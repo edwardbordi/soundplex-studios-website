@@ -1,0 +1,76 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+
+/**
+ * The venue marquee — a split-flap board that hangs over the door in the hero's opening
+ * frame and flips through the nights the room can be. Ambient for now: it cycles on its
+ * own and isn't tappable, so nothing is promised that doesn't exist yet. When the other
+ * nights' states are built, `onPick` wires a tap to the route switch and the cycling stops.
+ *
+ * Rendered by FlythroughV2 as a fixed sibling of the engine mount; the wrapper fades it
+ * with the opening veil, so it only lives on the first frame.
+ */
+export const NIGHTS = ["BUSINESS WORKSHOP", "LIVE MUSIC", "COMEDY", "A WEDDING", "YOUR EVENT"];
+
+const FLIP_MS = 90; // stagger between characters
+const HOLD_MS = 3200; // how long each night stays up
+
+export default function Marquee({
+  nights = NIGHTS,
+  active,
+  onPick,
+}: {
+  nights?: string[];
+  /** Controlled: which night is showing (index). Omit to cycle ambiently. */
+  active?: number;
+  onPick?: (index: number) => void;
+}) {
+  const [i, setI] = useState(active ?? 0);
+  const [flipping, setFlipping] = useState(false);
+  const timer = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (active != null) {
+      setI(active);
+      return;
+    }
+    const tick = () => {
+      setFlipping(true);
+      window.setTimeout(() => {
+        setI((n) => (n + 1) % nights.length);
+        setFlipping(false);
+      }, FLIP_MS * 6);
+    };
+    timer.current = window.setInterval(tick, HOLD_MS);
+    return () => {
+      if (timer.current) window.clearInterval(timer.current);
+    };
+  }, [active, nights.length]);
+
+  // Pad every night to the same width so the board never changes size.
+  const width = Math.max(...nights.map((n) => n.length));
+  const text = nights[i].padStart(Math.floor((width + nights[i].length) / 2)).padEnd(width);
+
+  const Tag = onPick ? "button" : "div";
+  return (
+    <Tag
+      className={`marquee${flipping ? " is-flipping" : ""}`}
+      aria-label={`Tonight: ${nights[i]}`}
+      onClick={onPick ? () => onPick((i + 1) % nights.length) : undefined}
+    >
+      <span className="marquee__tonight">Tonight</span>
+      <span className="marquee__board" aria-hidden>
+        {text.split("").map((ch, k) => (
+          <span
+            key={k}
+            className={`marquee__flap${ch === " " ? " is-blank" : ""}`}
+            style={{ transitionDelay: `${k * FLIP_MS * 0.35}ms`, animationDelay: `${k * FLIP_MS * 0.35}ms` }}
+          >
+            {ch === " " ? " " : ch}
+          </span>
+        ))}
+      </span>
+    </Tag>
+  );
+}

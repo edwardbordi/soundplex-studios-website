@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Lora, Roboto, Roboto_Slab, Poppins } from "next/font/google";
 import {
   SITE_URL,
   SITE_NAME,
@@ -16,6 +17,23 @@ import { StudioBar } from "@realiizlabs/admin/bar";
 import PreviewChrome from "./components/PreviewChrome";
 import { STUDIO_ROUTES } from "../lib/admin/content-types";
 import "./globals.css";
+
+/* ─── Type ───────────────────────────────────────────────────────────────────
+ * The three faces soundplexstudios.com actually uses, self-hosted by next/font
+ * so the site matches the live brand exactly (extracted from the live site's
+ * computed styles + Elementor globals, 2026-09-02):
+ *   Lora italic 400  → headlines / the payload line
+ *   Roboto           → body
+ *   Roboto Slab      → card titles
+ *   Poppins 500      → labels, buttons, nav (uppercase, letterspaced)
+ * Exposed as CSS variables so globals.css and the fly-through engine both read
+ * one source of truth. */
+const lora = Lora({ subsets: ["latin"], style: ["normal", "italic"], display: "swap", variable: "--font-lora" });
+const roboto = Roboto({ subsets: ["latin"], weight: ["400", "500", "700"], display: "swap", variable: "--font-roboto" });
+const robotoSlab = Roboto_Slab({ subsets: ["latin"], weight: ["400", "700"], display: "swap", variable: "--font-roboto-slab" });
+const poppins = Poppins({ subsets: ["latin"], weight: ["500", "600"], display: "swap", variable: "--font-poppins" });
+
+const fontVars = `${lora.variable} ${roboto.variable} ${robotoSlab.variable} ${poppins.variable}`;
 
 // Default social-share image (1200×630) — used for any page that doesn't set its own.
 const OG_IMAGE = `${SITE_URL}${OG_IMAGE_PATH}`;
@@ -51,8 +69,9 @@ export const metadata: Metadata = {
   title: `${SITE_NAME} — ${SITE_DESCRIPTION}`,
   description: SITE_DESCRIPTION,
   icons: {
-    icon: [{ url: "/logos/favicon.svg", type: "image/svg+xml" }],
-    apple: [{ url: "/logos/app-icon.svg" }],
+    // The real SoundPlex monogram, extracted from the client's lockup.
+    icon: [{ url: "/logos/favicon.png", type: "image/png" }],
+    apple: [{ url: "/logos/app-icon.png" }],
   },
   openGraph: {
     title: SITE_NAME,
@@ -72,23 +91,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className="h-full antialiased">
-      {/* id="theme-scope": the dark-mode kit's target — ThemeToggle flips
-          .theme-dark here and globals.css re-maps the design tokens under
-          it. suppressHydrationWarning covers the expected class mismatch
-          from the pre-paint bootstrap script below. */}
-      <body
-        id="theme-scope"
-        suppressHydrationWarning
-        className="min-h-full flex flex-col"
-      >
-        {/* Dark-theme bootstrap: applies the persisted choice before first
-            paint (no flash), and re-checks on client navigations. */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `try{var s=function(){var el=document.getElementById("theme-scope");if(el&&!el.classList.contains("theme-dark")&&localStorage.getItem("site-theme")==="dark"||(!localStorage.getItem("site-theme")&&matchMedia("(prefers-color-scheme: dark)").matches))el.classList.add("theme-dark")};s();new MutationObserver(s).observe(document.documentElement,{childList:true,subtree:true})}catch(e){}`,
-          }}
-        />
+    <html lang="en" className={`h-full antialiased ${fontVars}`}>
+      {/* Dark only (DESIGN-BRIEF.md): the template's light/dark toggle kit is not used, so
+          there is no theme-scope id or pre-paint bootstrap here. */}
+      <body className="min-h-full flex flex-col">
         <JsonLd data={organizationJsonLd} />
         {/* First-party analytics beacon — no-ops entirely until
             GA4_MEASUREMENT_ID + GA4_API_SECRET are set (see .env.example

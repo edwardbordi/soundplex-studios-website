@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
-import { NAV_LINKS } from "../../lib/site-config";
+import { NAV_LINKS, NAV_CTA } from "../../lib/site-config";
 
 /**
  * The phone navigation — a disclosure widget, not a div that toggles a class.
@@ -123,10 +123,26 @@ export default function MobileMenu() {
             aria-modal="true"
             aria-label="Menu"
           >
-            <nav aria-label="Main" className="flex flex-col gap-1">
+            {/* An explicit close in the panel's own corner. The hamburger does turn into
+                an X, but it sits in the header behind the panel — people look for the
+                close where the menu is. Focus returns to the hamburger, as Escape does. */}
+            <button
+              type="button"
+              className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-lg text-ink transition-colors hover:bg-bone-2"
+              aria-label="Close menu"
+              onClick={() => {
+                setOpen(false);
+                buttonRef.current?.focus();
+              }}
+            >
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" className="h-5 w-5">
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            </button>
+            <nav aria-label="Main" className="flex flex-col gap-1 pr-10">
               {NAV_LINKS.map((l) => (
                 <Link
-                  key={l.href}
+                  key={l.label}
                   href={l.href}
                   onClick={() => setOpen(false)}
                   className="font-display rounded-lg px-3 py-2.5 text-lg font-semibold text-ink transition-colors hover:bg-bone-2"
@@ -134,6 +150,14 @@ export default function MobileMenu() {
                   {l.label}
                 </Link>
               ))}
+              {/* The phone, as the same hollow gold button the desktop header shows. */}
+              <a
+                href={NAV_CTA.href}
+                onClick={() => setOpen(false)}
+                className="nav-cta mt-3 self-start"
+              >
+                {NAV_CTA.label}
+              </a>
             </nav>
             <div className="mt-4 flex gap-4 border-t border-line pt-4 font-mono-label text-xs text-slate">
               <Link href="/privacy" onClick={() => setOpen(false)}>
