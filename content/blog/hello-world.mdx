@@ -1,0 +1,30 @@
+---
+title: "Hello World — Your First Post"
+description: "An example post that shows the frontmatter contract every post must satisfy. Copy it, change the fields, write real content, and delete this one."
+publishedAt: "2026-01-01"
+author: "Your Name"
+slug: "hello-world"
+excerpt: "The example post. Every field below is validated at build time — miss one and the build fails, on purpose."
+tags: ["example", "getting-started", "template"]
+heroImage: "/blog/hello-world.webp"
+heroImageAlt: "Placeholder hero image — replace with your own."
+focusKeyword: "example blog post"
+---
+
+## This is your example post
+
+Every post in `content/blog/*.mdx` must satisfy the frontmatter contract in
+`src/lib/blog/schema.ts`. The schema is `.strict()` and validated at build time, so a missing or
+misspelled field **fails the build** — that's the point. You can't ship an SEO-incomplete post.
+
+## How to write a new post
+
+1. Copy this file to `content/blog/<your-slug>.mdx` (filename must equal the `slug`).
+2. Fill in every frontmatter field — a unique `title`, `description` (~155 chars), `excerpt`, exactly
+   three `tags`, a `heroImage` in `/public/blog/`, its `heroImageAlt`, and a single `focusKeyword`.
+3. Write genuinely useful, first-hand content — cite real sources and give real examples. Unique
+   content is what wins in Google **and** AI search; templated/thin content does not.
+4. The post auto-appears in the blog index, the sitemap, the RSS feed, and gets its canonical +
+   OpenGraph + `BlogPosting` JSON-LD — all from the frontmatter. No page edits needed.
+
+Then delete this example post.

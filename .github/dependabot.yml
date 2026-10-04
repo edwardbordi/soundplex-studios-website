@@ -1,0 +1,20 @@
+# Studio updates arrive as pull requests (see Settings → Studio in /admin). Only
+# @realiizlabs/admin is watched here; everything else is updated by hand, on purpose.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: America/New_York
+    allow:
+      - dependency-name: "@realiizlabs/admin"
+    # No waiting period: a Studio release should be offered the day it ships.
+    cooldown:
+      exclude: ["@realiizlabs/admin"]
+    open-pull-requests-limit: 1
+    commit-message:
+      prefix: "studio"
+    labels: ["studio-update"]
