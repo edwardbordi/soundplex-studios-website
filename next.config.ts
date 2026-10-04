@@ -25,6 +25,15 @@ const redirects = async () => [
    * rather than a hop in the normal path.
    */
   { source: "/blog/page/1", destination: "/blog", permanent: true },
+  // The hero v2 review page (Sept 2026) became the homepage. Anyone holding the old link
+  // (George) lands on the real thing. Query strings (?night=…) carry over.
+  { source: "/v2", destination: "/", permanent: true },
+  // WordPress → new routes. The full map with reasoning is design-process/URL-MAP.md;
+  // this list grows as wave 2 pages land. Nothing Google has today may 404.
+  { source: "/sp-room", destination: "/rooms", permanent: true },
+  { source: "/sp-room/:slug", destination: "/rooms", permanent: true },
+  { source: "/privacy-policy", destination: "/privacy", permanent: true },
+  { source: "/terms-of-service", destination: "/terms", permanent: true },
 ];
 
 /**

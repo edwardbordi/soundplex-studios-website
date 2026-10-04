@@ -1,37 +1,47 @@
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   THEME — this is a DISPOSABLE starter skeleton. REPLACE ALL OF IT.
+   THEME — SoundPlex Studios.
 
-   These are deliberately plain, neutral placeholder tokens + system fonts so the
-   default site looks unfinished — because it is. The FRAMEWORK (the SEO contract,
-   the blog engine, the schemas, the laws) does NOT depend on any of these values.
-   Change every color, font, radius, width, and the whole design here and in the
-   components/pages. Nothing about "how it's wired" changes when you do.
+   NOT the starter skeleton any more. Every token below was extracted from the
+   LIVE site (soundplexstudios.com) on 2026-09-02 — computed styles, Elementor
+   globals, and sampling the logo gradient — because the brief for this build is
+   "the client likes their site; keep their colors, fonts and style exactly."
+   So this is a deliberate match, not a design of ours. Don't "improve" it.
 
-   → Run the design interview (see design-process/ and the `theme` skill) to
-     generate a real design system, then paste it in here.
+   Ignore Elementor's unused kit defaults #6EC1E4 / #61CE70 if you ever go
+   looking at the source — they're leftovers, not the brand.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 @theme {
-  /* Neutral placeholder palette (grayscale + one plain accent). Replace. */
-  --color-ink: #171717;      /* primary text */
-  --color-ink-2: #262626;
-  --color-bone: #fafafa;     /* page background */
-  --color-bone-2: #f1f1f1;
-  --color-paper: #ffffff;
-  --color-signal: #2563eb;   /* accent / links — swap for your brand color */
-  --color-signal-strong: #1d4ed8;
-  --color-signal-light: #60a5fa;
-  --color-signal-2: #0d9488;
-  --color-slate: #6b7280;    /* muted text */
-  --color-line: #e5e5e5;     /* borders */
-  --color-line-dark: #d4d4d4;
-  --color-amber: #d97706;    /* caution accent */
+  /* Dark theme — the live site is pure black with white type. */
+  --color-ink: #ffffff;          /* primary text (on black) */
+  --color-ink-2: #e6e6e6;
+  --color-bone: #000000;         /* page background */
+  --color-bone-2: #0b0b0b;
+  --color-paper: #111111;
 
-  /* Type — system stacks by default (no web font). Replace with your fonts. */
-  --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* Brand gold — sampled from the logo gradient. The mid tone is THE accent
+     (buttons, active states); bright and deep are its gradient ends. */
+  --color-signal: #d4a030;       /* gold, mid — the accent */
+  --color-signal-strong: #c07000; /* deep amber */
+  --color-signal-light: #f0d040;  /* bright gold */
+
+  /* Secondary accents the live site uses — they echo the venue's real stage
+     lighting (the downstairs rooms are lit blue/magenta). Use sparingly. */
+  --color-signal-2: #3d9cff;     /* electric blue */
+  --color-violet: #7a3cff;       /* purple */
+
+  --color-slate: #a3a3a3;        /* muted text on black */
+  --color-line: #262626;         /* borders */
+  --color-line-dark: #3a3a3a;
+  --color-amber: #c07000;
+
+  /* Type — the live site's three faces, loaded in layout.tsx via next/font. */
+  --font-display: var(--font-lora), Georgia, "Times New Roman", serif;
+  --font-body: var(--font-roboto), system-ui, -apple-system, sans-serif;
+  --font-slab: var(--font-roboto-slab), Georgia, serif;
+  --font-button: var(--font-poppins), system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   --ease-precise: cubic-bezier(0.22, 1, 0.36, 1);
@@ -42,7 +52,7 @@
 }
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 html {
@@ -61,8 +71,10 @@ body {
 
 /* Display + mono helpers */
 .font-display {
-  font-family: var(--font-display), system-ui, sans-serif;
-  letter-spacing: -0.02em;
+  font-family: var(--font-display), Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0;
 }
 .font-mono-label {
   font-family: var(--font-mono), ui-monospace, monospace;
@@ -573,57 +585,8 @@ body {
 h1, h2, h3, h4 { text-wrap: balance; }
 p, li { text-wrap: pretty; }
 
-/* ---- Dark mode (opt-in kit) -------------------------------------------
-   .theme-dark on the theme scope (<body id="theme-scope">) re-maps the
-   design tokens, so every token-based class flips automatically — no
-   per-component dark: variants. ThemeToggle flips the class; the layout's
-   bootstrap script applies the persisted choice before first paint.
-   Values below are a neutral dark retuning of the template palette —
-   retune alongside the light tokens when branding a client site, keeping
-   AA contrast (ink-on-paper and slate-on-bone must clear 4.5:1). */
-.theme-dark {
-  --color-ink: #f0f1f4;
-  --color-ink-2: #e0e2e8;
-  --color-bone: #161920;
-  --color-bone-2: #1e222b;
-  --color-paper: #262b36;
-  --color-signal: #3b82f6;
-  --color-signal-strong: #8db4ff;
-  --color-signal-light: #aec9ff;
-  --color-signal-2: #2dd4bf;
-  --color-slate: #a3aab8;
-  --color-line: #333947;
-  --color-line-dark: #485064;
-  /* Native chrome (scrollbars, form controls) renders dark too. */
-  color-scheme: dark;
-  scrollbar-color: rgb(163 170 184 / 0.4) transparent;
-}
-
-/* Dark-by-design surfaces (ink panels, footers, dark cards) are the site's
-   dark ACCENTS: inverting them in dark mode turns them into glaring light
-   slabs. Add .theme-pin to such a wrapper to restore the light-theme token
-   values inside it, so the surface renders identically in both themes. */
-.theme-dark .theme-pin {
-  --color-ink: #171717;
-  --color-ink-2: #262626;
-  --color-bone: #fafafa;
-  --color-bone-2: #f1f1f1;
-  --color-paper: #ffffff;
-  --color-signal: #2563eb;
-  --color-signal-strong: #1d4ed8;
-  --color-signal-light: #60a5fa;
-  --color-signal-2: #0d9488;
-  --color-slate: #6b7280;
-  --color-line: #e5e5e5;
-  --color-line-dark: #d4d4d4;
-}
-/* Rounded pinned panels get a faint edge so they don't dissolve into the
-   dark page. */
-.theme-dark .theme-pin.rounded-3xl,
-.theme-dark .theme-pin .rounded-3xl {
-  outline: 1px solid rgb(163 170 184 / 0.16);
-  outline-offset: -1px;
-}
+/* Dark only (DESIGN-BRIEF.md): the template's opt-in light/dark kit is intentionally not
+   included here — the tokens above ARE the dark theme. */
 
 /* ---- TEMPORARY: review kit — "show what we still need" ---------------------
    PreviewChrome sets data-show-needs on <html>; every [data-needs="…"] spot
@@ -688,3 +651,874 @@ html[data-show-needs] [data-needs][data-needs-empty] {
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.28) #111111;
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FLY-THROUGH HERO — theming the scroll-world engine.
+
+   The engine ships a LIGHT theme and wraps its defaults in `@layer sw`, so this
+   plain unlayered block wins without any specificity games. Two jobs here:
+
+   1. Set the tokens (SoundPlex black / white / gold, and the three real fonts).
+   2. Fix what a dark theme breaks. The engine's buttons, tag pills and route
+      labels hard-code `#fff` against `var(--sw-ink)` — fine when ink is near-
+      black, invisible when ink IS white. Those need real overrides, not tokens.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.sw-root {
+  --sw-bg: #000000;
+  --sw-ink: #ffffff;
+  --sw-ink-soft: #a3a3a3;
+  --sw-accent: #d4a030; /* brand gold, mid tone — the accent, per the live site */
+  --sw-font-display: var(--font-lora), Georgia, "Times New Roman", serif;
+  --sw-font-body: var(--font-roboto), system-ui, -apple-system, sans-serif;
+}
+
+/* Headlines are Lora ITALIC on the live site — that's the whole character of it. */
+.sw-root .sw-copy__title {
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+/* The engine puts the display face on the eyebrow too; an italic serif in uppercase
+   letterspacing reads as a mistake. The live site's small-caps voice is Poppins. */
+.sw-root .sw-copy__eyebrow {
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  font-weight: 500;
+}
+
+/* Buttons: the live site's spec exactly — Poppins 500, UPPERCASE, 3px radius,
+   ~20px/30px padding. Primary is gold with black text (the engine's default of
+   white-on-var(--sw-ink) would be white on white here). */
+.sw-root .sw-btn {
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-radius: 3px;
+  padding: 20px 30px;
+  font-size: 0.85rem;
+}
+.sw-root .sw-btn--primary {
+  background: var(--sw-accent);
+  color: #000000;
+}
+.sw-root .sw-btn--primary:hover {
+  background: #f0d040; /* bright end of the logo gradient */
+}
+.sw-root .sw-btn--ghost {
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+}
+.sw-root .sw-btn--ghost:hover {
+  border-color: var(--sw-accent);
+  color: var(--sw-accent);
+}
+
+/* Tag pills + route labels: the engine mixes them toward #fff, which blows out on
+   black. Re-seat them on the page background instead. */
+.sw-root .sw-copy__tags li {
+  background: rgba(212, 160, 48, 0.12);
+  border-color: rgba(212, 160, 48, 0.35);
+  color: #f0d040;
+}
+.sw-root .sw-route__label {
+  background: rgba(0, 0, 0, 0.8);
+  border-color: rgba(212, 160, 48, 0.3);
+  color: #ffffff;
+}
+
+/* The copy scrim is a left-to-right wash of --sw-bg; on pure black it can swallow the
+   film. Pull it back so the room stays visible behind the words. */
+.sw-root .sw-copylayer::before {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.92) 0%,
+    rgba(0, 0, 0, 0.72) 34%,
+    rgba(0, 0, 0, 0.3) 62%,
+    transparent 100%
+  );
+}
+@media (max-width: 860px) {
+  .sw-root .sw-copylayer::before {
+    background: linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.94) 8%,
+      rgba(0, 0, 0, 0.65) 46%,
+      transparent 100%
+    );
+  }
+  /* Hero v2's block is taller (the chooser sits above the title), so its top row —
+     "Tonight" and the chips — lands where the stock scrim has thinned out. Taller and
+     denser for v2 only. */
+  .sw-root.sw-v2 .sw-copylayer::before {
+    height: 78%;
+    background: linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.95) 10%,
+      rgba(0, 0, 0, 0.82) 40%,
+      rgba(0, 0, 0, 0.55) 62%,
+      transparent 100%
+    );
+  }
+}
+
+/* Close the gap at the end of the flight.
+   The engine always appends one extra viewport-height to its scroll track ("+1vh so the
+   last flight completes"), but the last scene's opacity is driven by its own band, which
+   ends 1vh earlier. That left ~830px where the film had already faded to black while the
+   page content below hadn't arrived yet — a dead black window with the finale copy
+   stranded on it. Pulling the following section up by exactly that 1vh means the content
+   is already covering the viewport at the moment the film starts to fade, so the
+   transition is content-over-film instead of film-to-black-to-content.
+   Keep this in `vh`, matching the engine's own unit: it sizes the track from
+   window.innerHeight and ignores height-only resizes on touch, so `dvh` here would
+   desync the two on mobile when the URL bar collapses. */
+.sw-mount + .sw-after {
+  margin-top: -100vh;
+}
+
+/* Once the flight is behind us the engine's fixed chrome must stop floating over the
+   rest of the page. Flythrough.tsx sets .sw-past on the container; see the note there
+   for why this is a class toggle and not a clipping ancestor. */
+.sw-mount.sw-past .sw-stage,
+.sw-mount.sw-past .sw-copylayer,
+.sw-mount.sw-past .sw-route,
+.sw-mount.sw-past .sw-hint,
+.sw-mount.sw-past .sw-scrollbar,
+.sw-mount.sw-past .sw-sky {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+/* ── No lonely words (Ed, 2026-09-02) ──────────────────────────────────────
+   `balance` evens out wrapped heading lines ("Where creativity and / community
+   meet." instead of a stranded "meet."). `pretty` stops single-word last lines
+   in running text. Both are progressive enhancements — browsers without them
+   simply wrap as before. Applies to the fly-through copy AND the regular pages. */
+h1, h2, h3, h4,
+.sw-root .sw-copy__title {
+  text-wrap: balance;
+}
+p, li,
+.sw-root .sw-copy__body {
+  text-wrap: pretty;
+}
+
+/* Belt-and-suspenders for the fly-through copy: the engine renders its title/body
+   in its own DOM; target everything inside the copy block explicitly. */
+.sw-copy__title, .sw-copy h1, .sw-copy h2, .sw-copy .sw-copy__eyebrow {
+  text-wrap: balance !important;
+}
+.sw-copy__body, .sw-copy p {
+  text-wrap: pretty !important;
+}
+
+/* Copy block tidy-up (Ed, pre-client pass): drop the "01 / 11" counter — the route
+   rail already communicates progress — and nudge the block up slightly. The nudge is
+   desktop-only: on phones the engine anchors copy to the BOTTOM (top: auto), and an
+   unlayered `top` here would override that layered rule and break the anchoring. */
+.sw-root .sw-copy__num {
+  display: none;
+}
+.sw-root .sw-copy__eyebrow {
+  margin-top: 0; /* was spacing below the now-hidden counter */
+}
+@media (min-width: 861px) {
+  .sw-root .sw-copy {
+    top: calc(50% - 16px);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Hero v2 grading layers (FlythroughV2.tsx). Both are fixed siblings of the
+   mount, above the stage (z 10) and below the engine's copy layer (z 20).
+   ═══════════════════════════════════════════════════════════════════════════ */
+/* Top scrim — the nav reads over any frame. Subtle, permanent while the film is up. */
+.sw-v2-scrim {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 40vh;
+  z-index: 15;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.66) 0%, rgba(0, 0, 0, 0.5) 22%, rgba(0, 0, 0, 0.22) 60%, rgba(0, 0, 0, 0) 100%);
+  transition: opacity 0.3s;
+}
+/* Opening veil — warms and darkens the foyer's white top-right wall and the bright
+   sign on the door. Opacity is driven by scroll in FlythroughV2 (gone by the doors). */
+.sw-v2-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 15;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 50% 56% at 84% 24%, rgba(24, 14, 6, 0.28) 0%, rgba(24, 14, 6, 0.12) 45%, rgba(24, 14, 6, 0) 75%),
+    linear-gradient(to left, rgba(24, 14, 6, 0.22) 0%, rgba(24, 14, 6, 0.08) 30%, rgba(24, 14, 6, 0) 50%);
+}
+/* And take the edge off the foyer leg itself: a touch darker and warmer so the whole
+   first frame sits with the states that follow. First scene only. */
+.sw-v2 .sw-scene:first-child .sw-scene__video,
+.sw-v2 .sw-scene:first-child .sw-scene__still {
+  filter: brightness(0.96) contrast(1.02);
+}
+
+/* Hero v2 copy block: wider on desktop so the three-word phrases sit on two lines
+   instead of three. The engine caps the block at min(42vw, 460px); at 3.5rem italic
+   Lora that breaks "Leave with / something / started." Room for ~14ch per line. */
+@media (min-width: 861px) {
+  .sw-v2 .sw-copy {
+    width: min(48vw, 600px);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Header links + button (Nav.tsx). Uppercase, letterspaced Poppins with a single
+   outlined gold CTA — the same voice as the hero buttons, one step quieter.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.nav-link {
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+  opacity: 0.88;
+  white-space: nowrap;
+  transition: opacity 0.2s, color 0.2s;
+}
+.nav-link:hover {
+  opacity: 1;
+  color: var(--color-signal);
+}
+.nav-cta {
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-signal);
+  border: 1px solid var(--color-signal);
+  border-radius: 3px;
+  padding: 0.7rem 1.4rem;
+  margin-left: 0.5rem;
+  white-space: nowrap;
+  transition: background-color 0.2s, color 0.2s;
+}
+.nav-cta:hover {
+  background-color: var(--color-signal);
+  color: #000;
+}
+@media (min-width: 640px) and (max-width: 1100px) {
+  .nav-links { gap: 1.1rem; }
+  .nav-link, .nav-cta { font-size: 0.7rem; letter-spacing: 0.1em; }
+  .nav-cta { padding: 0.6rem 1rem; }
+}
+
+/* Hero v2 titles: the live site's pairing — geometric sans for the setup, Lora italic
+   for the payload (marked *like this* in the route). Same size, flat white; the italic
+   is the emphasis, not a colour. v1 keeps the all-italic title. */
+.sw-root.sw-v2 .sw-copy__title {
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  font-style: normal;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.sw-root.sw-v2 .sw-copy__title em {
+  display: block; /* the payload always starts its own line — setup / payload, never an orphan */
+  font-family: var(--font-lora), Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Hero v2 night chooser + letterboard overlay (FlythroughV2.tsx)
+   ═══════════════════════════════════════════════════════════════════════════ */
+/* The chooser lives IN the first frame's eyebrow — chips styled like the header:
+   uppercase Poppins, the active night solid gold, the rest hollow. */
+.sw-root .sw-copy__eyebrow.sw-v2-nights {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 6px;
+  max-width: 100%;
+}
+/* The chips: one row, scrolls sideways, scrollbar hidden, faded at the right edge so
+   it's obvious there's more. Wide enough on desktop to run past the copy column. */
+.sw-v2-nights__track {
+  display: flex;
+  gap: 8px;
+  width: 100%; /* the copy column, no wider — it scrolls, it doesn't stretch */
+  overflow-x: auto;
+  padding: 2px 48px 10px 2px; /* room for the slider bar below the chips */
+  mask-image: linear-gradient(to right, #000 82%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, #000 82%, transparent 100%);
+  cursor: grab;
+  user-select: none;
+  /* the slider bar: a thin gold thumb on a faint track, always visible */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) rgba(255, 255, 255, 0.02);
+}
+.sw-v2-nights__track:active { cursor: grabbing; }
+.sw-v2-nights__track::-webkit-scrollbar { height: 1px; }
+.sw-v2-nights__track::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
+.sw-v2-nights__track::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); }
+.sw-v2-nights__track .sw-v2-night { flex: 0 0 auto; }
+
+.sw-v2-nights__label {
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  margin-right: 4px;
+  opacity: 0.8;
+}
+.sw-v2-night {
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-signal);
+  border: 1px solid rgba(212, 160, 48, 0.7);
+  border-radius: 3px;
+  padding: 0.42rem 0.8rem;
+  white-space: nowrap;
+  transition: background-color 0.2s, color 0.2s;
+}
+.sw-v2-night:hover {
+  background-color: rgba(212, 160, 48, 0.18);
+}
+.sw-v2-night.is-active {
+  background-color: var(--color-signal);
+  color: #000;
+}
+/* Unbuilt nights (only shown with ?preview=nights): styled exactly like live ones
+   while testing. They don't link anywhere yet. */
+.sw-v2-night.is-soon {
+  cursor: default;
+}
+.sw-v2-night.is-other {
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #fff;
+}
+.sw-v2-night.is-other:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+.sw-v2-night.is-other { display: inline-flex; align-items: center; gap: 6px; }
+.sw-v2-night__arrow { width: 1.2em; height: 1.2em; transition: transform 0.2s ease-out; }
+.sw-v2-night.is-other:hover .sw-v2-night__arrow { transform: translateX(4px); }
+@media (max-width: 860px) {
+  .sw-v2-night { font-size: 0.62rem; padding: 0.38rem 0.65rem; letter-spacing: 0.1em; }
+  /* The chip row stops well short of the right edge so it never runs under the
+     engine's dot route; the fade still says "more". */
+  .sw-v2-nights__track { width: 68%; padding-right: 32px; }
+}
+
+/* The arrow on secondary CTAs (added after mount in FlythroughV2). Hidden on desktop,
+   where the button is a bordered ghost; shown on phones, where it becomes a link. */
+.sw-root .sw-btn__arrow { display: none; width: 1.25em; height: 1.25em; transition: transform 0.2s ease-out; }
+@media (max-width: 860px) {
+  .sw-root.sw-v2 .sw-btn--ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    border: 0;
+    padding: 0.6rem 0.2rem;
+    color: #fff;
+    letter-spacing: 0.12em;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    text-decoration: underline;
+    text-underline-offset: 5px;
+    text-decoration-thickness: 1px;
+    text-decoration-color: rgba(255, 255, 255, 0.45);
+    transition: color 0.2s, text-decoration-color 0.2s;
+  }
+  .sw-root.sw-v2 .sw-btn--ghost:hover,
+  .sw-root.sw-v2 .sw-btn--ghost:active { text-decoration-color: var(--sw-accent); }
+  .sw-root.sw-v2 .sw-btn--ghost:hover { color: var(--sw-accent); }
+  .sw-root.sw-v2 .sw-btn__arrow { display: inline-block; color: var(--sw-accent); }
+  .sw-root.sw-v2 .sw-btn--ghost:hover .sw-btn__arrow,
+  .sw-root.sw-v2 .sw-btn--ghost:active .sw-btn__arrow { transform: translateX(4px); }
+  /* The block sits higher than the engine's default so the buttons clear the "scroll to
+     step inside" hint (which is ~80px tall with its mouse glyph) by a real margin. */
+  .sw-mount.sw-root.sw-v2 .sw-copy {
+    bottom: clamp(120px, 19vh, 170px);
+    bottom: calc(clamp(120px, 19dvh, 170px) + env(safe-area-inset-bottom));
+  }
+  /* One row: the gold button and the link beside it, never wrapping. Sized to fit 390px
+     with the copy's side padding ("BOOK A TOUR" + "JOIN THE COLLECTIVE →"). */
+  .sw-root.sw-v2 .sw-copy__cta { flex-wrap: nowrap; align-items: center; gap: 16px; }
+  .sw-root.sw-v2 .sw-btn--primary { padding: 15px 20px; font-size: 0.78rem; white-space: nowrap; }
+  .sw-root.sw-v2 .sw-btn--ghost { font-size: 0.72rem; letter-spacing: 0.1em; padding: 0.6rem 0; }
+}
+/* Hero v2 copy block height: with the night chooser above the title, the block is taller
+   than v1's. Trim the title a notch, tighten the gaps, and on short laptop viewports go
+   one notch further so the buttons stay above the fold. Desktop only — phones anchor
+   the block to the bottom and are unaffected. */
+@media (min-width: 861px) {
+  .sw-root.sw-v2 .sw-copy__title {
+    font-size: clamp(1.9rem, 3.7vw, 3.1rem);
+    margin-top: 8px;
+  }
+  .sw-root.sw-v2 .sw-copy__body { margin-top: 14px; }
+  .sw-root.sw-v2 .sw-copy__cta { margin-top: 18px; }
+}
+@media (min-width: 861px) and (max-height: 820px) {
+  .sw-root.sw-v2 .sw-copy { top: calc(50% + 6px); }
+  .sw-root.sw-v2 .sw-copy__title { font-size: clamp(1.8rem, 3.2vw, 2.6rem); }
+  .sw-root.sw-v2 .sw-copy__body { font-size: 0.98rem; margin-top: 10px; }
+  .sw-root.sw-v2 .sw-copy__cta { margin-top: 14px; }
+  .sw-root.sw-v2 .sw-btn { padding: 0.8rem 1.4rem; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   The Connection Wall (widgets/ConnectionWall.tsx)
+   A wall of portraits the camera glides into. The plane transforms; nothing else moves.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.wall {
+  background: #000;
+  color: var(--color-ink);
+  padding: 96px 0 0;
+  overflow: hidden;
+}
+.wall__eyebrow {
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-signal);
+}
+.wall__title {
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  font-weight: 500;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  margin-top: 12px;
+}
+.wall__title em {
+  font-family: var(--font-lora), Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+}
+.wall__lede {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 14px;
+  color: var(--color-ink-2);
+  font-size: 1.05rem;
+}
+.wall__show {
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-signal);
+  border: 1px solid rgba(212, 160, 48, 0.7);
+  border-radius: 3px;
+  padding: 0.5rem 0.95rem;
+  transition: background-color 0.2s, color 0.2s;
+}
+.wall__show:hover { background: var(--color-signal); color: #000; }
+
+/* The stage: a fixed-height window the plane moves inside. */
+.wall__stage {
+  position: relative;
+  margin-top: 40px;
+  height: min(78vh, 760px);
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 40%, rgba(212, 160, 48, 0.07), transparent 70%),
+    #0a0806;
+}
+.wall__plane {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 0;
+  transition: transform 950ms cubic-bezier(0.22, 0.61, 0.21, 1);
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 18px;
+  padding: 28px 40px;
+  will-change: transform;
+}
+@media (max-width: 860px) {
+  .wall__plane { grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 18px 16px; }
+  .wall__stage { height: min(84vh, 720px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wall__plane { transition: none; }
+}
+
+/* Threads: gold lines between connected portraits. INVISIBLE at rest — a wall of faces,
+   not a diagram. A person's threads appear when their face is hovered or chosen; a story
+   shows only its own thread. Scales to any number of members without getting busy. */
+.wall__threads {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.wall__threads--lines { z-index: 0; } /* behind the tiles */
+.wall__threads--dots { z-index: 2; }  /* in front: the dots sit on the frame borders */
+.wall__thread {
+  opacity: 0;
+  transition: opacity 0.45s;
+}
+.wall__thread.is-lit,
+.wall__thread.is-hover { opacity: 1; }
+.wall__thread.is-hover .wall__thread-line { opacity: 0.7; }
+.wall__thread-line {
+  fill: none;
+  stroke: rgba(212, 160, 48, 0.75);
+  stroke-width: 1.4;
+  /* Stitched, not drawn: round caps with a zero-length dash make a run of dots. Dashes
+     were considered and read as a flowchart; dots read as thread. */
+  stroke-linecap: round;
+  stroke-dasharray: 0 5;
+}
+.wall__thread-dot {
+  fill: #c9992a; /* solid, a shade darker than the ring — never translucent */
+  transform-box: fill-box;
+  transform-origin: center;
+}
+/* A story's thread: same thin line, and the two dots breathe — an easy pulse, offset so
+   they don't beat in unison. Nothing travels; the connection simply exists. */
+.wall__thread.is-story { opacity: 1; }
+.wall__thread.is-story .wall__thread-line { stroke: rgba(240, 208, 64, 0.9); stroke-width: 1.2; }
+.wall__thread.is-story .wall__thread-dot.is-far { animation: wall-pulse 3s ease-in-out infinite; }
+@keyframes wall-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.25); }
+}
+@media (prefers-reduced-motion: reduce) { .wall__thread.is-story .wall__thread-dot { animation: none; } }
+
+
+/* Tiles: a framed portrait and a first name. */
+.wall__tile {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  transition: filter 0.6s;
+}
+.wall__frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: #2a2420;
+  border: 6px solid #15110d;
+  box-shadow: 0 0 0 1px rgba(212, 160, 48, 0.25), 0 14px 30px rgba(0, 0, 0, 0.55);
+  display: grid;
+  place-items: center;
+}
+.wall__photo { object-fit: cover; filter: grayscale(1) contrast(1.05); }
+.wall__initials {
+  font-family: var(--font-lora), Georgia, serif;
+  font-style: italic;
+  font-size: clamp(1.4rem, 3vw, 2.4rem);
+  color: rgba(243, 233, 210, 0.55);
+}
+.wall__name {
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink-2);
+}
+.wall__tile:hover .wall__frame { box-shadow: 0 0 0 1px rgba(212, 160, 48, 0.8), 0 14px 30px rgba(0, 0, 0, 0.55); }
+/* Zoomed: everything but the chosen face falls away — you walked up to one picture.
+   Their connections stay a shade brighter so you can sense them; nothing else competes. */
+/* Dim with brightness, not opacity: a tile at 9% opacity is glass, and the thread lines
+   show straight through it. Brightness keeps it solid, so lines stay behind. */
+.wall__stage.is-zoomed .wall__tile { filter: brightness(0.16) saturate(0.6); }
+.wall__stage.is-zoomed .wall__tile.is-linked { filter: brightness(0.34) saturate(0.7); }
+.wall__stage.is-zoomed .wall__tile.is-active { filter: none; }
+/* Reading a person: their threads stay — short lines out to the people they're connected
+   to, a dot at each end, the dots breathing. When a story plays, only that thread stays. */
+.wall__stage.is-zoomed .wall__thread.is-lit .wall__thread-dot.is-far { animation: wall-pulse 3s ease-in-out infinite; }
+/* Zoomed in, the lines are big on screen — pull them back so they're clearly there but
+   not in your face. The dots stay solid. */
+.wall__stage.is-zoomed .wall__thread-line { opacity: 0.45; }
+/* …and the dot on the OTHER person's frame steps back with the line. The dot on the card
+   you're reading is the only one at full colour. */
+.wall__stage.is-zoomed .wall__thread-dot.is-far { fill: #7d5f1c; }
+.wall__stage.has-story .wall__thread.is-lit:not(.is-story) { opacity: 0; }
+.wall__stage.is-zoomed .wall__tile.is-active .wall__frame { box-shadow: 0 0 0 1px rgba(212, 160, 48, 0.9), 0 30px 60px rgba(0, 0, 0, 0.7); }
+.wall__stage.is-zoomed .wall__tile.is-active .wall__name { opacity: 0; }
+
+/* The story card — outside the plane, so it never scales. */
+.wall__card {
+  position: absolute;
+  z-index: 3;
+  left: 52%;
+  right: 5%;
+  top: 50%;
+  transform: translateY(-50%);
+  max-width: 460px;
+  padding: 28px 32px;
+  margin-left: -32px;
+  /* a soft dark pool under the text so it reads on black, not on dimmed tiles */
+  background: radial-gradient(ellipse 90% 80% at 40% 50%, rgba(10, 8, 6, 0.96) 55%, rgba(10, 8, 6, 0) 100%);
+  animation: wall-card-in 0.6s 0.55s both;
+}
+@keyframes wall-card-in { from { opacity: 0; transform: translateY(calc(-50% + 12px)); } to { opacity: 1; transform: translateY(-50%); } }
+@media (max-width: 860px) {
+  .wall__card {
+    left: 16px;
+    right: 16px;
+    /* Anchored just under the portrait (flyTo puts its centre at 20% of the stage; the
+       frame's bottom lands near 40%), and runs to the stage floor. Content starts at the
+       top, so a short card leaves its gap below, not between it and the face. */
+    top: 41%;
+    bottom: 0;
+    transform: none;
+    max-width: none;
+    margin-left: 0; /* the desktop rule's -32px pulled the text off the left edge */
+    padding: 14px 0 20px;
+    overflow-y: auto;
+    background: linear-gradient(to bottom, rgba(10, 8, 6, 0) 0%, #0a0806 8%);
+  }
+  .wall__lede { flex-wrap: nowrap; }
+  .wall__lede p { flex: 1 1 auto; }
+  .wall__show { flex: 0 0 auto; white-space: nowrap; }
+  @keyframes wall-card-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+}
+.wall__card-eyebrow {
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-signal);
+}
+.wall__card-title {
+  font-family: var(--font-lora), Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(1.7rem, 2.8vw, 2.4rem);
+  line-height: 1.1;
+  margin-top: 8px;
+}
+.wall__role { color: var(--color-ink-2); margin-top: 4px; }
+.wall__story { margin-top: 14px; font-size: 1.02rem; line-height: 1.55; color: var(--color-ink-2); }
+/* Stacked, not a two-column table: a side label makes every wrapped answer start at a
+   different x than its label and the block reads ragged. Label over, answer under in the
+   wall's italic — it reads as the person saying it. */
+.wall__facts { margin-top: 18px; }
+.wall__facts dt {
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-signal);
+  margin-bottom: 4px;
+}
+.wall__facts dd + dt { margin-top: 12px; }
+/* The answers in the wall's italic, a touch smaller and quieter than the story line. */
+.wall__facts dd {
+  font-family: var(--font-lora), Georgia, serif;
+  font-style: italic;
+  font-size: 1rem;
+  line-height: 1.45;
+  color: var(--color-ink-2);
+  max-width: 40ch;
+}
+/* Never a single word alone on the last line. */
+.wall__story, .wall__facts dd, .wall__steps li, .wall__card-title { text-wrap: pretty; }
+.wall__steps { margin-top: 12px; display: grid; gap: 10px; font-size: 1.05rem; line-height: 1.4; }
+.wall__steps li { display: flex; gap: 12px; align-items: baseline; }
+.wall__step-n {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid rgba(212, 160, 48, 0.8);
+  color: var(--color-signal);
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  font-size: 0.68rem;
+  display: grid;
+  place-items: center;
+  transform: translateY(-2px);
+}
+.wall__links { margin-top: 20px; display: grid; gap: 6px; }
+.wall__link {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: "name arrow" "role arrow";
+  align-items: center;
+  text-align: left;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(212, 160, 48, 0.28);
+  border-radius: 3px;
+  color: var(--color-ink);
+  cursor: pointer;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+.wall__link:hover { border-color: rgba(212, 160, 48, 0.85); background: rgba(212, 160, 48, 0.1); }
+.wall__link-name { grid-area: name; font-weight: 500; }
+.wall__link-role { grid-area: role; font-size: 0.85rem; color: var(--color-ink-2); }
+.wall__link-arrow { grid-area: arrow; color: var(--color-signal); padding-left: 12px; display: flex; align-items: center; }
+.wall__card-eyebrow--pair { display: inline-flex; align-items: center; gap: 8px; }
+
+.wall__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 20px;
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-2);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.wall__back:hover { color: var(--color-signal); }
+@media (max-width: 860px) {
+  /* The phone card keeps the two facts and drops the one-line story. */
+  .wall__story { display: none; }
+  .wall__facts { margin-top: 12px; }
+  .wall__facts dd { font-size: 0.95rem; }
+  .wall__links { margin-top: 14px; }
+  .wall__link { padding: 10px 12px; }
+}
+
+/* ─── Footer ───────────────────────────────────────────────────────────────────
+   The last frame: black, one gold hairline, the two voices. See Footer.tsx. */
+.foot {
+  margin-top: auto;
+  background: #000;
+  color: var(--color-ink);
+  border-top: 1px solid rgba(212, 160, 48, 0.35);
+  /* A faint warm pool top-left, like the room's pendant — never a flat black slab. */
+  background-image: radial-gradient(ellipse 60% 70% at 12% 0%, rgba(212, 160, 48, 0.07), transparent 65%);
+}
+.foot__hero {
+  padding: 72px 0 56px;
+  border-bottom: 1px solid var(--color-line);
+}
+.foot__eyebrow,
+.foot__label {
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-signal);
+}
+.foot__line {
+  margin-top: 14px;
+  max-width: 22ch;
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  font-weight: 500;
+  font-size: clamp(1.7rem, 3.6vw, 2.8rem);
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+}
+.foot__line em {
+  display: block;
+  font-family: var(--font-lora), Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+}
+.foot__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  margin-top: 28px;
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-signal);
+  border: 1px solid var(--color-signal);
+  border-radius: 3px;
+  padding: 0.8rem 1.5rem;
+  transition: background-color 0.2s, color 0.2s;
+}
+.foot__cta:hover { background-color: var(--color-signal); color: #000; }
+
+.foot__grid {
+  display: grid;
+  gap: 32px 24px;
+  padding: 44px 0 48px;
+  border-bottom: 1px solid var(--color-line);
+}
+@media (min-width: 640px) { .foot__grid { grid-template-columns: 1.3fr 1fr 1fr; } }
+.foot__col { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.foot__col .foot__label { margin-bottom: 4px; }
+.foot__link {
+  font-size: 0.98rem;
+  line-height: 1.45;
+  color: var(--color-ink-2);
+  transition: color 0.2s;
+}
+.foot__link:hover { color: var(--color-signal); }
+.foot__link--multi { display: flex; flex-direction: column; }
+/* Outbound links carry the site's diagonal arrow (OutboundArrow: lifts on hover). */
+.foot__col > .foot__link--out { display: inline-flex; flex-direction: row; align-items: center; gap: 0.3em; white-space: nowrap; }
+.foot__col > .foot__link--out > svg { flex: 0 0 auto; }
+.foot__link--out .foot__link--multi + svg { align-self: flex-start; margin-top: 0.15em; }
+
+.foot__bar {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px 0 28px;
+}
+@media (min-width: 640px) { .foot__bar { flex-direction: row; align-items: center; justify-content: space-between; } }
+.foot__brand { display: inline-flex; opacity: 0.85; transition: opacity 0.2s; }
+.foot__brand:hover { opacity: 1; }
+.foot__legal {
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-slate);
+}
+.foot__legal a { transition: color 0.2s; }
+.foot__legal a:hover { color: var(--color-ink); }
+.foot__sep { margin: 0 0.6em; opacity: 0.5; }
+@media (max-width: 639px) {
+  .foot__hero { padding: 56px 0 44px; }
+}
+
+/* Card CTA — the small-caps link with the site's arrow, used on the room cards. */
+.card-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  align-self: flex-start;
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 0.74rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-signal);
+  transition: color 0.2s;
+}
+.card-cta:hover { color: var(--color-signal-light); }

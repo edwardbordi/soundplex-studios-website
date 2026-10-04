@@ -7,10 +7,10 @@
  */
 
 /** Site / brand name — used in titles, JSON-LD, the feed, and the footer. */
-export const SITE_NAME = "Your Site";
+export const SITE_NAME = "SoundPlex Studios";
 
 /** Production origin — single source of truth for absolute URLs (sitemap, robots, metadataBase). */
-export const SITE_URL = "https://example.com";
+export const SITE_URL = "https://soundplexstudios.com";
 
 /* ---------------------------------------------------------------------------
  * Review chrome — TEMPORARY, for the client-review phase only
@@ -30,7 +30,7 @@ export const SITE_URL = "https://example.com";
  * ------------------------------------------------------------------------- */
 
 /** The master switch. False ships the site with no review chrome at all. */
-export const PREVIEW_CHROME = false;
+export const PREVIEW_CHROME = true; // wave 2 is in client review; false at launch
 
 /**
  * The walkthrough video: whoever built the site explaining what this preview is
@@ -41,7 +41,7 @@ export const PREVIEW_CHROME = false;
 export const PREVIEW_WALKTHROUGH_URL: string = "";
 
 /** Where feedback goes when no FEEDBACK_WEBHOOK_URL is set. Your address, not the client's. */
-export const PREVIEW_FEEDBACK_EMAIL = "";
+export const PREVIEW_FEEDBACK_EMAIL = "ebordi@icloud.com";
 
 /** The URL the speed badge offers to test — usually the preview deployment. */
 export const PREVIEW_TEST_URL = SITE_URL;
@@ -68,22 +68,27 @@ export const SITE_TIMEZONE = "America/New_York";
 
 /** One-line description used as the default meta description + OG description. */
 export const SITE_DESCRIPTION =
-  "A fast, owned, AI-search-ready website built on the site-starter framework.";
+  "A creative production and performance space in Pennsauken, NJ — recording studios, podcast studios, and live event spaces in South Jersey.";
 
 /** Legal entity behind the trade name (compliance / footer). */
-export const LEGAL_ENTITY = "Your Company LLC";
+// Per the live Terms of Service ("SOUNDPLEX STUDIOS operates soundplexstudios.com"); exact
+// entity to be confirmed with George — design-process/COMPANY-FACTS.md §1.
+export const LEGAL_ENTITY = "SoundPlex Studios";
 
 /** Default social share image (1200×630) at /public/og/…  — replace with your own. */
 export const OG_IMAGE_PATH = "/og/default.png";
 
 /** Contact essentials shown in the footer. Leave blank to hide. */
-export const CONTACT_EMAIL = "hello@example.com";
-export const PHONE_DISPLAY = "";
-export const PHONE_TEL = "";
-export const LOCATION = "";
+export const CONTACT_EMAIL = "george@thesoundplex.com";
+export const PHONE_DISPLAY = "(609) 697-2077";
+export const PHONE_TEL = "+16096972077";
+export const LOCATION = "6713 Rudderow Ave, Pennsauken, NJ 08109";
 
 /** Off-site profiles — used for JSON-LD sameAs + footer links. Add/remove as needed. */
-export const SOCIAL_LINKS: { label: string; url: string }[] = [];
+export const SOCIAL_LINKS: { label: string; url: string }[] = [
+  { label: "Facebook", url: "https://facebook.com/thesoundplex" },
+  { label: "Instagram", url: "https://instagram.com/thesoundplex" },
+];
 
 /**
  * The main navigation — ONE list that every nav surface reads (header, mobile
@@ -91,10 +96,12 @@ export const SOCIAL_LINKS: { label: string; url: string }[] = [];
  * there is no second list to keep in sync.
  */
 export const NAV_LINKS: { href: string; label: string }[] = [
-  { href: "/", label: "Home" },
-  { href: "/blog", label: "Blog" },
-  { href: "/events", label: "Events" },
-  { href: "/book", label: "Contact" },
+  // The site's IA (design-process/SITE-STRUCTURE-BRIEF.md §6). Studio Productions and
+  // Membership point at the nearest existing page until their routes land in wave 2.
+  { href: "/about", label: "About" },
+  { href: "/events", label: "Studio Productions" },
+  { href: "/rooms", label: "Rooms" },
+  { href: "/book", label: "Membership" },
 ];
 
 /**
@@ -104,3 +111,6 @@ export const NAV_LINKS: { href: string; label: string }[] = [
  * drifting into a second, conflicting Organization entity.
  */
 export const ORGANIZATION_ID = `${SITE_URL}/#organization`;
+
+/** The header's one button — the phone number, as a hollow gold button right of the links. */
+export const NAV_CTA = { href: `tel:${PHONE_TEL}`, label: `Call ${PHONE_DISPLAY}` };

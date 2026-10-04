@@ -50,3 +50,13 @@ next-env.d.ts
 
 # Private working docs — internal strategy/SOPs; never ship in the template
 /private/
+/playwright-report/
+
+# fly-through hero: raw model renders + extracted frames (large, regenerable)
+/design-process/flythrough/raw/
+/design-process/flythrough/frames/
+/design-process/flythrough/logs/
+# fly-through model bake-off: raw test renders + extracted frames (regenerable).
+# The finding is documented in design-process/flythrough/README.md and the side-by-side
+# is kept as model-comparison.jpg.
+/design-process/flythrough/modeltest/
