@@ -176,6 +176,38 @@ generalised: `translate/scale` of a photo plane to a target rect, then the paylo
 Reduced-motion: cut, no glide. Phone: the dot is a 44px target; the payload goes full-width
 below the photo instead of beside it.
 
+## 8c. "Websites by SoundPlex" (Ed, 2026-10-04 — after the reseller agreement)
+
+George resells Realiiz websites under Realiiz's program (private/Realiiz-SoundPlex-Partner-Agreement-v1.docx,
+gitignored). On the site: one page, `/websites` (or under Studio Productions' services), using a
+distilled version of Realiiz's own sales copy — the "better in person than online" argument, the
+preview-first offer ("we build it, you pay when you love it"), the $6,000 Base Site and what's in
+it, the add-ons. CTA → `/start`. **Survey gets a sixth Q1 option:** "I need a website for my
+business" → path **website** (business, current site URL, what it should do, budget confirmed
+against Schedule A, timeline, contact) → GHL survey webhook tagged `website-lead` → thank-you with
+George's calendar. Lead-registration rule applies: these are George's leads (Tier A).
+
+## 8d. "The 5th Dimension" — George's media agency (George → Ed, 2026-10-05; PARKED, come back later)
+
+George sent a one-sheet: **"Enter the 5th Dimension — Multi-Dimensional Media Agency,"** branded
+SoundPlex Studios, "Powered by Plex Collective talent." Tagline: "Your company should not be limited
+to 3 dimensions. Art. Music. Business Development. All under one roof." Five numbered dimensions:
+
+1. Story & Strategy — brand storytelling, ad creation
+2. Content & Visibility — content creators, social media managers (George already has a person doing this)
+3. Digital Experience — website developers, digital designers (**this is Realiiz, white-label, under the partner agreement**)
+4. Production & Authority — video, film, podcasting
+5. Connection & Experience — Plex Collective, events, workshop streaming
+
+What it means: George becomes the agency front door; he already delivers most of 1, 2, 4, 5 himself
+or through Collective talent; when a client needs a website, dimension 3 is fulfilled by Realiiz via
+the white-label tier (Tier A, George merchant of record). So `/websites` (§8c) likely becomes one
+dimension inside a broader agency page rather than a standalone offer, and the survey "website"
+path may become an "agency" path with dimension picks. **Not decided yet — do not build.** Open
+questions when we return: page vs. section of /membership or /studio-productions; URL (`/agency`?
+`/5th-dimension`?); whether 5th Dimension is its own name/brand on the site or a SoundPlex service
+line; what happens to the §8c page and the sixth survey option.
+
 ## 9. Out of scope for wave 2 (named so they're not lost)
 
 - **Members area (wave 3):** invite-only login for active Plex members; live check-in ("I'm in

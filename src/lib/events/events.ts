@@ -22,10 +22,10 @@ function parseFile(fileName: string): EventEntry {
   const { data, content } = matter(raw);
   const result = eventFrontmatterSchema.safeParse(data);
   if (!result.success) {
-    const issues = result.error.issues.map((i) => `  • ${i.path.join(".") || "(root)"}: ${i.message}`).join("\n");
+    const issues = result.error.issues.map((i: { path: PropertyKey[]; message: string }) => `  • ${i.path.join(".") || "(root)"}: ${i.message}`).join("\n");
     throw new Error(`Invalid frontmatter in content/events/${fileName}:\n${issues}`);
   }
-  return { frontmatter: result.data, content: content.trim() };
+  return { frontmatter: result.data as EventItem, content: content.trim() };
 }
 
 let cache: EventEntry[] | null = null;

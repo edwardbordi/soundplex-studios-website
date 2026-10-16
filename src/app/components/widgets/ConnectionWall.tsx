@@ -4,7 +4,7 @@ import Image from "next/image";
 import ForwardArrow from "../ForwardArrow";
 import BackArrow from "../BackArrow";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { MEMBERS, CONNECTIONS, type Member, type Connection } from "../../../../content/wall/members";
+import type { WallMember as Member, WallConnection as Connection } from "../../../lib/members/members";
 
 /**
  * The Connection Wall — George's idea: a wall of member portraits; pick one and you get
@@ -17,7 +17,8 @@ import { MEMBERS, CONNECTIONS, type Member, type Connection } from "../../../../
  * along the thread to the other person, with the three steps of the story. "Back to the
  * wall" pulls out. It's the same language as the hero — you move through the place.
  *
- * Data lives in content/wall/members.ts. Adding a member is one portrait and one entry.
+ * Data lives in content/members/*.mdx (editable in Studio); the page loads it with getWall()
+ * and passes it in. A member shows only with permission; a connection only when both agreed.
  */
 
 const ZOOM_MS = 950;
@@ -33,7 +34,7 @@ function initials(name: string) {
     .join("");
 }
 
-export default function ConnectionWall() {
+export default function ConnectionWall({ members: MEMBERS, connections: CONNECTIONS }: { members: Member[]; connections: Connection[] }) {
   const stageRef = useRef<HTMLDivElement>(null);
   const planeRef = useRef<HTMLDivElement>(null);
   const tileRefs = useRef<Record<string, HTMLButtonElement | null>>({});
@@ -46,10 +47,10 @@ export default function ConnectionWall() {
   const [hover, setHover] = useState<string | null>(null);
   const autoTimer = useRef<number | null>(null);
 
-  const byId = useMemo(() => Object.fromEntries(MEMBERS.map((m) => [m.id, m])), []);
+  const byId = useMemo(() => Object.fromEntries(MEMBERS.map((m) => [m.id, m])), [MEMBERS]);
   const connectionsOf = useCallback(
     (id: string) => CONNECTIONS.filter((c) => c.permission && c.between.includes(id)),
-    [],
+    [CONNECTIONS],
   );
 
   // Thread geometry, in the plane's own (untransformed) coordinates, so the SVG scales
@@ -113,7 +114,7 @@ export default function ConnectionWall() {
         })
         .filter((v): v is NonNullable<typeof v> => v !== null),
     );
-  }, []);
+  }, [CONNECTIONS]);
 
   useEffect(() => {
     measure();
@@ -171,6 +172,7 @@ export default function ConnectionWall() {
   // a beat, then along the thread to the second with the story.
   const showOne = useCallback(() => {
     const pool = CONNECTIONS.filter((c) => c.permission);
+    if (pool.length === 0) return;
     const c = pool[Math.floor(Math.random() * pool.length)];
     const a = byId[c.between[0]];
     setStory(null);
@@ -182,7 +184,7 @@ export default function ConnectionWall() {
       setActive(byId[c.between[1]]);
       flyTo(c.between[1]);
     }, ZOOM_MS + 1400);
-  }, [byId, flyTo]);
+  }, [byId, flyTo, CONNECTIONS]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

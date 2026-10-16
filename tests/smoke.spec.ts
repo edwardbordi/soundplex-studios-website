@@ -23,7 +23,9 @@ test.describe('site smoke tests', () => {
 
   test('homepage has a working booking CTA', async ({ page }) => {
     await page.goto('/');
-    const bookingLink = page.locator('a[href="/book"]').first();
+    // SoundPlex: every CTA lands on /start (the survey). The hero's buttons are rendered
+    // by the engine after mount; the room cards' links are server-rendered.
+    const bookingLink = page.locator('a[href^="/start"]').first();
     await expect(bookingLink).toBeVisible();
   });
 
@@ -34,10 +36,28 @@ test.describe('site smoke tests', () => {
     ).toBeVisible();
   });
 
-  test('booking page loads', async ({ page }) => {
-    const response = await page.goto('/book');
+  test('the survey (/start) loads and asks its first question', async ({ page }) => {
+    const response = await page.goto('/start');
     expect(response?.status()).toBeLessThan(400);
-    await expect(page.locator('body')).toBeVisible();
+    await expect(page.getByRole('heading', { name: /what brings you to soundplex/i })).toBeVisible();
+    // /book was the template's contact route; it now redirects to /start.
+    const r2 = await page.goto('/book');
+    expect(r2?.status()).toBeLessThan(400);
+    expect(page.url()).toContain('/start');
+  });
+
+  test('contact page loads with its form', async ({ page }) => {
+    const response = await page.goto('/contact-us');
+    expect(response?.status()).toBeLessThan(400);
+    await expect(page.getByLabel('Email')).toBeVisible();
+  });
+
+  test('membership, rooms, a room, websites and about render an h1', async ({ page }) => {
+    for (const path of ['/membership', '/rooms', '/rooms/wood-room', '/websites', '/about']) {
+      const response = await page.goto(path);
+      expect(response?.status(), path).toBeLessThan(400);
+      await expect(page.locator('h1').first(), path).not.toBeEmpty();
+    }
   });
 
   /* These tests check the machinery, not the sample content.
@@ -94,26 +114,28 @@ test.describe('site smoke tests', () => {
   });
 });
 
-test.describe('events', () => {
-  test('/events lists what is upcoming, or says nothing is', async ({ page }) => {
-    await page.goto('/events');
-    await expect(page.locator('h1')).toHaveText('Events');
-    const upcoming = page.getByRole('region', { name: 'Upcoming' });
+test.describe('studio productions (events)', () => {
+  test('/studio-productions lists what is coming up, or says nothing is', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 }); // list view is the phone default
+    await page.goto('/studio-productions');
+    await expect(page.locator('h1')).toContainText('Find your kind');
+    const upcoming = page.getByRole('region', { name: 'Coming up' });
     await expect(upcoming).toBeVisible();
-
-    const details = upcoming.getByRole('link', { name: 'Details' });
-    if ((await details.count()) === 0) {
-      // An empty calendar is a normal state — a site between seasons, or one
-      // whose owner has just cleared out the sample. It must still say so.
+    const links = upcoming.locator('a[href^="/studio-productions/"]');
+    if ((await links.count()) === 0) {
+      // An empty calendar is a normal state. It must still say so.
       await expect(upcoming).not.toBeEmpty();
       return;
     }
-    await expect(details.first()).toHaveAttribute('href', /^\/events\/[a-z0-9]+(?:-[a-z0-9]+)*$/);
+    await expect(links.first()).toHaveAttribute('href', /^\/studio-productions\/[a-z0-9]+(?:-[a-z0-9]+)*$/);
+    // /events (the template's default) redirects here.
+    await page.goto('/events');
+    expect(page.url()).toContain('/studio-productions');
   });
 
-  test('the events page has no horizontal scroll at 375px', async ({ page }) => {
+  test('the productions page has no horizontal scroll at 375px', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto('/events');
+    await page.goto('/studio-productions');
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
   });

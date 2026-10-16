@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import ForwardArrow from "./ForwardArrow";
 import OutboundArrow from "./OutboundArrow";
+import NewsletterForm from "./widgets/NewsletterForm";
 import {
   SITE_NAME,
   LEGAL_ENTITY,
@@ -35,8 +36,8 @@ export default function Footer() {
           <p className="foot__line">
             You have a home. You have work. <em>This is your third place.</em>
           </p>
-          <Link href="/book" className="foot__cta group inline-flex items-center whitespace-nowrap">
-            Schedule a tour
+          <Link href="/start?path=collective&from=footer" className="foot__cta group inline-flex items-center whitespace-nowrap">
+            Book a tour
             <ForwardArrow />
           </Link>
         </div>
@@ -74,12 +75,17 @@ export default function Footer() {
           </div>
           <nav className="foot__col" aria-label="Footer">
             <p className="foot__label">Explore</p>
-            {NAV_LINKS.map((l) => (
+            {[...NAV_LINKS, { href: "/blog", label: "Spotlight" }, { href: "/websites", label: "Websites" }, { href: "/contact-us", label: "Contact" }].map((l) => (
               <Link key={l.label} href={l.href} className="foot__link">
                 {l.label}
               </Link>
             ))}
           </nav>
+          <div className="foot__col foot__col--news">
+            <p className="foot__label">Stay inspired</p>
+            <p className="foot__news-lede">Once a month: what’s on, who’s new, what got made.</p>
+            <NewsletterForm />
+          </div>
         </div>
 
         <div className="foot__bar">

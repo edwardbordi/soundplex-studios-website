@@ -62,8 +62,8 @@ export const ROUTE_V2: RouteState[] = [
     // The two things someone who felt it would do — come, or belong. Both go to /book
     // until there's an events page and a membership page.
     cta: {
-      primary: { label: "Book a tour", href: "/book" },
-      secondary: { label: "Join the Collective", href: "/book" },
+      primary: { label: "Book a tour", href: "/start?path=collective&from=hero" },
+      secondary: { label: "Join the Collective", href: "/membership" },
     },
   },
   // Walk in past the walls and settle on the wide. Its last frame is state A.
@@ -136,8 +136,8 @@ export const ROUTE_V2: RouteState[] = [
     // the site's own offer (soundplexstudios.com/membership).
     body: "The first steps inside and you feel it. The tour is on us \u2014 come find out.",
     cta: {
-      primary: { label: "Book a tour", href: "/book" },
-      secondary: { label: "Join the Collective", href: "/book" },
+      primary: { label: "Book a tour", href: "/start?path=collective&from=hero" },
+      secondary: { label: "Join the Collective", href: "/membership" },
     },
   },
 ];
@@ -201,7 +201,7 @@ export const NIGHTS: Night[] = [
 ];
 
 /** The last chip, always live: the night nobody listed. Goes to the contact page. */
-export const OTHER_NIGHT = { label: "Other", href: "/book" };
+export const OTHER_NIGHT = { label: "Other", href: "/start?path=room&from=chooser" };
 
 export function nightById(id?: string | null): Night {
   return NIGHTS.find((n) => n.id === id && n.ready) ?? NIGHTS[0];
