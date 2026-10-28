@@ -96,12 +96,11 @@ export const SOCIAL_LINKS: { label: string; url: string }[] = [
  * there is no second list to keep in sync.
  */
 export const NAV_LINKS: { href: string; label: string }[] = [
-  // The site's IA (design-process/SITE-STRUCTURE-BRIEF.md §6). Studio Productions and
-  // Membership point at the nearest existing page until their routes land in wave 2.
+  // The site's IA (design-process/SITE-STRUCTURE-BRIEF.md §6) — the live site's four, same URLs.
   { href: "/about", label: "About" },
-  { href: "/events", label: "Studio Productions" },
+  { href: "/studio-productions", label: "Studio Productions" },
   { href: "/rooms", label: "Rooms" },
-  { href: "/book", label: "Membership" },
+  { href: "/membership", label: "Membership" },
 ];
 
 /**

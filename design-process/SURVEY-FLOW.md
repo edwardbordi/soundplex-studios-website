@@ -14,7 +14,8 @@ Posts to `/api/survey` → `GHL_WEBHOOK_SURVEY` with `path`, every answer, and `
 2. **I'm coming to a show or event** → path **attend**
 3. **I want to join the Plex Collective** → path **collective**
 4. **I want to make something** — a podcast, video, live broadcast, or a show of my own → path **produce**
-5. **Something else — I'd like to talk to George** → path **talk**
+5. **I need a website for my business** → path **website** (added 2026-10-04 — George resells Realiiz sites; see SITE-STRUCTURE-BRIEF §8c)
+6. **Something else — I'd like to talk to George** → path **talk**
 
 ## Path: room
 
@@ -58,6 +59,15 @@ Posts to `/api/survey` → `GHL_WEBHOOK_SURVEY` with `path`, every answer, and `
   thing, from blueprint to finished media)*
 - Contact: first name, last name, email, phone, business or show name
 - **Thank-you:** tour calendar ("Every production here starts with a discovery conversation.")
+
+## Path: website
+
+- Tell us about the business *(name, what you do, current website URL if any)*
+- What should the new site do for you? *(multi: get found on Google · book more appointments / sell · look as good as we are in person · run events and a blog ourselves · replace a site we're embarrassed by)*
+- Budget: the Base Site is $6,000 — *(that works · need to talk about it)*
+- When do you need it? *(ASAP · this quarter · exploring)*
+- Contact: first name, last name, email, phone
+- **Thank-you:** "We build it first. You pay when you love it." + George's calendar (discovery call).
 
 ## Path: talk
 

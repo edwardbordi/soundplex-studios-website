@@ -2,7 +2,8 @@ import type { MetadataRoute } from "next";
 import { SITE_URL } from "../lib/site-config";
 import { getAllPosts } from "../lib/blog/posts";
 import { totalBlogPages } from "../lib/blog/pagination";
-import { getAllEvents } from "../lib/events/events";
+import { getPublicEvents } from "../lib/events/public";
+import { getAllRooms } from "../lib/rooms/rooms";
 
 /**
  * sitemap.xml — Next 16 file convention (app/sitemap.ts).
@@ -18,9 +19,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/`, lastModified: now, changeFrequency: "monthly", priority: 1 },
     { url: `${SITE_URL}/about`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${SITE_URL}/rooms`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${SITE_URL}/book`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${SITE_URL}/membership`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
+    { url: `${SITE_URL}/studio-productions`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${SITE_URL}/contact-us`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${SITE_URL}/websites`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
     { url: `${SITE_URL}/blog`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
-    { url: `${SITE_URL}/events`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
     { url: `${SITE_URL}/terms`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
     { url: `${SITE_URL}/privacy`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
   ];
@@ -45,12 +48,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  const events: MetadataRoute.Sitemap = getAllEvents().map(({ frontmatter }) => ({
-    url: `${SITE_URL}/events/${frontmatter.slug}`,
+  const roomPages: MetadataRoute.Sitemap = getAllRooms().map(({ frontmatter }) => ({
+    url: `${SITE_URL}/rooms/${frontmatter.slug}`,
+    lastModified: now,
+    changeFrequency: "monthly",
+    priority: 0.8,
+  }));
+
+  const events: MetadataRoute.Sitemap = getPublicEvents().map((frontmatter) => ({
+    url: `${SITE_URL}/studio-productions/${frontmatter.slug}`,
     lastModified: now,
     changeFrequency: "weekly",
     priority: 0.6,
   }));
 
-  return [...staticPages, ...archivePages, ...posts, ...events];
+  return [...staticPages, ...roomPages, ...archivePages, ...posts, ...events];
 }

@@ -123,8 +123,8 @@ export const ROUTE: RouteLeg[] = [
     title: "Stay a while.",
     body: "The counter, the sofas, and the room the night carries on in after the set. Open Mon–Sat, 8AM–10PM.",
     cta: {
-      primary: { label: "Book a room", href: "/book" },
-      secondary: { label: "Join the SoundPlex", href: "/book" },
+      primary: { label: "Book a room", href: "/start?path=room&from=rooms-film" },
+      secondary: { label: "Join the Collective", href: "/membership" },
     },
   },
 ];

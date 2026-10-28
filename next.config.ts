@@ -30,10 +30,42 @@ const redirects = async () => [
   { source: "/v2", destination: "/", permanent: true },
   // WordPress → new routes. The full map with reasoning is design-process/URL-MAP.md;
   // this list grows as wave 2 pages land. Nothing Google has today may 404.
+  // Rooms
   { source: "/sp-room", destination: "/rooms", permanent: true },
+  { source: "/sp-room/woodroom", destination: "/rooms/wood-room", permanent: true },
+  { source: "/sp-room/studio-a", destination: "/rooms/studio-a", permanent: true },
+  { source: "/sp-room/podcast", destination: "/rooms/podcast-studio", permanent: true },
+  { source: "/sp-room/soundlounge", destination: "/rooms/sound-lounge", permanent: true },
   { source: "/sp-room/:slug", destination: "/rooms", permanent: true },
+  // Events: every imported event keeps its slug under /studio-productions; the rest fall
+  // back to the listing. The template's default /events route is gone.
+  { source: "/sp-event", destination: "/studio-productions", permanent: true },
+  { source: "/sp-event/:slug", destination: "/studio-productions/:slug", permanent: true },
+  { source: "/events", destination: "/studio-productions", permanent: true },
+  { source: "/events/:slug", destination: "/studio-productions/:slug", permanent: true },
+  { source: "/ai-crossroads", destination: "/studio-productions/ai-crossroads-of-humanity-and-machines", permanent: true },
+  // Blog: WordPress "spotlight" → /blog. Two root-level posts, two renamed, one duplicate.
+  { source: "/soundplex-spotlight", destination: "/blog", permanent: true },
+  { source: "/sp-spotlight", destination: "/blog", permanent: true },
+  { source: "/sp-spotlight-podcast-studio-setup-what-your-business-needs", destination: "/blog/podcast-studio-setup-what-your-business-needs", permanent: true },
+  { source: "/sp-spotlight-podcast-studio-rental-cost-whats-included", destination: "/blog/podcast-studio-rental-cost-whats-included", permanent: true },
+  { source: "/sp-spotlight/exploring-the-soundlounge-at-soundplex-studios-2", destination: "/blog/exploring-the-soundlounge-at-soundplex-studios", permanent: true },
+  { source: "/sp-spotlight/102-9wmgk-selects-soundplex-2", destination: "/blog/102-9wmgk-selects-soundplex", permanent: true },
+  { source: "/sp-spotlight/5-awesome-vintage-photos-of-the-soundplex-2", destination: "/blog/5-awesome-vintage-photos-of-the-soundplex", permanent: true },
+  { source: "/sp-spotlight/:slug", destination: "/blog/:slug", permanent: true },
+  { source: "/category/:path*", destination: "/blog", permanent: true },
+  { source: "/tag/:path*", destination: "/blog", permanent: true },
+  { source: "/author/:path*", destination: "/blog", permanent: true },
+  // Membership funnels (the old tiers are retired — COMPANY-FACTS §5)
+  { source: "/audience", destination: "/membership", permanent: true },
+  { source: "/backstage", destination: "/membership", permanent: true },
+  { source: "/centerstage", destination: "/membership", permanent: true },
+  // Template's contact route → the live site's URL; legal pages
+  { source: "/book", destination: "/start", permanent: true },
+  { source: "/contact", destination: "/contact-us", permanent: true },
   { source: "/privacy-policy", destination: "/privacy", permanent: true },
   { source: "/terms-of-service", destination: "/terms", permanent: true },
+  { source: "/disclaimers", destination: "/terms", permanent: true },
 ];
 
 /**

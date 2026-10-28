@@ -5,6 +5,13 @@ import Reveal from "./components/Reveal";
 import ForwardArrow from "./components/ForwardArrow";
 import FlythroughV2 from "./components/widgets/FlythroughV2";
 import ConnectionWall from "./components/widgets/ConnectionWall";
+import { getWall } from "../lib/members/members";
+import RoomTransform, { type Look } from "./components/widgets/RoomTransform";
+import UpcomingEvents from "./components/widgets/UpcomingEvents";
+import CollectiveSteps from "./components/widgets/CollectiveSteps";
+import LatestPosts from "./components/widgets/LatestPosts";
+import { getUpcomingAndPast } from "../lib/events/public";
+import { getAllPosts } from "../lib/blog/posts";
 import JsonLd from "./components/JsonLd";
 import { buildPageMetadata } from "../lib/seo";
 import {
@@ -64,14 +71,23 @@ const ROOMS = [
   },
   {
     title: "Play the room",
-    body: "The Wood Room is a real stage with a real audience four feet away. Shows, sessions and screenings run through the week.",
-    cta: { label: "Book a night", href: "/book" },
+    body: "The WoodRoom is a real stage with a real audience four feet away. Shows, sessions and screenings run through the week.",
+    cta: { label: "What’s on", href: "/studio-productions" },
   },
   {
     title: "Join the Plex Collective",
     body: "Memberships for people who show up: the room, the gear, and the other creators who are already here.",
-    cta: { label: "Schedule a tour", href: "/book" },
+    cta: { label: "Book a tour", href: "/start?path=collective" },
   },
+];
+
+/* The WoodRoom, one angle, dressed for different nights. The first looks are the hero's
+ * own states; the others are generated from the same frame as they're made (HERO-V2.md). */
+const LOOKS: Look[] = [
+  { id: "workshop", label: "A workshop", image: "/flythrough/states/state-C-2.jpg", alt: "The WoodRoom full for a business workshop, people talking in groups under the stage lights", line: "Fifty founders, a mic, and the conversations that happen after.", href: "/start?path=room&room=wood-room" },
+  { id: "talk", label: "A talk", image: "/flythrough/states/state-B-4.jpg", alt: "Three people in conversation on the WoodRoom floor before a talk", line: "A speaker, a room that leans in, and nobody checking the time.", href: "/start?path=room&room=wood-room" },
+  { id: "empty", label: "Yours", image: "/flythrough/states/state-A.jpg", alt: "The WoodRoom empty and lit, stage set, waiting", line: "Eighty seats, a stage, a piano, and whatever you’re planning.", href: "/start?path=room&room=wood-room" },
+  { id: "after", label: "The after-party", image: "/flythrough/states/state-D-2.jpg", alt: "Three people lingering in the WoodRoom as the night ends", line: "The part of the night people actually remember.", href: "/start?path=room&room=wood-room" },
 ];
 
 /**
@@ -84,6 +100,13 @@ export default async function Home({
   searchParams: Promise<{ night?: string }>;
 }) {
   const { night } = await searchParams;
+  const wall = getWall();
+  const upcoming = getUpcomingAndPast().upcoming.slice(0, 3);
+  const posts = getAllPosts()
+    .slice()
+    .sort((a, b) => b.frontmatter.publishedAt.getTime() - a.frontmatter.publishedAt.getTime())
+    .slice(0, 3)
+    .map(({ frontmatter: f }) => ({ slug: f.slug, title: f.title, excerpt: f.excerpt, heroImage: f.heroImage, heroImageAlt: f.heroImageAlt ?? f.title, publishedAt: f.publishedAt.toISOString().slice(0, 10) }));
   return (
     <>
       <JsonLd data={placeJsonLd} />
@@ -102,7 +125,26 @@ export default async function Home({
             mount's direct next sibling (`.sw-mount + .sw-after` pulls it up over the last
             frame). Placeholder cast until real members opt in. */}
         <div className="sw-after relative z-30">
-          <ConnectionWall />
+          <ConnectionWall members={wall.members} connections={wall.connections} />
+        </div>
+
+        <div className="relative z-30 bg-bone">
+          <RoomTransform
+            looks={LOOKS}
+            heading="Same room. Different night."
+            lede="The WoodRoom from the one spot everyone stands when they walk in. Tap a night and watch it change."
+          />
+          <section className="mx-auto max-w-6xl px-6 py-20">
+            <UpcomingEvents events={upcoming} heading="What’s on" />
+          </section>
+          <section className="hc">
+            <div className="mx-auto max-w-6xl px-6">
+              <Reveal><p className="page-head__eyebrow">The Plex Collective</p></Reveal>
+              <Reveal delay={80}><h2 className="page-head__title" style={{ fontSize: "clamp(1.7rem,3.6vw,2.8rem)" }}>Membership is three steps. <em>The first one is a tour.</em></h2></Reveal>
+              <div className="mt-10"><CollectiveSteps compact /></div>
+            </div>
+          </section>
+          <LatestPosts posts={posts} />
         </div>
 
         <section className="relative z-30 bg-bone">
