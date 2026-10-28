@@ -16,8 +16,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import ForwardArrow from "../ForwardArrow";
-import { MOODS, KIND_LABELS, type Mood } from "../../../lib/events/schema";
-import { ROOM_NAMES, type EventCard } from "../../../lib/events/public";
+import { MOODS, KIND_LABELS, ROOM_NAMES, type Mood, type EventCard } from "../../../lib/events/constants";
 
 type View = "list" | "grid";
 

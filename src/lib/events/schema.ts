@@ -11,46 +11,11 @@ import { eventSchema, type EventFrontmatter } from "@realiizlabs/admin/events";
  * The kinds list is ours, drawn from the live site's 45-event history.
  */
 
-/** SoundPlex event kinds. "other" + kindLabel is added by the package for the rest. */
-export const EVENT_KINDS = [
-  "show",
-  "comedy",
-  "talk",
-  "workshop",
-  "screening",
-  "open-mic",
-  "podcast-taping",
-  "networking",
-  "private",
-] as const;
-export type EventKind = (typeof EVENT_KINDS)[number];
-
-export const KIND_LABELS: Record<EventKind | "other", string> = {
-  show: "Live music",
-  comedy: "Comedy",
-  talk: "Talk",
-  workshop: "Workshop",
-  screening: "Screening",
-  "open-mic": "Open mic",
-  "podcast-taping": "Podcast taping",
-  networking: "Networking",
-  private: "Private",
-  other: "Event",
-};
-
-/** The rooms an event can be in — values match content/rooms/*.mdx slugs. */
-export const ROOM_SLUGS = ["wood-room", "studio-a", "podcast-studio", "sound-lounge", "whole-building"] as const;
-
-/** "Find your kind of night" — the mood prompts the calendar filters on (George's #7). */
-export const MOODS = [
-  { value: "music", label: "Put me near live music" },
-  { value: "laugh", label: "Make me laugh" },
-  { value: "learn", label: "Teach me something" },
-  { value: "people", label: "Let me meet people" },
-  { value: "film", label: "Show me a film" },
-  { value: "unwind", label: "Let me unwind" },
-] as const;
-export type Mood = (typeof MOODS)[number]["value"];
+// Kinds, labels, rooms and moods live in ./constants (no imports there, so client components
+// can use them). Re-exported here so server code keeps one import path.
+import { EVENT_KINDS, KIND_LABELS, MOODS, type EventKind, type Mood } from "./constants";
+export { EVENT_KINDS, KIND_LABELS, ROOM_SLUGS, ROOM_NAMES, MOODS } from "./constants";
+export type { EventKind, Mood, EventCard } from "./constants";
 
 export const EVENT_GROUPS_ON = ["tickets", "venues", "appearances"] as const;
 

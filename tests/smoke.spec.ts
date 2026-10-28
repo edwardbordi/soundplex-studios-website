@@ -39,7 +39,8 @@ test.describe('site smoke tests', () => {
   test('the survey (/start) loads and asks its first question', async ({ page }) => {
     const response = await page.goto('/start');
     expect(response?.status()).toBeLessThan(400);
-    await expect(page.getByRole('heading', { name: /what brings you to soundplex/i })).toBeVisible();
+    // The page has an sr-only h1 ("Start here — …") and the visible question h2; assert the visible one.
+    await expect(page.getByRole('heading', { level: 2, name: /what brings you to soundplex/i })).toBeVisible();
     // /book was the template's contact route; it now redirects to /start.
     const r2 = await page.goto('/book');
     expect(r2?.status()).toBeLessThan(400);
@@ -49,7 +50,8 @@ test.describe('site smoke tests', () => {
   test('contact page loads with its form', async ({ page }) => {
     const response = await page.goto('/contact-us');
     expect(response?.status()).toBeLessThan(400);
-    await expect(page.getByLabel('Email')).toBeVisible();
+    // The footer newsletter also has an Email field; scope to the contact form.
+    await expect(page.locator('#cf-email')).toBeVisible();
   });
 
   test('membership, rooms, a room, websites and about render an h1', async ({ page }) => {

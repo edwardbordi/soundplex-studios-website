@@ -1,16 +1,11 @@
 import { eventWhen, formatWhen, splitEvents } from "@realiizlabs/admin/events";
 import { SITE_TIMEZONE } from "../site-config";
 import { getAllEvents } from "./events";
-import { kindLabel, type EventItem, type Mood } from "./schema";
+import { kindLabel, type EventItem } from "./schema";
+import { ROOM_NAMES, type EventCard } from "./constants";
 
-/** Room slug → display name (content/rooms is the source of truth for pages; this is the quick map). */
-export const ROOM_NAMES: Record<string, string> = {
-  "wood-room": "WoodRoom",
-  "studio-a": "Studio A",
-  "podcast-studio": "Podcasting Studios",
-  "sound-lounge": "SoundLounge",
-  "whole-building": "The whole building",
-};
+// Server-only. Client widgets import ROOM_NAMES / EventCard from ./constants, never from here.
+export { ROOM_NAMES, type EventCard };
 
 /** Only public productions ever leave the server. Private = rentals and member sessions. */
 export function getPublicEvents(): EventItem[] {
@@ -18,35 +13,6 @@ export function getPublicEvents(): EventItem[] {
     .map((e) => e.frontmatter)
     .filter((e) => e.visibility !== "private");
 }
-
-/** A flat, serialisable shape for the client-side calendar. */
-export type EventCard = {
-  slug: string;
-  title: string;
-  summary: string;
-  kind: string;
-  kindLabel: string;
-  date: string; // YYYY-MM-DD
-  startISO: string;
-  endISO?: string;
-  whenText: string;
-  weekday: string;
-  day: string;
-  month: string;
-  room: string;
-  roomName: string;
-  producer?: string;
-  price?: string;
-  ticketLabel?: string;
-  url?: string;
-  heroImage?: string;
-  heroImageAlt?: string;
-  mood: Mood[];
-  cancelled: boolean;
-  closed: boolean;
-  rescheduledTo?: string;
-  location?: string;
-};
 
 export function toCard(fm: EventItem): EventCard {
   const when = eventWhen(fm, { defaultZone: SITE_TIMEZONE });

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Reveal from "../Reveal";
 import ForwardArrow from "../ForwardArrow";
-import type { EventCard } from "../../../lib/events/public";
+import type { EventCard } from "../../../lib/events/constants";
 
 /** The next few public productions, compact. Used on the home, room pages and membership. */
 export default function UpcomingEvents({ events, heading = "What’s on", more = true }: { events: EventCard[]; heading?: string; more?: boolean }) {

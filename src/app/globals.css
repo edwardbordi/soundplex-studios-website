@@ -1468,12 +1468,16 @@ p, li,
   padding: 44px 0 48px;
   border-bottom: 1px solid var(--color-line);
 }
-@media (min-width: 640px) { .foot__grid { grid-template-columns: 1fr 1fr; } }
+/* minmax(0, 1fr) + min-width: 0 on the columns: otherwise the newsletter inputs' intrinsic width
+   (~190px each) sets the column's min-content and the footer pushes the page wide on phones. */
+.foot__grid { grid-template-columns: minmax(0, 1fr); }
+.foot__grid > * { min-width: 0; }
+@media (min-width: 640px) { .foot__grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
 @media (min-width: 1024px) { .foot__grid { grid-template-columns: 1.2fr 1fr 1fr 1.4fr; } }
 .foot__news-lede { font-size: 0.9rem; color: var(--color-slate); line-height: 1.5; }
 .nl { width: 100%; }
-.nl__row { display: flex; gap: 6px; }
-.nl__input { flex: 1 1 0; min-width: 0; padding: 10px 12px; font-size: 16px; color: var(--color-ink); background: var(--color-bone-2); border: 1px solid var(--color-line-dark); border-radius: 3px; }
+.nl__row { display: flex; gap: 6px; min-width: 0; }
+.nl__input { flex: 1 1 0; width: 0; min-width: 0; padding: 10px 12px; font-size: 16px; color: var(--color-ink); background: var(--color-bone-2); border: 1px solid var(--color-line-dark); border-radius: 3px; }
 .nl__input:focus { outline: none; border-color: var(--color-signal); }
 .nl__btn { flex: 0 0 auto; width: 44px; display: grid; place-items: center; background: var(--color-signal); color: #000; border: 0; border-radius: 3px; cursor: pointer; }
 .nl__btn:hover { background: var(--color-signal-light); }
@@ -1678,7 +1682,9 @@ p, li,
 
 /* ─── Studio Productions: the calendar ───────────────────────────────────── */
 .ev__filters { display: grid; gap: 16px; padding: 20px 0 28px; border-top: 1px solid var(--color-line); border-bottom: 1px solid var(--color-line); }
-.ev__moods { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+/* min-width: 0 — grid children default to min-width:auto, which would let the chip row widen the page on phones. */
+.ev__moods { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; min-width: 0; }
+.ev__body { min-width: 0; }
 .ev__moods::-webkit-scrollbar { display: none; }
 .ev__chip {
   flex: 0 0 auto; font-family: var(--font-poppins), system-ui, sans-serif; font-weight: 500; font-size: 0.68rem;
