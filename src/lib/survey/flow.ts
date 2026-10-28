@@ -10,12 +10,15 @@
  * chosen (the room cards and transformations link this way). Unknown values are ignored.
  */
 
+import { ROOM_USES } from "../rooms/uses";
+
 export type PathId = "room" | "attend" | "collective" | "produce" | "website" | "talk";
 
 export type Option = { value: string; label: string; note?: string };
 
 export type Question =
-  | { id: string; kind: "single"; label: string; help?: string; options: Option[] }
+  /** An option with value "other" opens a box for their own answer; `other` shapes that box. */
+  | { id: string; kind: "single"; label: string; help?: string; options: Option[]; other?: { placeholder?: string; input?: "text" | "number"; suffix?: string } }
   | { id: string; kind: "multi"; label: string; help?: string; options: Option[] }
   | { id: string; kind: "text"; label: string; help?: string; placeholder?: string; optional?: boolean; input?: "text" | "url" | "number" }
   | { id: string; kind: "textarea"; label: string; help?: string; placeholder?: string; optional?: boolean }
@@ -28,52 +31,55 @@ export type Path = {
   /** One line under the choice. */
   choiceNote: string;
   questions: Question[];
-  /** Phone required at the contact step? (George calls room enquiries back.) */
+  /** Phone required at the contact step? (George calls room inquiries back.) */
   phoneRequired: boolean;
   /** What the thank-you page says, and whether it shows George's calendar. */
   thanks: { title: string; body: string; calendar: boolean; calendarLead?: string };
 };
 
+/** Three rooms (SITE-STRUCTURE-BRIEF §8e). Podcast is a USE — see the `use` question. */
 export const ROOMS: Option[] = [
   { value: "wood-room", label: "WoodRoom", note: "stage · 80 people · 2,800 sq ft" },
   { value: "studio-a", label: "Studio A", note: "recording · in the round · 80 people" },
-  { value: "podcast-studio", label: "Podcasting Studios", note: "3 cameras · up to 6 guests" },
   { value: "sound-lounge", label: "SoundLounge", note: "speakeasy · 50 people · 1,800 sq ft" },
-  { value: "not-sure", label: "Not sure yet", note: "we’ll help you pick" },
+  { value: "not-sure", label: "Not sure yet", note: "we’ll help you pick the right one" },
 ];
+
+/**
+ * What the survey knows about a room once one is chosen — passed in by /start (server) from
+ * content/rooms, so the survey can say which room you're renting, show only that room's uses,
+ * and mention its capacity. `ref` is the name as it reads mid-sentence: "the WoodRoom", "Studio A".
+ */
+export type RoomContext = { slug: string; name: string; ref: string; tagline: string; capacity?: string; uses: string[]; image: string; imageAlt: string };
+
+/** What the room is for — the same list the room pages show (src/lib/rooms/uses.ts). */
+export const USES: Option[] = ROOM_USES.map((u) => ({ value: u.id, label: u.label, ...(u.note ? { note: u.note } : {}) }));
 
 export const PATHS: Path[] = [
   {
     id: "room",
     choice: "I want to rent a room",
-    choiceNote: "A private event, meeting, shoot or session.",
+    choiceNote: "A podcast, a party, a workshop, a shoot — any of the three rooms.",
     phoneRequired: true,
     questions: [
-      { id: "room", kind: "single", label: "Which room?", options: ROOMS },
-      {
-        id: "occasion",
-        kind: "single",
-        label: "What’s the occasion?",
-        options: [
-          { value: "party", label: "A party or celebration" },
-          { value: "wedding", label: "A wedding" },
-          { value: "business", label: "A business meeting or workshop" },
-          { value: "shoot", label: "A photo or video shoot" },
-          { value: "recording", label: "A recording session" },
-          { value: "other", label: "Something else" },
-        ],
-      },
+      { id: "room", kind: "single", label: "Which room?", help: "Podcasts go in any of them — pick a favorite, or let us set up wherever is free.", options: ROOMS },
+      { id: "use", kind: "single", label: "What’s it for?", options: USES },
       { id: "date", kind: "date", label: "When?", help: "A date, or leave it blank if you’re flexible.", optional: true },
       {
         id: "duration",
         kind: "single",
         label: "How long?",
+        help: "Roughly is fine. If you know the exact hours, pick the last one.",
         options: [
-          { value: "2h", label: "A couple of hours" },
-          { value: "half-day", label: "Half a day" },
-          { value: "full-day", label: "A full day" },
+          { value: "1h", label: "An hour" },
+          { value: "2h", label: "Two hours" },
+          { value: "3-4h", label: "Three or four hours" },
+          { value: "half-day", label: "Half a day", note: "about five hours" },
+          { value: "full-day", label: "All day" },
           { value: "multi", label: "More than a day" },
+          { value: "other", label: "I know exactly how many hours" },
         ],
+        other: { placeholder: "6", input: "number", suffix: "hours" },
       },
       { id: "headcount", kind: "text", label: "Roughly how many people?", input: "number", placeholder: "40" },
       { id: "notes", kind: "textarea", label: "Anything we should know?", placeholder: "Catering, a stage, a quiet room for a speaker…", optional: true },

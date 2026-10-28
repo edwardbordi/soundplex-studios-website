@@ -22,7 +22,7 @@ export async function POST(request: Request) {
       const phone = digits(body.phone);
       if (!firstName) return { error: "First name, please.", field: "firstName" };
       if (!email) return { error: "We need an email to get back to you.", field: "email" };
-      if (path.phoneRequired && phone.length < 10) return { error: "A phone number — George calls room enquiries back.", field: "phone" };
+      if (path.phoneRequired && phone.length < 10) return { error: "A phone number — George calls room inquiries back.", field: "phone" };
 
       const raw = (body.answers ?? {}) as Record<string, unknown>;
       const answers: Record<string, string | string[]> = {};
@@ -30,6 +30,9 @@ export async function POST(request: Request) {
         const v = raw[q.id];
         if (Array.isArray(v)) answers[q.id] = v.map((x) => str(x, 120)).filter(Boolean).slice(0, 12);
         else if (typeof v === "string") answers[q.id] = friendly(str(v, q.kind === "textarea" ? 2000 : 200));
+        // "Something else" carries its own words: q_use_other etc. in GHL.
+        const other = raw[`${q.id}_other`];
+        if (v === "other" && typeof other === "string" && other.trim()) answers[`${q.id}_other`] = str(other, 160);
       }
       return {
         email,

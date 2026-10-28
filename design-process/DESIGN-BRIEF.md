@@ -81,6 +81,8 @@ step is a confirmation pass, not a redesign.
 - **Always:** third place · the Plex Collective (or "the Collective") · Studio Productions ·
   the room names as written (WoodRoom, Studio A, Podcasting Studios, SoundLounge — confirm
   spacing with George; the site currently writes Wood Room / Sound Lounge).
+- **US English, always** (Ed, 2026-10-28): favorite, color, center, canceled, organize, gray,
+  toward, inquiry/inquire (not enquiry). Applies to copy, alt text, form labels, error messages — and comments we write.
 - **Never:** "community" (George doesn't use it) · "state-of-the-art" · "world-class" ·
   "immersive" · "experience" as a noun · exclamation marks in UI.
 

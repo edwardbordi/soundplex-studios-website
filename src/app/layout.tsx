@@ -13,6 +13,7 @@ import {
 } from "../lib/site-config";
 import JsonLd from "./components/JsonLd";
 import AnalyticsBeacon from "./components/AnalyticsBeacon";
+import ScrollToTop from "./components/ScrollToTop";
 import { StudioBar } from "@realiizlabs/admin/bar";
 import PreviewChrome from "./components/PreviewChrome";
 import { STUDIO_ROUTES } from "../lib/admin/content-types";
@@ -91,7 +92,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`h-full antialiased ${fontVars}`}>
+    // data-scroll-behavior="smooth": Next turns smooth scrolling OFF while it changes page, so a
+    // new page starts at the top instead of gliding (and stopping) partway down. Smooth scrolling
+    // still applies to in-page anchors (#photos, #podcast).
+    <html lang="en" className={`h-full antialiased ${fontVars}`} data-scroll-behavior="smooth">
       {/* Dark only (DESIGN-BRIEF.md): the template's light/dark toggle kit is not used, so
           there is no theme-scope id or pre-paint bootstrap here. */}
       <body className="min-h-full flex flex-col">
@@ -100,6 +104,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             GA4_MEASUREMENT_ID + GA4_API_SECRET are set (see .env.example
             and api/t/route.ts). Zero third-party JS either way. */}
         <AnalyticsBeacon />
+        <ScrollToTop />
         {/* Skip link — without it a keyboard user tabs through the whole
             header on every page before reaching anything. Each page's <main>
             carries id="main". Visually hidden until focused; see .skip-link

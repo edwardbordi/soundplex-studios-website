@@ -1,7 +1,8 @@
 import { z } from "zod";
 
 /**
- * Rooms (content/rooms/*.mdx) — the four rooms as data, one file each, editable in Studio.
+ * Rooms (content/rooms/*.mdx) — the three rooms as data, one file each, editable in Studio.
+ * (Podcast is a use, not a room — see ./uses.ts.)
  * Facts come from COMPANY-FACTS.md §4 (the live site's published numbers). The MDX body is
  * the room's one-paragraph story.
  */
@@ -23,6 +24,8 @@ export const roomFrontmatterSchema = z
     rates: z.array(z.string()).default([]).meta({ label: "Rates", help: "One per line, as printed: “$550/hr · meetings & productions”." }),
     included: z.array(z.string()).default([]).meta({ label: "What's included", help: "One item per line." }),
     bestFor: z.array(z.string()).default([]).meta({ label: "Best for", help: "One per line: concerts, workshops, screenings…" }),
+    /** What this room can be booked for — ids from src/lib/rooms/uses.ts. Drives the chips and the survey. */
+    uses: z.array(z.string()).default([]).meta({ label: "Uses", help: "One id per line: podcast · workshop · concert · comedy · screening · party · wedding · shoot · recording · meeting" }),
     heroImage: z.string().min(1).meta({ label: "Hero image" }),
     heroImageAlt: z.string().min(1).meta({ label: "Hero image alt" }),
     gallery: z.array(z.string()).default([]).meta({ label: "Gallery", help: "Image paths under public/rooms/." }),

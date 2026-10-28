@@ -83,7 +83,7 @@ export default function Footer() {
           </nav>
           <div className="foot__col foot__col--news">
             <p className="foot__label">Stay inspired</p>
-            <p className="foot__news-lede">Once a month: what’s on, who’s new, what got made.</p>
+            <p className="foot__news-lede">Once a month: what’s on, who’s new in the Collective, and what got made here.</p>
             <NewsletterForm />
           </div>
         </div>

@@ -55,12 +55,12 @@ export default function ConnectionWall({ members: MEMBERS, connections: CONNECTI
 
   // Thread geometry, in the plane's own (untransformed) coordinates, so the SVG scales
   // with the wall. A thread runs frame-edge to frame-edge — never across a face — and the
-  // dots sit ON the frame border, so two neighbours still show a line between them.
+  // dots sit ON the frame border, so two neighbors still show a line between them.
   // Recomputed on resize.
   const measure = useCallback(() => {
     const plane = planeRef.current;
     if (!plane) return;
-    const GAP = 0.5; // the gold ring is a 1px box-shadow outside the frame's box: its centre
+    const GAP = 0.5; // the gold ring is a 1px box-shadow outside the frame's box: its center
     // Exact (fractional) rects, not offsetLeft/offsetWidth — those round to whole pixels
     // and the dots drift by up to half a pixel. Everything is divided by the plane's
     // current scale so a re-measure while zoomed still lands in plane coordinates.
@@ -79,7 +79,7 @@ export default function ConnectionWall({ members: MEMBERS, connections: CONNECTI
         hh: h / 2 + GAP,
       };
     };
-    // Where the line from this frame's centre toward `to` leaves the frame, and the
+    // Where the line from this frame's center toward `to` leaves the frame, and the
     // outward normal of the side it leaves through — the curve departs square-on.
     const edge = (r: NonNullable<ReturnType<typeof frameRect>>, to: { cx: number; cy: number }) => {
       const dx = to.cx - r.cx;
@@ -103,7 +103,7 @@ export default function ConnectionWall({ members: MEMBERS, connections: CONNECTI
           if (!ra || !rb) return null;
           const p = edge(ra, rb);
           const q = edge(rb, ra);
-          // A cubic whose handles push out along each frame's normal: neighbours read as
+          // A cubic whose handles push out along each frame's normal: neighbors read as
           // an almost-straight wire, far pairs on other rows as a smooth S.
           const dist = Math.hypot(q.x - p.x, q.y - p.y);
           const k = Math.max(28, dist * 0.42);
@@ -123,7 +123,7 @@ export default function ConnectionWall({ members: MEMBERS, connections: CONNECTI
   }, [measure]);
 
   // The camera: scale the plane so the chosen tile is large, and translate so it lands
-  // left-of-centre on desktop (story on the right) or top-centre on a phone (story below).
+  // left-of-center on desktop (story on the right) or top-center on a phone (story below).
   const flyTo = useCallback((id: string) => {
     const stage = stageRef.current;
     const tile = tileRefs.current[id];

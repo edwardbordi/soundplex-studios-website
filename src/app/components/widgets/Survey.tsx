@@ -20,7 +20,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import ForwardArrow from "../ForwardArrow";
 import BackArrow from "../BackArrow";
-import { CONTACT_FIELDS, PATHS, Q1, pathById, type Option, type PathId, type Question } from "../../../lib/survey/flow";
+import Image from "next/image";
+import DatePicker from "./DatePicker";
+import RangePicker from "./RangePicker";
+import SiteField from "./SiteField";
+import { CONTACT_FIELDS, PATHS, Q1, USES, pathById, type Option, type PathId, type Question, type RoomContext } from "../../../lib/survey/flow";
 
 const STORAGE_KEY = "soundplex-start";
 const AUTO_ADVANCE_MS = 240;
@@ -41,23 +45,53 @@ function formatPhone(value: string): string {
   return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
 }
 
+/** One line for "what you said" on a step — the progress-bar tooltip. */
+function summarize(q: Question, answers: Answers): string {
+  const v = answers[q.id];
+  if (v === undefined || v === "" || (Array.isArray(v) && v.length === 0)) return "";
+  if (q.kind === "single") {
+    if (v === "other") {
+      const t = answers[`${q.id}_other`];
+      return typeof t === "string" && t.trim() ? `${t.trim()}${q.other?.suffix ? ` ${q.other.suffix}` : ""}` : "Something else";
+    }
+    return q.options.find((o) => o.value === v)?.label ?? "";
+  }
+  if (q.kind === "multi" && Array.isArray(v)) {
+    const labels = v.map((x) => q.options.find((o) => o.value === x)?.label).filter(Boolean) as string[];
+    return labels.length > 2 ? `${labels[0]} +${labels.length - 1} more` : labels.join(", ");
+  }
+  if (q.kind === "date" && typeof v === "string") {
+    return new Date(`${v}T12:00:00`).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  }
+  if (typeof v === "string") {
+    const t = v.trim();
+    if (q.id === "headcount") return `${t} people`;
+    return t.length > 36 ? `${t.slice(0, 34)}…` : t;
+  }
+  return "";
+}
+
 type Saved = { stepId?: string; furthest?: number; path?: PathId; answers?: Answers; contact?: Partial<Contact> };
 
-export default function Survey({ initialPath, initialAnswers, entry }: { initialPath?: string; initialAnswers?: Record<string, string>; entry?: string }) {
+export default function Survey({ initialPath, initialAnswers, entry, rooms = [] }: { initialPath?: string; initialAnswers?: Record<string, string>; entry?: string; rooms?: RoomContext[] }) {
   const router = useRouter();
   const [path, setPath] = useState<PathId | "">((pathById(initialPath)?.id as PathId) ?? "");
   const [answers, setAnswers] = useState<Answers>(() => ({ ...(initialAnswers ?? {}) }));
   const [contact, setContact] = useState<Contact>(EMPTY_CONTACT);
-  // A pre-selected path (deep link) lands on its first question.
+  // A pre-selected path (deep link) lands on its first question that the link didn't already
+  // answer — a room card passes the room, a transformation passes room + use.
   const preset = pathById(initialPath);
-  const [stepId, setStepId] = useState<string>(preset ? (preset.questions[0]?.id ?? "contact") : "intent");
-  const [furthest, setFurthest] = useState(preset ? 1 : 0);
+  const firstOpenRaw = preset ? preset.questions.findIndex((q) => !initialAnswers?.[q.id]) : 0;
+  const firstOpen = firstOpenRaw === -1 ? (preset?.questions.length ?? 0) : firstOpenRaw; // all answered → contact
+  const [stepId, setStepId] = useState<string>(preset ? (preset.questions[firstOpen]?.id ?? "contact") : "intent");
+  const [furthest, setFurthest] = useState(preset ? 1 + firstOpen : 0);
   const [error, setError] = useState("");
   const [invalid, setInvalid] = useState("");
   const [suggestion, setSuggestion] = useState("");
   const [sending, setSending] = useState(false);
   const [honeypot, setHoneypot] = useState("");
   const [typoConfirmed, setTypoConfirmed] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
 
   const stepRef = useRef<HTMLDivElement>(null);
   const timer = useRef<number | null>(null);
@@ -80,6 +114,22 @@ export default function Survey({ initialPath, initialAnswers, entry }: { initial
   const index = rawIndex === -1 ? 0 : rawIndex;
   const step = sequence[index];
   const total = sequence.length;
+
+  /* ── The room you're renting, once you've picked one (or a link picked it) ─────────────
+     Every later step says so, offers only what that room is used for, and knows its size. */
+  const room = path === "room" && typeof answers.room === "string" ? rooms.find((r) => r.slug === answers.room) : undefined;
+  const roomStep = sequence.findIndex((s) => s.id === "room");
+  const tailor = (q: Question): Question => {
+    if (!room) return q;
+    if (q.id === "use" && q.kind === "single") {
+      const options = q.options.filter((o) => o.value === "other" || room.uses.includes(o.value));
+      return { ...q, label: `What are you using ${room.ref} for?`, options: options.length > 1 ? options : q.options };
+    }
+    if (q.id === "headcount" && q.kind === "text" && room.capacity) {
+      return { ...q, help: `${room.ref.replace(/^the /, "The ")} holds up to ${room.capacity}${/\d$/.test(room.capacity) ? " people" : ""}.` };
+    }
+    return q;
+  };
 
   /* ── Restore + autosave ───────────────────────────────────────────────── */
   useEffect(() => {
@@ -132,6 +182,7 @@ export default function Survey({ initialPath, initialAnswers, entry }: { initial
     if (timer.current) window.clearTimeout(timer.current);
     setError("");
     setInvalid("");
+    setConfirmReset(false); // an unanswered "start over?" doesn't follow them to the next step
     setStepId(sequence[i]?.id ?? "intent");
     setFurthest((f) => Math.max(f, i));
   }, [sequence]);
@@ -142,6 +193,10 @@ export default function Survey({ initialPath, initialAnswers, entry }: { initial
     const q = (s as { question: Question }).question;
     const v = answers[q.id];
     if ("optional" in q && q.optional) return true;
+    if (q.kind === "single" && v === "other") {
+      const t = answers[`${q.id}_other`];
+      return typeof t === "string" && t.trim().length > 0;
+    }
     if (Array.isArray(v)) return v.length > 0;
     return typeof v === "string" && v.trim().length > 0;
   }, [answers, path]);
@@ -166,11 +221,20 @@ export default function Survey({ initialPath, initialAnswers, entry }: { initial
   }, []);
 
   const chooseSingle = useCallback((qid: string, v: string) => {
-    setAnswers((a) => ({ ...a, [qid]: v }));
+    setAnswers((a) => {
+      const nextA: Answers = { ...a, [qid]: v };
+      // Switching rooms drops a use the new room isn't booked for.
+      if (qid === "room" && typeof a.use === "string" && a.use !== "other") {
+        const r = rooms.find((x) => x.slug === v);
+        if (r && !r.uses.includes(a.use)) delete nextA.use;
+      }
+      return nextA;
+    });
     setError("");
     if (timer.current) window.clearTimeout(timer.current);
+    if (v === "other") return; // the "tell us what" box opens; Continue moves on
     timer.current = window.setTimeout(() => goTo(index + 1), AUTO_ADVANCE_MS);
-  }, [goTo, index]);
+  }, [goTo, index, rooms]);
   const toggleMulti = (qid: string, v: string) => {
     setAnswers((a) => {
       const cur = Array.isArray(a[qid]) ? (a[qid] as string[]) : [];
@@ -198,7 +262,10 @@ export default function Survey({ initialPath, initialAnswers, entry }: { initial
     setInvalid("");
     setSuggestion("");
     const own: Answers = {};
-    for (const q of current.questions) if (answers[q.id] !== undefined) own[q.id] = answers[q.id];
+    for (const q of current.questions) {
+      if (answers[q.id] !== undefined) own[q.id] = answers[q.id];
+      if (answers[q.id] === "other" && answers[`${q.id}_other`] !== undefined) own[`${q.id}_other`] = answers[`${q.id}_other`];
+    }
     setSending(true);
     try {
       const r = await fetch("/api/survey", {
@@ -233,7 +300,9 @@ export default function Survey({ initialPath, initialAnswers, entry }: { initial
   };
 
   if (!step) return null;
-  const q: Question | null = step.id !== "intent" && step.id !== "contact" ? (step as { question: Question }).question : null;
+  const q: Question | null = step.id !== "intent" && step.id !== "contact" ? tailor((step as { question: Question }).question) : null;
+  const part = room && step.id !== "intent" ? `Renting ${room.ref}` : step.part;
+  const showRoom = !!room && step.id !== "intent" && step.id !== "room";
   const v = q ? answers[q.id] : undefined;
   const canBack = index > 0;
   const canForward = index < total - 1 && index < furthest && answered(step);
@@ -247,29 +316,53 @@ export default function Survey({ initialPath, initialAnswers, entry }: { initial
       ) : (
         <div className="sv__progress">
           <div className="sv__progress-row">
-            <p className="sv__part">{step.part}</p>
+            <p className="sv__part">{part}</p>
             <p className="sv__count">{index} of {total - 1}</p>
           </div>
           <ol className="sv__bar">
             {sequence.slice(1).map((s, i) => {
               const n = i + 1;
               const reached = n <= furthest;
+              // Hover (or keyboard focus) on a step you've reached says which question it was and
+              // what you answered — so going back is a choice, not a guess.
+              const sq = "question" in s ? tailor(s.question) : null;
+              const name = sq ? sq.label : "Your details";
+              const said = sq ? summarize(sq, answers) : "";
               return (
                 <li key={s.id}>
                   <button
                     type="button"
                     disabled={!reached || n === index}
                     onClick={() => goTo(n)}
-                    aria-label={reached ? `Go back to step ${n}` : `Step ${n} — still to come`}
+                    aria-label={reached ? `Go back to step ${n}: ${name}${said ? ` (${said})` : ""}` : `Step ${n} — still to come`}
                     aria-current={n === index ? "step" : undefined}
                     className={`sv__seg${n < index ? " is-done" : n === index ? " is-here" : ""}${reached && n !== index ? " is-link" : ""}`}
                   >
                     <span />
+                    {reached && n !== index && (
+                      <span className={`sv__tip${n === 1 ? " is-first" : n === total - 1 ? " is-last" : ""}`} aria-hidden>
+                        <span className="sv__tip-n">Step {n}</span>
+                        <span className="sv__tip-q">{name}</span>
+                        {said && <span className="sv__tip-a">{said}</span>}
+                      </span>
+                    )}
                   </button>
                 </li>
               );
             })}
           </ol>
+        </div>
+      )}
+
+      {/* The room you're renting: one line, a thumbnail, and a way to switch. */}
+      {showRoom && room && (
+        <div className="sv__room">
+          <div className="sv__room-img"><Image src={room.image} alt={room.imageAlt} fill sizes="64px" className="object-cover" /></div>
+          <div className="sv__room-text">
+            <p className="sv__room-name">{room.name}</p>
+            <p className="sv__room-meta">{[room.tagline, room.capacity && `up to ${room.capacity}${/\d$/.test(room.capacity) ? " people" : ""}`].filter(Boolean).join(" · ")}</p>
+          </div>
+          {roomStep > 0 && <button type="button" className="sv__link sv__room-change" onClick={() => goTo(roomStep)}>Change</button>}
         </div>
       )}
 
@@ -293,8 +386,48 @@ export default function Survey({ initialPath, initialAnswers, entry }: { initial
               {q.kind === "single" && (
                 <div className="sv__cards">
                   {q.options.map((o) => (
-                    <Card key={o.value} selected={v === o.value} label={o.label} note={o.note} onClick={() => chooseSingle(q.id, o.value)} />
+                    <Card
+                      key={o.value}
+                      selected={v === o.value}
+                      label={o.label}
+                      note={o.note}
+                      onClick={() => chooseSingle(q.id, o.value)}
+                      /* "Which room?" shows each room's photo; "Not sure yet" gets an empty frame so the cards line up. */
+                      {...(q.id === "room" ? { thumb: rooms.find((r) => r.slug === o.value)?.image ?? "" } : {})}
+                    />
                   ))}
+                </div>
+              )}
+              {/* "Something else" opens a box to say what — and waits for Continue instead of auto-advancing. */}
+              {/* A number ("exactly how many hours"): a − / + stepper, not the browser's spinner. */}
+              {q.kind === "single" && v === "other" && q.other?.input === "number" && (
+                <RangePicker
+                  value={typeof answers[`${q.id}_other`] === "string" ? (answers[`${q.id}_other`] as string) : ""}
+                  onChange={(s) => setText(`${q.id}_other`, s)}
+                  onEnter={next}
+                  unit={q.other.suffix ?? ""}
+                  label={`How many ${q.other.suffix ?? ""}`}
+                  min={1}
+                  max={24}
+                  step={0.5}
+                  start={Number(q.other.placeholder) || 4}
+                />
+              )}
+              {q.kind === "single" && v === "other" && q.other?.input !== "number" && (
+                <div className={`sv__other${q.other?.suffix ? " has-suffix" : ""}`}>
+                  <input
+                    className="sv__input sv__input--other"
+                    type="text"
+                    autoFocus
+                    maxLength={160}
+                    aria-label={q.other?.suffix ? `How many ${q.other.suffix}` : "Tell us what"}
+                    placeholder={q.other?.placeholder ?? (q.id === "use" ? "Tell us what you’re booking it for" : "Tell us a little more")}
+                    value={typeof answers[`${q.id}_other`] === "string" ? (answers[`${q.id}_other`] as string) : ""}
+                    onChange={(e) => setText(`${q.id}_other`, e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); next(); } }}
+                    aria-invalid={invalid === q.id || undefined}
+                  />
+                  {q.other?.suffix && <span className="sv__other-suffix" aria-hidden>{q.other.suffix}</span>}
                 </div>
               )}
               {q.kind === "multi" && (
@@ -304,11 +437,27 @@ export default function Survey({ initialPath, initialAnswers, entry }: { initial
                   ))}
                 </div>
               )}
-              {q.kind === "text" && (
+              {q.kind === "text" && q.id === "headcount" && (
+                <RangePicker
+                  value={typeof v === "string" ? v : ""}
+                  onChange={(s) => setText(q.id, s)}
+                  onEnter={next}
+                  unit="people"
+                  one="person"
+                  label={q.label}
+                  min={1}
+                  start={Number(q.placeholder) || 40}
+                  {...(room?.capacity && /^\d+$/.test(room.capacity) ? { max: Number(room.capacity), fullLabel: "full" } : { max: 200 })}
+                />
+              )}
+              {q.kind === "text" && q.input === "url" && (
+                <SiteField value={typeof v === "string" ? v : ""} onChange={(s) => setText(q.id, s)} onEnter={next} placeholder={q.placeholder} invalid={invalid === q.id} />
+              )}
+              {q.kind === "text" && q.id !== "headcount" && q.input !== "url" && (
                 <input
                   className="sv__input"
-                  type={q.input === "number" ? "number" : q.input === "url" ? "url" : "text"}
-                  inputMode={q.input === "number" ? "numeric" : q.input === "url" ? "url" : undefined}
+                  type={q.input === "number" ? "number" : "text"}
+                  inputMode={q.input === "number" ? "numeric" : undefined}
                   placeholder={q.placeholder}
                   value={typeof v === "string" ? v : ""}
                   onChange={(e) => setText(q.id, e.target.value)}
@@ -317,7 +466,17 @@ export default function Survey({ initialPath, initialAnswers, entry }: { initial
                 />
               )}
               {q.kind === "date" && (
-                <input className="sv__input sv__input--date" type="date" value={typeof v === "string" ? v : ""} onChange={(e) => setText(q.id, e.target.value)} />
+                <DatePicker
+                  value={typeof v === "string" ? v : ""}
+                  onChange={(d) => setText(q.id, d)}
+                  label={q.label}
+                  preview={{
+                    ...(room ? { roomName: room.name, image: room.image, imageAlt: room.imageAlt } : {}),
+                    ...(typeof answers.use === "string"
+                      ? { what: answers.use === "other" && typeof answers.use_other === "string" && answers.use_other.trim() ? answers.use_other.trim() : USES.find((u) => u.value === answers.use && u.value !== "other")?.label }
+                      : {}),
+                  }}
+                />
               )}
               {q.kind === "textarea" && (
                 <textarea className="sv__input sv__textarea" rows={5} placeholder={q.placeholder} value={typeof v === "string" ? v : ""} onChange={(e) => setText(q.id, e.target.value)} />
@@ -331,7 +490,7 @@ export default function Survey({ initialPath, initialAnswers, entry }: { initial
             noValidate
           >
             <h2 className="sv__q">Where should we reach you?</h2>
-            <p className="sv__help">{current.phoneRequired ? "George calls room enquiries back, so a number helps." : "Email is enough. A number is optional."}</p>
+            <p className="sv__help">{current.phoneRequired ? "George calls room inquiries back, so a number helps." : "Email is enough. A number is optional."}</p>
             <div className="sv__fields">
               {CONTACT_FIELDS.map((f) => {
                 const optional = f.id === "phone" && !current.phoneRequired;
@@ -354,8 +513,21 @@ export default function Survey({ initialPath, initialAnswers, entry }: { initial
                         if (f.id === "email") { setSuggestion(""); setTypoConfirmed(false); }
                       }}
                       aria-invalid={invalid === f.id || undefined}
+                      aria-describedby={invalid === f.id && error ? `sv-${f.id}-error` : undefined}
                       required={!optional}
                     />
+                    {/* A problem with this field shows right under it — "Did you mean …@icloud.com?" included. */}
+                    {invalid === f.id && error && <p id={`sv-${f.id}-error`} className="sv__error sv__error--field" role="alert">{error}</p>}
+                    {f.id === "email" && suggestion && (
+                      <div className="sv__suggest">
+                        <button type="button" className="sv__btn sv__btn--primary" onClick={() => {
+                          const local = contact.email.split("@")[0];
+                          setContact((c) => ({ ...c, email: `${local}@${suggestion}` }));
+                          setSuggestion(""); setError(""); setInvalid("");
+                        }}>Use @{suggestion}</button>
+                        <button type="button" className="sv__link" onClick={() => { setSuggestion(""); setTypoConfirmed(true); void submit(true); }}>No, my address is right</button>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -372,17 +544,8 @@ export default function Survey({ initialPath, initialAnswers, entry }: { initial
               <input id="sv-company_site" name="company_site" tabIndex={-1} autoComplete="off" value={honeypot} onChange={(e) => setHoneypot(e.target.value)} />
             </div>
 
-            {error && <p className="sv__error" role="alert">{error}</p>}
-            {suggestion && (
-              <div className="sv__suggest">
-                <button type="button" className="sv__btn sv__btn--primary" onClick={() => {
-                  const local = contact.email.split("@")[0];
-                  setContact((c) => ({ ...c, email: `${local}@${suggestion}` }));
-                  setSuggestion(""); setError(""); setInvalid("");
-                }}>Use @{suggestion}</button>
-                <button type="button" className="sv__link" onClick={() => { setSuggestion(""); setTypoConfirmed(true); void submit(true); }}>No, my address is right</button>
-              </div>
-            )}
+            {/* Errors that aren't about one field (network, server) stay down by the button. */}
+            {error && !CONTACT_FIELDS.some((f) => f.id === invalid) && <p className="sv__error" role="alert">{error}</p>}
 
             <div className="sv__nav">
               <button type="button" className="sv__back group" onClick={() => goTo(index - 1)}><BackArrow />Back</button>
@@ -400,8 +563,12 @@ export default function Survey({ initialPath, initialAnswers, entry }: { initial
           <div className="sv__nav">
             {canBack ? <button type="button" className="sv__back group" onClick={() => goTo(index - 1)}><BackArrow />Back</button> : <span />}
             <div className="sv__nav-right">
-              {canForward && <button type="button" className="sv__link" onClick={() => goTo(index + 1)}>Forward →</button>}
-              {step.id !== "intent" && q?.kind !== "single" && (
+              {/* One way on, never two: Continue where the step has one; Forward only on tap-to-answer
+                  steps you've come Back to (they auto-advance, so there's no Continue to press). */}
+              {canForward && !(step.id !== "intent" && (q?.kind !== "single" || v === "other")) && (
+                <button type="button" className="sv__back group" onClick={() => goTo(index + 1)}>Forward<ForwardArrow /></button>
+              )}
+              {step.id !== "intent" && (q?.kind !== "single" || v === "other") && (
                 <button type="button" className="sv__btn sv__btn--primary group" onClick={next}>Continue<ForwardArrow /></button>
               )}
             </div>
@@ -409,19 +576,33 @@ export default function Survey({ initialPath, initialAnswers, entry }: { initial
         )}
 
         {step.id !== "intent" && (
-          <p className="sv__reset">
-            Wrong path? <button type="button" className="sv__link" onClick={startOver}>Start over</button>
-          </p>
+          // Start over asks once — one tap shouldn't erase every answer (same pattern as the apply flow we built before).
+          confirmReset ? (
+            <p className="sv__reset sv__reset--confirm" role="group" aria-label="Start over?">
+              <span>Clear every answer and begin again?</span>
+              <button type="button" className="sv__link" onClick={() => { setConfirmReset(false); startOver(); }}>Yes, start over</button>
+              <button type="button" className="sv__link sv__link--quiet" onClick={() => setConfirmReset(false)}>Keep what I have</button>
+            </p>
+          ) : (
+            <p className="sv__reset">
+              Wrong path? <button type="button" className="sv__link" onClick={() => setConfirmReset(true)}>Start over</button>
+            </p>
+          )
         )}
       </div>
     </div>
   );
 }
 
-function Card({ label, note, selected, multi, onClick }: { label: string; note?: string; selected: boolean; multi?: boolean; onClick: () => void }) {
+function Card({ label, note, selected, multi, onClick, thumb }: { label: string; note?: string; selected: boolean; multi?: boolean; onClick: () => void; thumb?: string }) {
   return (
-    <button type="button" role={multi ? "checkbox" : "radio"} aria-checked={selected} onClick={onClick} className={`sv__card${selected ? " is-selected" : ""}`}>
+    <button type="button" role={multi ? "checkbox" : "radio"} aria-checked={selected} onClick={onClick} className={`sv__card${selected ? " is-selected" : ""}${thumb !== undefined ? " has-thumb" : ""}`}>
       <span className={`sv__tick${multi ? " sv__tick--square" : ""}`} aria-hidden>{selected ? "✓" : ""}</span>
+      {thumb !== undefined && (
+        <span className={`sv__thumb${thumb ? "" : " is-empty"}`} aria-hidden>
+          {thumb ? <Image src={thumb} alt="" fill sizes="96px" className="object-cover" /> : "?"}
+        </span>
+      )}
       <span className="sv__card-text">
         <span className="sv__card-label">{label}</span>
         {note && <span className="sv__card-note">{note}</span>}

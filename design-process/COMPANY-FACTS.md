@@ -148,7 +148,7 @@ nights, Friendly Feud networking.
 ## 7. The three offers (Ed, 2026-10-04) — the IA follows this
 
 1. **Rent a room** — private hire: weddings, parties, business workshops, shoots. NOT public
-   events. Lives on `/rooms` + `/rooms/<room>`; CTA = booking enquiry (→ /start, rooms branch).
+   events. Lives on `/rooms` + `/rooms/<room>`; CTA = booking inquiry (→ /start, rooms branch).
 2. **Studio Productions** — every PUBLIC, ticketed thing happening at SoundPlex, whether George
    produces it or a member does (concerts, comedy, talks, screenings, open mic…). This IS the
    events feed. Keep the live URL `/studio-productions/` (ranking history); `/events` → 301 to it.
@@ -210,7 +210,11 @@ copy as-is into /terms and /privacy; keep /terms-of-service and /privacy-policy 
 - [x] Legal entity: "SoundPlex Studios" per live Terms (provisional)
 - [ ] Building history: all true; reuse live copy, keep vague; proper timeline before go-live
 - [ ] Opening date; are 213+ / 10k real
-- [ ] Podcast studio: $225 or $250; capacity 5 or 6
+- [x] Rooms: THREE — WoodRoom, Studio A, SoundLounge. Podcast is a USE in any room, rig set up fresh per booking (Ed, 2026-10-28; SITE-STRUCTURE-BRIEF §8e)
+- [ ] Podcast session rate ($225 or $250/hr incl. operator) and max guests (5 or 6) — now facts of the *use*, not a room
+- [ ] Member self-reservation rules: cap per week, advance notice, can George veto (§11.1 item 6)
+- [ ] Members-only events: does George actually run any? (drives the `members` visibility tier)
+- [ ] GHL: workflow for "Plex member active/lapsed" → site webhook; "purchase" → ticker webhook (§11.2)
 - [x] Membership: three-step model only; old tiers removed; funnel URLs → /membership
 - [ ] $75 membership join mechanism (checkout vs tour-first)
 - [ ] Definitions: Local Lens, Discovery session, Creator Blueprint, Idea Lab

@@ -15,6 +15,7 @@ import UpcomingEvents from "../../components/widgets/UpcomingEvents";
 import { buildPageMetadata, breadcrumbJsonLd } from "../../../lib/seo";
 import { SITE_NAME, SITE_URL, ORGANIZATION_ID } from "../../../lib/site-config";
 import { getAllRooms, getRoomBySlug } from "../../../lib/rooms/rooms";
+import { PODCAST, useById, type RoomUse } from "../../../lib/rooms/uses";
 import { getUpcomingAndPast } from "../../../lib/events/public";
 
 /** /rooms/[slug] — one room: photo, story, facts, what's included, book it, what's on in it. */
@@ -43,33 +44,82 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
   const r = room.frontmatter;
   const inRoom = getUpcomingAndPast().upcoming.filter((e) => e.room === r.slug).slice(0, 3);
   const others = getAllRooms().filter((x) => x.frontmatter.slug !== r.slug);
+  const uses = r.uses.map(useById).filter((u): u is RoomUse => !!u);
+
+  // The four numbers in the hero, from the room file as printed (strings on purpose).
+  const lowest = r.rates.map((x) => Number(x.match(/\$(\d[\d,]*)/)?.[1]?.replace(/,/g, ""))).filter((n) => n > 0).sort((a, b) => a - b)[0];
+  const num = (s?: string) => s?.match(/^[\d,]+/)?.[0];
+  const facts: { k: string; v: string; unit?: string }[] = [
+    ...(r.capacity ? [{ k: "Holds", v: num(r.capacity) ?? r.capacity, ...(num(r.capacity) ? { unit: "people" } : {}) }] : []),
+    ...(r.size ? [{ k: "Size", v: num(r.size) ?? r.size, ...(num(r.size) ? { unit: "sq ft" } : {}) }] : []),
+    ...(r.ceilings ? [{ k: "Ceilings", v: num(r.ceilings) ?? r.ceilings.split(",")[0], ...(num(r.ceilings) ? { unit: "ft" } : {}) }] : []),
+    ...(lowest ? [{ k: "From", v: `$${lowest}`, unit: "/hr" }] : []),
+  ];
 
   return (
     <>
       <Nav />
       <main id="main" className="flex-1">
         <article>
-          <div className="rmp__hero">
-            <Image src={r.heroImage} alt={r.heroImageAlt} fill priority sizes="100vw" className="object-cover" />
-            <div className="evp__hero-scrim" aria-hidden />
-          </div>
-          <div className="mx-auto max-w-6xl px-6">
-            <Reveal eager><Link href="/rooms" className="evp__back group"><BackArrow />All rooms</Link></Reveal>
-            <header className="rmp__head">
-              <div>
-                <Reveal eager><p className="page-head__eyebrow">{[r.capacity && `${r.capacity}${/\d$/.test(r.capacity) ? " people" : ""}`, r.size, r.ceilings].filter(Boolean).join(" · ")}</p></Reveal>
-                <Reveal eager delay={80}><h1 className="page-head__title">{r.name} <em>{r.tagline}</em></h1></Reveal>
-                <Reveal eager delay={160}><div className="rmp__story blog-prose"><MDXRemote source={room.content} components={mdxComponents} options={{ mdxOptions: { remarkPlugins: [remarkGfm] } }} /></div></Reveal>
+          {/* The hero: the room, full-bleed, with everything you'd ask first laid over it —
+              name, one line, the four numbers, and the two things you can do. */}
+          <header className="rmh">
+            <Image src={r.heroImage} alt={r.heroImageAlt} fill priority sizes="100vw" className="rmh__img object-cover" />
+            <div className="rmh__scrim" aria-hidden />
+            <div className="rmh__inner mx-auto max-w-6xl px-6">
+              <Reveal eager><Link href="/rooms" className="evp__back rmh__back group"><BackArrow />All rooms</Link></Reveal>
+              <div className="rmh__copy">
+                <Reveal eager><p className="page-head__eyebrow">The rooms · SoundPlex, Pennsauken</p></Reveal>
+                <Reveal eager delay={80}><h1 className="rmh__title">{r.name}<em>{r.tagline}</em></h1></Reveal>
+                {facts.length > 0 && (
+                  <Reveal eager delay={160}>
+                    <dl className="rmh__facts">
+                      {facts.map((f) => (
+                        <div key={f.k} className="rmh__fact"><dt>{f.k}</dt><dd>{f.v}{f.unit && <span>{f.unit}</span>}</dd></div>
+                      ))}
+                    </dl>
+                  </Reveal>
+                )}
+                <Reveal eager delay={220}>
+                  <div className="rmh__ctas">
+                    <Link href={`/start?path=room&room=${r.slug}`} className="evp__btn group">Book this room<ForwardArrow /></Link>
+                    {r.gallery.length > 0 && <a href="#photos" className="rmh__more">See the photos</a>}
+                  </div>
+                </Reveal>
               </div>
-              <Reveal eager delay={200}>
+            </div>
+          </header>
+          <div className="mx-auto max-w-6xl px-6">
+            <section className="rmp__head" aria-label={`About the ${r.name}`}>
+              <div>
+                <Reveal><div className="rmp__story blog-prose"><MDXRemote source={room.content} components={mdxComponents} options={{ mdxOptions: { remarkPlugins: [remarkGfm] } }} /></div></Reveal>
+              </div>
+              <Reveal delay={80}>
                 <aside className="rmp__book">
                   <p className="rm__label">Rates</p>
                   <ul className="rmp__rates">{r.rates.map((x) => <li key={x}>{x}</li>)}</ul>
                   <Link href={`/start?path=room&room=${r.slug}`} className="evp__btn group rmp__btn">Book this room<ForwardArrow /></Link>
-                  <p className="rmp__fine">Tell us the date and the occasion; we check the calendar and come back within a business day. Members get member rates.</p>
+                  <p className="rmp__fine">Tell us the date and what it’s for; we check the calendar and come back within a business day. Members get member rates.</p>
                 </aside>
               </Reveal>
-            </header>
+            </section>
+
+            {/* What you can do here: every use is a tap into the survey with room + use set. */}
+            {uses.length > 0 && (
+              <Reveal>
+                <section className="rmp__uses" aria-labelledby="uses-h">
+                  <p id="uses-h" className="rm__label">Book it for</p>
+                  <ul className="rmp__chips">
+                    {uses.map((u) => (
+                      <li key={u.id}>
+                        <Link href={`/start?path=room&room=${r.slug}&use=${u.id}`} className="rmp__chip">{u.plural}</Link>
+                      </li>
+                    ))}
+                  </ul>
+                  {uses.some((u) => u.id === "podcast") && <p className="rmp__fine">Podcasts: we bring the cameras, mics and an operator to the room — {PODCAST.rate.replace(" ·", ",")}.</p>}
+                </section>
+              </Reveal>
+            )}
 
             <div className="rmp__cols">
               <Reveal>
@@ -85,6 +135,18 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
                 </section>
               </Reveal>
             </div>
+
+            {r.gallery.length > 0 && (
+              <section id="photos" className="rmp__gallery scroll-mt-24" aria-label={`Photos of the ${r.name}`}>
+                <ul>
+                  {r.gallery.map((src, i) => (
+                    <Reveal key={src} as="li" delay={i * 40}>
+                      <Image src={src} alt={`${r.name} at SoundPlex, photo ${i + 1}`} width={1600} height={1067} sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="rmp__gallery-img" />
+                    </Reveal>
+                  ))}
+                </ul>
+              </section>
+            )}
 
             {inRoom.length > 0 && (
               <section className="rmp__events">

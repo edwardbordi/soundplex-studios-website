@@ -19,9 +19,9 @@ Posts to `/api/survey` → `GHL_WEBHOOK_SURVEY` with `path`, every answer, and `
 
 ## Path: room
 
-- Which room? *(cards with the photo: Wood Room · Studio A · Podcast Studio · Sound Lounge · Not sure yet)*
-- What's the occasion? *(party or celebration · wedding · business meeting or workshop · photo/video shoot · recording session · other)*
-- When? *(date picker + "flexible")* · How long? *(2 hrs · half day · full day · multi-day)*
+- Which room? *(cards with the photo: WoodRoom · Studio A · SoundLounge · Not sure yet — podcasts go wherever is free)* — three rooms, 2026-10-28
+- What's it for? *(podcast or interview · workshop/talk/class · concert · comedy · screening · party · wedding · shoot · recording/rehearsal · meeting · other — src/lib/rooms/uses.ts)*. Deep links pre-fill both: `/start?path=room&room=wood-room&use=podcast` lands on the first question the link didn't answer.
+- When? *(inline branded month calendar; blank = flexible)* · How long? *(an hour · two hours · three or four · half a day · all day · more than a day · "I know exactly" → hours box, sent as `q_duration_other`)*
 - Roughly how many people?
 - Anything we should know? *(optional, free text)*
 - Contact: first name, last name, email, phone, business name *(optional)*
