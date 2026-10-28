@@ -34,14 +34,13 @@ export const KIND_LABELS: Record<EventKind | "other", string> = {
   other: "Event",
 };
 
-/** The rooms an event can be in — values match content/rooms/*.mdx slugs. */
-export const ROOM_SLUGS = ["wood-room", "studio-a", "podcast-studio", "sound-lounge", "whole-building"] as const;
+/** The rooms an event can be in — values match content/rooms/*.mdx slugs. Three rooms; podcast is a use. */
+export const ROOM_SLUGS = ["wood-room", "studio-a", "sound-lounge", "whole-building"] as const;
 
 /** Room slug → display name (content/rooms is the source of truth for pages; this is the quick map). */
 export const ROOM_NAMES: Record<string, string> = {
   "wood-room": "WoodRoom",
   "studio-a": "Studio A",
-  "podcast-studio": "Podcasting Studios",
   "sound-lounge": "SoundLounge",
   "whole-building": "The whole building",
 };
@@ -57,7 +56,7 @@ export const MOODS = [
 ] as const;
 export type Mood = (typeof MOODS)[number]["value"];
 
-/** A flat, serialisable shape for the client-side calendar. Built by public.ts on the server. */
+/** A flat, serializable shape for the client-side calendar. Built by public.ts on the server. */
 export type EventCard = {
   slug: string;
   title: string;

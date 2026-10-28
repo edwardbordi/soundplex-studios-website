@@ -5,6 +5,7 @@ import Reveal from "../components/Reveal";
 import ForwardArrow from "../components/ForwardArrow";
 import JsonLd from "../components/JsonLd";
 import CollectiveSteps from "../components/widgets/CollectiveSteps";
+import ChainRun from "../components/widgets/ChainRun";
 import ConnectionWall from "../components/widgets/ConnectionWall";
 import UpcomingEvents from "../components/widgets/UpcomingEvents";
 import { buildPageMetadata, breadcrumbJsonLd, serviceJsonLd } from "../../lib/seo";
@@ -36,8 +37,7 @@ export default function MembershipPage() {
             <Reveal eager><p className="page-head__eyebrow">The Plex Collective · Membership</p></Reveal>
             <Reveal eager delay={80}><h1 className="page-head__title">You have a home. You have work. <em>This is your third place.</em></h1></Reveal>
             <Reveal eager delay={160}>
-              <p className="page-head__lede">Most people have a home and a workplace — but few have a true third place: a space intentionally designed to foster connection, creativity, meaningful conversations, collaboration, and opportunity.</p>
-              <p className="page-head__lede" style={{ marginTop: 12 }}>Not just a creative venue. Not just a networking group. Not just content production. The Plex Collective is a guided ecosystem where creativity is shaped into momentum.</p>
+              <p className="page-head__lede">Most people have a home and a workplace, but few have a true third place. The Plex Collective is one: not just a venue, a networking group or a production studio, but a guided ecosystem where connection and creativity turn into momentum.</p>
             </Reveal>
             <Reveal eager delay={240}>
               <div className="mb__ctas">
@@ -51,18 +51,14 @@ export default function MembershipPage() {
         <section className="mx-auto max-w-6xl px-6 pb-8">
           <Reveal><p className="page-head__eyebrow">How the Plex Collective works</p></Reveal>
           <div className="mt-6"><CollectiveSteps /></div>
-          <Reveal>
-            <p className="mb__motto">The environment sparks it. The team shapes it. The blueprint directs it. <em>The result is opportunity.</em></p>
-          </Reveal>
         </section>
 
-        <section className="mx-auto max-w-6xl px-6 py-16">
+        {/* The statement: centered, roomy, the chain running, George's motto under it (ChainRun). */}
+        <section className="ch-stage mx-auto max-w-6xl px-6">
           <Reveal>
             <p className="page-head__eyebrow">Not rocket science. Human science.</p>
-            <div className="mb__chain">
-              <span>Ideas become collaborations</span><ForwardArrow /><span>Collaborations become visibility</span><ForwardArrow /><span>Visibility becomes opportunity</span>
-            </div>
           </Reveal>
+          <ChainRun />
         </section>
 
         <ConnectionWall members={wall.members} connections={wall.connections} />

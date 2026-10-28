@@ -62,6 +62,32 @@ test.describe('site smoke tests', () => {
     }
   });
 
+  test('three rooms; podcast is a use, and the old podcast-room URLs land on it', async ({ page }) => {
+    await page.goto('/rooms');
+    await expect(page.locator('#podcast')).toBeVisible();
+    // A room page offers its uses as deep links into the survey.
+    await page.goto('/rooms/wood-room');
+    const chip = page.locator('a.rmp__chip').first();
+    await expect(chip).toBeVisible();
+    expect(await chip.getAttribute('href')).toMatch(/^\/start\?path=room&room=wood-room&use=/);
+    // The retired room page and the WordPress podcast URL both redirect to the podcast section.
+    for (const old of ['/rooms/podcast-studio', '/sp-room/podcast']) {
+      const r = await page.goto(old);
+      expect(r?.status(), old).toBeLessThan(400);
+      expect(page.url(), old).toContain('/rooms');
+    }
+    // A deep link with room + use skips to the next open question, and says which room.
+    await page.goto('/start?path=room&room=wood-room&use=podcast');
+    await expect(page.getByRole('heading', { level: 2, name: /when\?/i })).toBeVisible();
+    await expect(page.locator('.sv__room')).toContainText('WoodRoom');
+    // Room only: the uses question is about that room, and "Something else" asks what.
+    await page.evaluate(() => sessionStorage.clear());
+    await page.goto('/start?path=room&room=wood-room');
+    await expect(page.getByRole('heading', { level: 2, name: /using the woodroom for/i })).toBeVisible();
+    await page.getByRole('radio', { name: /something else/i }).click();
+    await expect(page.locator('.sv__input--other')).toBeVisible();
+  });
+
   /* These tests check the machinery, not the sample content.
    *
    * A site with no posts yet — or one whose owner has just deleted the samples

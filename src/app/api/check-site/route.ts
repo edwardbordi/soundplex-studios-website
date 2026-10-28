@@ -1,7 +1,10 @@
 import { isAllowedOrigin, safeHostname } from "../../../lib/api-guard";
 
 /**
- * POST /api/check-site — { url } → { live, title? }
+ * POST /api/check-site — { url } → { live, title?, issues? }
+ *
+ * Used by the survey's website path ("Current website"): a live check, a screenshot, and a
+ * short list of what's wrong with their site (SiteField.tsx).
  *
  * The template's EXAMPLE API route, demonstrating the conventions every
  * route here should follow (see lib/api-guard.ts):
@@ -49,6 +52,7 @@ export async function POST(request: Request) {
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 6000);
+    const startedAt = Date.now();
     const res = await fetch(target.href, {
       method: "GET",
       redirect: "follow",
@@ -67,22 +71,45 @@ export async function POST(request: Request) {
       return Response.json({ live: res.status === 403 });
     }
 
-    // Read only the first ~32KB — the <title> lives in the head.
+    // Read up to ~150KB — the head and early body, where the title, meta tags, schema and
+    // tracking snippets live.
     let html = "";
-    const reader = res.body?.getReader();
-    if (reader) {
-      const decoder = new TextDecoder();
-      while (html.length < 32768) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        html += decoder.decode(value, { stream: true });
+    try {
+      const reader = res.body?.getReader();
+      if (reader) {
+        const decoder = new TextDecoder();
+        while (html.length < 153600) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          html += decoder.decode(value, { stream: true });
+        }
+        reader.cancel().catch(() => {});
       }
-      reader.cancel().catch(() => {});
+    } catch {
+      /* partial HTML is fine — "live" is the main answer */
     }
+    const loadMs = Date.now() - startedAt;
     clearTimeout(timer);
 
-    const title = /<title[^>]*>([^<]{1,120})/i.exec(html)?.[1]?.trim();
-    return Response.json({ live: true, ...(title ? { title } : {}) });
+    let title = /<title[^>]*>([^<]{1,200})/i.exec(html)?.[1]
+      ?.replace(/&amp;/g, "&").replace(/&#?\w+;/g, " ").replace(/\s+/g, " ").trim().slice(0, 60);
+    // Challenge/error pages sometimes come back 200 — never echo those as their site.
+    if (title && /forbidden|access denied|just a moment|attention required|error|not found|\b40\d\b|\b50\d\b/i.test(title)) title = undefined;
+
+    // Quick audit (the website survey path — George resells websites): what's BAD only,
+    // generous checks so a healthy site is never flagged. Same list as the Realiiz survey.
+    const issues: string[] = [];
+    const lower = html.toLowerCase();
+    if (html) {
+      if (loadMs > 1500) issues.push(`Slow to load — ${(loadMs / 1000).toFixed(1)}s to respond`);
+      if (!res.url.startsWith("https:")) issues.push("Not secure — no HTTPS");
+      if (!/name=["']?viewport/.test(lower)) issues.push("Not set up for phones — missing viewport");
+      if (!lower.includes("application/ld+json") && !lower.includes("schema.org")) issues.push("No structured data — hard for Google and AI search to read");
+      if (!/googletagmanager|gtag\(|google-analytics|fbq\(|hotjar|clarity|plausible|matomo|segment\.com/.test(lower)) issues.push("No visitor analytics detected — flying blind on traffic");
+      if (!/name=["']?description/.test(lower)) issues.push("Missing meta description — weak search snippet");
+    }
+
+    return Response.json({ live: true, ...(title ? { title } : {}), ...(issues.length ? { issues: issues.slice(0, 4) } : {}) });
   } catch {
     return Response.json({ live: false });
   }

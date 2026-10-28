@@ -27,7 +27,7 @@ Source: Yoast sitemaps read 2026-10-04. Redirects go in `next.config.ts` → `re
 | `/sp-room` | → `/rooms` |
 | `/sp-room/woodroom` | → `/rooms/wood-room` |
 | `/sp-room/studio-a` | → `/rooms/studio-a` |
-| `/sp-room/podcast` | → `/rooms/podcast-studio` |
+| `/sp-room/podcast` | → `/rooms#podcast` (podcast is a use, not a room — §8e; `/rooms/podcast-studio` also → `/rooms#podcast`) |
 | `/sp-room/soundlounge` | → `/rooms/sound-lounge` |
 
 ## Events — ~45 past events at `/sp-event/<slug>`

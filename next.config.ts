@@ -34,7 +34,11 @@ const redirects = async () => [
   { source: "/sp-room", destination: "/rooms", permanent: true },
   { source: "/sp-room/woodroom", destination: "/rooms/wood-room", permanent: true },
   { source: "/sp-room/studio-a", destination: "/rooms/studio-a", permanent: true },
-  { source: "/sp-room/podcast", destination: "/rooms/podcast-studio", permanent: true },
+  // Podcast is a use, not a room (three rooms; the rig is set up wherever is free). The old
+  // podcast room URL — and the short-lived /rooms/podcast-studio — land on the rooms page's
+  // podcast section.
+  { source: "/sp-room/podcast", destination: "/rooms#podcast", permanent: true },
+  { source: "/rooms/podcast-studio", destination: "/rooms#podcast", permanent: true },
   { source: "/sp-room/soundlounge", destination: "/rooms/sound-lounge", permanent: true },
   { source: "/sp-room/:slug", destination: "/rooms", permanent: true },
   // Events: every imported event keeps its slug under /studio-productions; the rest fall

@@ -84,10 +84,10 @@ const ROOMS = [
 /* The WoodRoom, one angle, dressed for different nights. The first looks are the hero's
  * own states; the others are generated from the same frame as they're made (HERO-V2.md). */
 const LOOKS: Look[] = [
-  { id: "workshop", label: "A workshop", image: "/flythrough/states/state-C-2.jpg", alt: "The WoodRoom full for a business workshop, people talking in groups under the stage lights", line: "Fifty founders, a mic, and the conversations that happen after.", href: "/start?path=room&room=wood-room" },
-  { id: "talk", label: "A talk", image: "/flythrough/states/state-B-4.jpg", alt: "Three people in conversation on the WoodRoom floor before a talk", line: "A speaker, a room that leans in, and nobody checking the time.", href: "/start?path=room&room=wood-room" },
+  { id: "workshop", label: "A workshop", image: "/flythrough/states/state-C-2.jpg", alt: "The WoodRoom full for a business workshop, people talking in groups under the stage lights", line: "Fifty founders, a mic, and the conversations that happen after.", href: "/start?path=room&room=wood-room&use=workshop" },
+  { id: "talk", label: "A talk", image: "/flythrough/states/state-B-4.jpg", alt: "Three people in conversation on the WoodRoom floor before a talk", line: "A speaker, a room that leans in, and nobody checking the time.", href: "/start?path=room&room=wood-room&use=workshop" },
   { id: "empty", label: "Yours", image: "/flythrough/states/state-A.jpg", alt: "The WoodRoom empty and lit, stage set, waiting", line: "Eighty seats, a stage, a piano, and whatever you’re planning.", href: "/start?path=room&room=wood-room" },
-  { id: "after", label: "The after-party", image: "/flythrough/states/state-D-2.jpg", alt: "Three people lingering in the WoodRoom as the night ends", line: "The part of the night people actually remember.", href: "/start?path=room&room=wood-room" },
+  { id: "after", label: "The after-party", image: "/flythrough/states/state-D-2.jpg", alt: "Three people lingering in the WoodRoom as the night ends", line: "The part of the night people actually remember.", href: "/start?path=room&room=wood-room&use=party" },
 ];
 
 /**

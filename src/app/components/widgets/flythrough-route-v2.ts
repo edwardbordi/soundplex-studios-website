@@ -17,7 +17,7 @@
  *
  * `dissolve` / `drift` / `focal` are the three per-section options added to the vendored
  * engine for this hero (opt-in; v1 doesn't use them). `focal` is where the people are, so
- * a phone's centre crop lands on them — values from design-process/flythrough/hero-v2-phone-crops.jpg.
+ * a phone's center crop lands on them — values from design-process/flythrough/hero-v2-phone-crops.jpg.
  */
 
 import type { RouteLeg } from "./flythrough-route";
