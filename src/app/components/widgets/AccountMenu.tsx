@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ROOMS } from "../../../lib/venue/data";
 import { MEMBER_SINCE, setSession, useVenueSession } from "../../../lib/venue/session";
@@ -101,6 +102,14 @@ export default function AccountMenu() {
             )}
           </div>
           <ul className="py-1.5 text-[14px]">
+            {membersConfigured() && (
+              <li>
+                <Link href="/members/account" role="menuitem" onClick={() => setOpen(false)} className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-white/[0.06]">
+                  <Ico d="M20 21a8 8 0 0 0-16 0M12 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10" />
+                  My profile &amp; password
+                </Link>
+              </li>
+            )}
             <li>
               <button type="button" role="menuitem" onClick={() => go("members")} className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-white/[0.06]">
                 <Ico d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8" />

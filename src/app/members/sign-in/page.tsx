@@ -27,7 +27,7 @@ export default async function MemberSignInPage({ searchParams }: { searchParams:
             <h1 className="page-head__title">
               Members, <em>welcome back.</em>
             </h1>
-            <p className="page-head__lede">Enter the email George invited you with. We’ll send you a link that signs you in, no password needed.</p>
+            <p className="page-head__lede">Sign in with the email George invited you with and the password you chose.</p>
             <div className="mt-10">
               <SignInForm next={safeNext} />
             </div>
