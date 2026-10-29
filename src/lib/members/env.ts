@@ -20,6 +20,7 @@ export type MemberRow = {
   offers: string;
   looking: string;
   photo_url: string | null;
+  socials: string[];
   show_me: boolean;
   on_wall: boolean;
   status: "active" | "paused";

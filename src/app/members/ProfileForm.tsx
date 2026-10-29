@@ -1,33 +1,81 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import ForwardArrow from "../components/ForwardArrow";
+import SocialTags from "./SocialTags";
 import { membersBrowser } from "../../lib/members/browser";
-import type { MemberRow } from "../../lib/members/env";
+import { parseSocial, socialLabel } from "../../lib/social";
+import { setSession } from "../../lib/venue/session";
 
 /**
- * A member's profile + password, in one form (Ed, 2026-10-28).
+ * A member's profile + password (Ed, 2026-10-28).
  *   mode "setup"   first time, from the invite email: profile + choose a password (required)
  *   mode "reset"   from a forgot-password email: just a new password (required)
  *   mode "account" My profile, any time: profile, and a new password only if they type one
- * The profile writes go through RLS: a member can only update their OWN row, and only the
- * profile columns (never status). The password goes to Supabase Auth and is never stored here.
+ *
+ * Setup and account show a live "how members see you" card beside the form (sticky on desktop),
+ * a profile photo (cropped square and shrunk in the browser, then stored in the "avatars" bucket
+ * under the member's own folder; it saves straight away) and social accounts (the Root & Reach
+ * tag field). Profile writes go through RLS: a member can only update their OWN row and only
+ * the profile columns. The password goes to Supabase Auth and is never stored here.
  */
 type Mode = "setup" | "reset" | "account";
-type Fields = Pick<MemberRow, "first_name" | "last_name" | "role" | "offers" | "looking" | "show_me" | "on_wall">;
+type Fields = {
+  first_name: string;
+  last_name: string;
+  role: string;
+  offers: string;
+  looking: string;
+  show_me: boolean;
+  on_wall: boolean;
+  photo_url: string;
+  socials: string[];
+};
 
 const MIN = 8;
+const PHOTO_PX = 512;
+const EMPTY: Fields = { first_name: "", last_name: "", role: "", offers: "", looking: "", show_me: true, on_wall: false, photo_url: "", socials: [] };
+
+/** Center-crop to a square, shrink to 512px, encode as WebP. Throws if the browser can't read it. */
+async function squareWebp(file: File): Promise<Blob> {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = () => reject(new Error("unreadable"));
+      i.src = url;
+    });
+    const side = Math.min(img.naturalWidth, img.naturalHeight);
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = Math.min(PHOTO_PX, side);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("no canvas");
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(img, (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/webp", 0.86));
+    if (!blob) throw new Error("encode");
+    return blob;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
 
 export default function ProfileForm({ mode, next = "/studio-productions#members" }: { mode: Mode; next?: string }) {
   const sb = membersBrowser();
   const [loaded, setLoaded] = useState(false);
   const [email, setEmail] = useState("");
   const [userId, setUserId] = useState("");
-  const [f, setF] = useState<Fields>({ first_name: "", last_name: "", role: "", offers: "", looking: "", show_me: true, on_wall: false });
+  const [f, setF] = useState<Fields>(EMPTY);
+  const [socialDraft, setSocialDraft] = useState("");
   const [pw, setPw] = useState("");
   const [pw2, setPw2] = useState("");
   const [busy, setBusy] = useState(false);
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const [photoMsg, setPhotoMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [drag, setDrag] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!sb) return;
@@ -40,9 +88,9 @@ export default function ProfileForm({ mode, next = "/studio-productions#members"
       }
       setEmail(u.email ?? "");
       setUserId(u.id);
-      const { data: row } = await sb.from("members").select("first_name, last_name, role, offers, looking, show_me, on_wall").eq("id", u.id).maybeSingle();
+      const { data: row } = await sb.from("members").select("first_name, last_name, role, offers, looking, show_me, on_wall, photo_url, socials").eq("id", u.id).maybeSingle();
       if (row) {
-        const r = row as Partial<Record<keyof Fields, string | boolean | null>>;
+        const r = row as Partial<Record<keyof Fields, unknown>>;
         const str = (v: unknown) => (typeof v === "string" ? v : "");
         setF({
           first_name: str(r.first_name),
@@ -52,6 +100,8 @@ export default function ProfileForm({ mode, next = "/studio-productions#members"
           looking: str(r.looking),
           show_me: r.show_me !== false,
           on_wall: r.on_wall === true,
+          photo_url: str(r.photo_url),
+          socials: Array.isArray(r.socials) ? (r.socials as unknown[]).filter((s): s is string => typeof s === "string") : [],
         });
       }
       setLoaded(true);
@@ -64,6 +114,54 @@ export default function ProfileForm({ mode, next = "/studio-productions#members"
   const needsPw = mode !== "account";
   const set = <K extends keyof Fields>(k: K, v: Fields[K]) => setF((x) => ({ ...x, [k]: v }));
 
+  // ── Photo: saves on its own, straight away ──
+  const uploadPhoto = async (file: File | undefined) => {
+    if (!file) return;
+    setPhotoMsg(null);
+    if (!file.type.startsWith("image/")) return setPhotoMsg({ ok: false, text: "That isn’t an image. Try a JPG or PNG." });
+    if (file.size > 20 * 1024 * 1024) return setPhotoMsg({ ok: false, text: "That photo is over 20 MB. Try a smaller one." });
+    setPhotoBusy(true);
+    try {
+      const blob = await squareWebp(file);
+      const path = `${userId}/${Date.now()}.webp`;
+      const { error: upErr } = await sb.storage.from("avatars").upload(path, blob, { contentType: "image/webp", cacheControl: "31536000" });
+      if (upErr) throw upErr;
+      const url = sb.storage.from("avatars").getPublicUrl(path).data.publicUrl;
+      const { error: dbErr } = await sb.from("members").update({ photo_url: url }).eq("id", userId);
+      if (dbErr) throw dbErr;
+      set("photo_url", url);
+      setSession({ photo: url });
+      setPhotoMsg({ ok: true, text: "Photo updated." });
+      // Tidy up: keep only the new file in their folder.
+      const { data: files } = await sb.storage.from("avatars").list(userId);
+      const old = (files ?? []).map((x) => `${userId}/${x.name}`).filter((p) => p !== path);
+      if (old.length) await sb.storage.from("avatars").remove(old);
+    } catch (e) {
+      const m = e instanceof Error ? e.message : "";
+      setPhotoMsg({ ok: false, text: m === "unreadable" ? "Couldn’t read that image. Try a JPG or PNG." : "Couldn’t save your photo. Try again in a moment." });
+    } finally {
+      setPhotoBusy(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
+  const removePhoto = async () => {
+    setPhotoBusy(true);
+    setPhotoMsg(null);
+    const { error } = await sb.from("members").update({ photo_url: null }).eq("id", userId);
+    if (error) {
+      setPhotoBusy(false);
+      return setPhotoMsg({ ok: false, text: "Couldn’t remove your photo. Try again in a moment." });
+    }
+    const { data: files } = await sb.storage.from("avatars").list(userId);
+    if (files?.length) await sb.storage.from("avatars").remove(files.map((x) => `${userId}/${x.name}`));
+    set("photo_url", "");
+    setSession({ photo: "" });
+    setPhotoBusy(false);
+    setPhotoMsg({ ok: true, text: "Photo removed." });
+  };
+
+  // ── Everything else: saves with the button ──
   const save = async () => {
     setMsg(null);
     if (mode !== "reset" && !f.first_name.trim()) return setMsg({ ok: false, text: "Add your first name." });
@@ -73,6 +171,9 @@ export default function ProfileForm({ mode, next = "/studio-productions#members"
     }
     setBusy(true);
     if (mode !== "reset") {
+      // Anything typed in the socials field but never "added" still counts.
+      const draft = socialDraft.replace(/,+$/, "").trim();
+      const socials = (draft && !f.socials.includes(draft) ? [...f.socials, draft] : f.socials).slice(0, 8).map((s) => s.slice(0, 200));
       const { error } = await sb
         .from("members")
         .update({
@@ -83,12 +184,16 @@ export default function ProfileForm({ mode, next = "/studio-productions#members"
           looking: f.looking.trim().slice(0, 400),
           show_me: f.show_me,
           on_wall: f.on_wall,
+          socials,
         })
         .eq("id", userId);
       if (error) {
         setBusy(false);
         return setMsg({ ok: false, text: "Couldn’t save your profile. Try again in a moment." });
       }
+      setF((x) => ({ ...x, socials }));
+      setSocialDraft("");
+      setSession({ name: f.first_name.trim(), showMe: f.show_me });
     }
     if (needsPw || pw) {
       const { error } = await sb.auth.updateUser({ password: pw, data: { password_set: true } });
@@ -112,51 +217,21 @@ export default function ProfileForm({ mode, next = "/studio-productions#members"
 
   const field = "w-full rounded-[4px] border border-white/15 bg-[#0b0b0b] px-3.5 py-3 text-[16px] text-white outline-none transition-colors placeholder:text-white/30 focus:border-[#d4a030]";
   const label = "block text-[12px] uppercase tracking-[0.16em] text-white/50";
+  const section = "rounded-[8px] rounded-bl-none border border-white/10 bg-white/[0.02] p-5 sm:p-7";
+  const sectionTitle = "font-[family-name:var(--font-poppins)] text-[17px] font-medium text-white";
+  const sectionNote = "mt-1 text-[14px] text-white/50";
 
-  return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        void save();
-      }}
-      noValidate
-      className="max-w-[36rem]"
-    >
-      <p className="text-[14px] text-white/50">
-        Signed in as <span className="text-white/80">{email}</span>. That’s your username.
-      </p>
-
+  const passwordBlock = (
+    <div className={mode === "reset" ? "" : section}>
       {mode !== "reset" && (
-        <div className="mt-8 grid gap-5 sm:grid-cols-2">
-          <label className={label}>
-            First name
-            <input className={`${field} mt-2 normal-case tracking-normal`} autoComplete="given-name" value={f.first_name} onChange={(e) => set("first_name", e.target.value)} />
-          </label>
-          <label className={label}>
-            Last name
-            <input className={`${field} mt-2 normal-case tracking-normal`} autoComplete="family-name" value={f.last_name} onChange={(e) => set("last_name", e.target.value)} />
-          </label>
-          <label className={`${label} sm:col-span-2`}>
-            What you do
-            <input className={`${field} mt-2 normal-case tracking-normal`} placeholder="Producer, vocalist, brand designer…" value={f.role} onChange={(e) => set("role", e.target.value)} />
-          </label>
-          <label className={`${label} sm:col-span-2`}>
-            What you can offer other members
-            <textarea rows={2} className={`${field} mt-2 resize-y normal-case tracking-normal`} placeholder="Mixing, photography, a room full of gear…" value={f.offers} onChange={(e) => set("offers", e.target.value)} />
-          </label>
-          <label className={`${label} sm:col-span-2`}>
-            What you’re looking for
-            <textarea rows={2} className={`${field} mt-2 resize-y normal-case tracking-normal`} placeholder="A drummer, a co-host, feedback on a pitch…" value={f.looking} onChange={(e) => set("looking", e.target.value)} />
-          </label>
-          <Toggle on={f.show_me} onChange={(v) => set("show_me", v)} title="Show me to other members" note="When you check in, other members see you’re in the building." />
-          <Toggle on={f.on_wall} onChange={(v) => set("on_wall", v)} title="OK to feature me on the public wall" note="George may add you to the Connection Wall on the website." />
-        </div>
+        <>
+          <p className={sectionTitle}>Password</p>
+          <p className={sectionNote}>{mode === "account" ? "Leave blank to keep your current one." : "For signing in from now on, with your email."}</p>
+        </>
       )}
-
-      <div className={`grid gap-5 sm:grid-cols-2 ${mode === "reset" ? "mt-8" : "mt-10 border-t border-white/[0.08] pt-8"}`}>
-        <p className="text-[15px] text-white/70 sm:col-span-2">{mode === "account" ? "Change your password (leave blank to keep it)" : mode === "reset" ? "Choose a new password" : "Choose a password, for signing in from now on"}</p>
+      <div className={`grid gap-5 sm:grid-cols-2 ${mode === "reset" ? "" : "mt-5"}`}>
         <label className={label}>
-          Password
+          {mode === "account" ? "New password" : "Password"}
           <input className={`${field} mt-2 normal-case tracking-normal`} type="password" autoComplete="new-password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder={`At least ${MIN} characters`} />
         </label>
         <label className={label}>
@@ -164,24 +239,230 @@ export default function ProfileForm({ mode, next = "/studio-productions#members"
           <input className={`${field} mt-2 normal-case tracking-normal`} type="password" autoComplete="new-password" value={pw2} onChange={(e) => setPw2(e.target.value)} />
         </label>
       </div>
+    </div>
+  );
 
-      {msg && (
-        <p role="status" className={`mt-5 text-[14px] ${msg.ok ? "text-[#e2b34e]" : "text-[#ff8a80]"}`}>
-          {msg.text}
-        </p>
-      )}
-
-      <button type="submit" disabled={busy} className="evp__btn group mt-8">
+  const actions = (
+    <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+      <button type="submit" disabled={busy} className="evp__btn group">
         {busy ? "Saving…" : mode === "setup" ? "Finish setting up" : mode === "reset" ? "Save my new password" : "Save changes"}
         {!busy && <ForwardArrow />}
       </button>
+      {msg && (
+        <p role="status" className={`text-[14px] ${msg.ok ? "text-[#e2b34e]" : "text-[#ff8a80]"}`}>
+          {msg.text}
+        </p>
+      )}
+    </div>
+  );
+
+  const onSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    void save();
+  };
+
+  // ── Reset: just the password ──
+  if (mode === "reset") {
+    return (
+      <form onSubmit={onSubmit} noValidate className="max-w-[36rem]">
+        <p className="text-[14px] text-white/50">
+          Signed in as <span className="text-white/80">{email}</span>.
+        </p>
+        <div className="mt-8">{passwordBlock}</div>
+        <div className="mt-8">{actions}</div>
+      </form>
+    );
+  }
+
+  const fullName = [f.first_name, f.last_name].map((s) => s.trim()).filter(Boolean).join(" ") || "Your name";
+
+  return (
+    <form onSubmit={onSubmit} noValidate className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-12">
+      <div className="min-w-0 space-y-6">
+        <p className="text-[14px] text-white/50">
+          Signed in as <span className="text-white/80">{email}</span>. That’s your username.
+        </p>
+
+        {/* Photo */}
+        <div
+          className={`${section} transition-colors ${drag ? "border-[#d4a030]/70 bg-[#d4a030]/[0.06]" : ""}`}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDrag(true);
+          }}
+          onDragLeave={() => setDrag(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDrag(false);
+            void uploadPhoto(e.dataTransfer.files?.[0]);
+          }}
+        >
+          <div className="flex flex-wrap items-center gap-5">
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              disabled={photoBusy}
+              aria-label={f.photo_url ? "Change your photo" : "Add a photo"}
+              className="group relative h-24 w-24 shrink-0 overflow-hidden rounded-full ring-2 ring-[#d4a030] ring-offset-4 ring-offset-[#050505]"
+            >
+              <Avatar url={f.photo_url} name={f.first_name} size={96} />
+              <span className="absolute inset-0 grid place-items-center bg-black/55 text-[12px] font-medium uppercase tracking-[0.14em] text-white opacity-0 transition-opacity group-hover:opacity-100">
+                {photoBusy ? "…" : f.photo_url ? "Change" : "Add"}
+              </span>
+            </button>
+            <div className="min-w-0 flex-1">
+              <p className={sectionTitle}>Your photo</p>
+              <p className={sectionNote}>A clear photo of your face works best. Drop one here or choose a file.</p>
+              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[14px]">
+                <button type="button" onClick={() => fileRef.current?.click()} disabled={photoBusy} className="font-medium text-[#d4a030] hover:text-[#e2b34e] disabled:opacity-50">
+                  {photoBusy ? "Saving…" : f.photo_url ? "Choose a new photo" : "Choose a photo"}
+                </button>
+                {f.photo_url && !photoBusy && (
+                  <button type="button" onClick={() => void removePhoto()} className="text-white/50 hover:text-white">
+                    Remove
+                  </button>
+                )}
+                {photoMsg && <span className={photoMsg.ok ? "text-[#e2b34e]" : "text-[#ff8a80]"}>{photoMsg.text}</span>}
+              </div>
+            </div>
+            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => void uploadPhoto(e.target.files?.[0])} />
+          </div>
+        </div>
+
+        {/* About you */}
+        <div className={section}>
+          <p className={sectionTitle}>About you</p>
+          <p className={sectionNote}>What other members see on your card.</p>
+          <div className="mt-5 grid gap-5 sm:grid-cols-2">
+            <label className={label}>
+              First name
+              <input className={`${field} mt-2 normal-case tracking-normal`} autoComplete="given-name" value={f.first_name} onChange={(e) => set("first_name", e.target.value)} />
+            </label>
+            <label className={label}>
+              Last name
+              <input className={`${field} mt-2 normal-case tracking-normal`} autoComplete="family-name" value={f.last_name} onChange={(e) => set("last_name", e.target.value)} />
+            </label>
+            <label className={`${label} sm:col-span-2`}>
+              What you do
+              <input className={`${field} mt-2 normal-case tracking-normal`} placeholder="Producer, vocalist, brand designer…" value={f.role} onChange={(e) => set("role", e.target.value)} />
+            </label>
+            <label className={`${label} sm:col-span-2`}>
+              What you can offer other members
+              <textarea rows={2} className={`${field} mt-2 resize-y normal-case tracking-normal`} placeholder="Mixing, photography, a room full of gear…" value={f.offers} onChange={(e) => set("offers", e.target.value)} />
+            </label>
+            <label className={`${label} sm:col-span-2`}>
+              What you’re looking for
+              <textarea rows={2} className={`${field} mt-2 resize-y normal-case tracking-normal`} placeholder="A drummer, a co-host, feedback on a pitch…" value={f.looking} onChange={(e) => set("looking", e.target.value)} />
+            </label>
+          </div>
+        </div>
+
+        {/* Socials */}
+        <div className={section}>
+          <p className={sectionTitle}>Where to find you</p>
+          <p className={sectionNote}>Instagram, TikTok, YouTube, your website… so members can follow your work.</p>
+          <div className="mt-5">
+            <label htmlFor="profile-socials" className={`${label} mb-2`}>
+              Social accounts and links
+            </label>
+            <SocialTags id="profile-socials" tags={f.socials} onChange={(v) => set("socials", v)} pending={socialDraft} onPendingChange={setSocialDraft} />
+          </div>
+        </div>
+
+        {/* Privacy */}
+        <div className={section}>
+          <p className={sectionTitle}>Privacy</p>
+          <div className="mt-5 grid gap-3">
+            <Toggle on={f.show_me} onChange={(v) => set("show_me", v)} title="Show me to other members" note="When you check in, other members see you’re in the building." />
+            <Toggle on={f.on_wall} onChange={(v) => set("on_wall", v)} title="OK to feature me on the public wall" note="George may add you to the Connection Wall on the website." />
+          </div>
+        </div>
+
+        {passwordBlock}
+
+        {actions}
+      </div>
+
+      {/* How members see you */}
+      <aside className="lg:sticky lg:top-[calc(var(--hdr-h,96px)+24px)]">
+        <p className="text-[12px] uppercase tracking-[0.16em] text-white/45">How members see you</p>
+        <div className="mt-3 overflow-hidden rounded-[8px] rounded-bl-none border border-[#d4a030]/30 bg-[#0d0d0d]">
+          <div className="h-1 bg-[#d4a030]" />
+          <div className="p-6 text-center">
+            <div className="mx-auto h-20 w-20 overflow-hidden rounded-full ring-2 ring-[#d4a030] ring-offset-4 ring-offset-[#0d0d0d]">
+              <Avatar url={f.photo_url} name={f.first_name} size={80} />
+            </div>
+            <p className="mt-5 font-[family-name:var(--font-poppins)] text-[19px] font-medium leading-tight text-white">{fullName}</p>
+            {f.role.trim() && <p className="mt-1 text-[14px] text-[#e2b34e]">{f.role.trim()}</p>}
+          </div>
+          {(f.offers.trim() || f.looking.trim()) && (
+            <dl className="space-y-3 border-t border-white/[0.08] px-6 py-5 text-[14px]">
+              {f.offers.trim() && (
+                <div>
+                  <dt className="text-[11px] uppercase tracking-[0.16em] text-white/40">Offers</dt>
+                  <dd className="mt-1 text-white/80">{f.offers.trim()}</dd>
+                </div>
+              )}
+              {f.looking.trim() && (
+                <div>
+                  <dt className="text-[11px] uppercase tracking-[0.16em] text-white/40">Looking for</dt>
+                  <dd className="mt-1 text-white/80">{f.looking.trim()}</dd>
+                </div>
+              )}
+            </dl>
+          )}
+          {f.socials.length > 0 && (
+            <ul className="flex flex-wrap gap-2 border-t border-white/[0.08] px-6 py-5">
+              {f.socials.map((s) => {
+                const info = parseSocial(s);
+                const { platform, name } = socialLabel(info);
+                const text = platform ?? name;
+                return (
+                  <li key={s}>
+                    {info.url && !info.problem ? (
+                      <a href={info.url} target="_blank" rel="noopener noreferrer" title={name} className="inline-flex rounded-[4px] border border-white/15 px-2.5 py-1 text-[12.5px] text-white/80 transition-colors hover:border-[#d4a030]/60 hover:text-white">
+                        {text}
+                      </a>
+                    ) : (
+                      <span className="inline-flex rounded-[4px] border border-white/15 px-2.5 py-1 text-[12.5px] text-white/60">{text}</span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          <p className="border-t border-white/[0.08] px-6 py-4 text-[12.5px] text-white/45">
+            {f.show_me ? (
+              <>
+                <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#4cc773] align-middle" aria-hidden="true" />
+                Members see you when you’re in the building
+              </>
+            ) : (
+              "Hidden when you’re in the building"
+            )}
+          </p>
+        </div>
+      </aside>
     </form>
+  );
+}
+
+/** The member's photo, or their initial on gold. A plain <img>: it lives in Supabase storage. */
+function Avatar({ url, name, size }: { url: string; name: string; size: number }) {
+  if (url) {
+    // eslint-disable-next-line @next/next/no-img-element -- member photo from Supabase storage (not a site asset)
+    return <img src={url} alt="" width={size} height={size} className="h-full w-full object-cover" />;
+  }
+  return (
+    <span className="grid h-full w-full place-items-center bg-[#d4a030] font-bold text-[#050505]" style={{ fontSize: Math.round(size * 0.4) }}>
+      {(name.trim()[0] ?? "?").toUpperCase()}
+    </span>
   );
 }
 
 function Toggle({ on, onChange, title, note }: { on: boolean; onChange: (v: boolean) => void; title: string; note: string }) {
   return (
-    <button type="button" role="switch" aria-checked={on} onClick={() => onChange(!on)} className="flex items-start gap-3 rounded-[6px] border border-white/10 bg-white/[0.02] p-4 text-left transition-colors hover:border-white/25 sm:col-span-2">
+    <button type="button" role="switch" aria-checked={on} onClick={() => onChange(!on)} className="flex items-start gap-3 rounded-[6px] border border-white/10 bg-white/[0.02] p-4 text-left transition-colors hover:border-white/25">
       <span className={`relative mt-0.5 h-6 w-10 shrink-0 rounded-[4px] transition-colors ${on ? "bg-[#d4a030]" : "bg-white/15"}`} aria-hidden>
         <span className={`absolute top-1 h-4 w-4 rounded-[3px] bg-white shadow transition-all ${on ? "left-5" : "left-1"}`} />
       </span>

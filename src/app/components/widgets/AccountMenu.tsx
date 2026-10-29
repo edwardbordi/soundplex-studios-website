@@ -74,7 +74,7 @@ export default function AccountMenu() {
         className="flex items-center rounded-full p-1 text-white transition-[box-shadow] hover:shadow-[0_0_0_3px_rgba(212,160,48,0.35)]"
       >
         <span className="relative h-8 w-8 shrink-0 rounded-full ring-2" style={{ ["--tw-ring-color" as string]: GOLD }}>
-          <MeAvatar name={s.name} size={32} />
+          <MeAvatar name={s.name} photo={s.photo} size={32} />
           {room && <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[#050505] bg-[#4cc773]" aria-hidden="true" />}
         </span>
       </button>
@@ -82,24 +82,49 @@ export default function AccountMenu() {
       {open && (
         <div role="menu" className="vo-pop absolute right-0 top-full z-[70] mt-2 w-[19rem] overflow-hidden rounded-[8px] border border-white/12 bg-[#141414] text-white shadow-2xl">
           <div className="flex items-center gap-3 border-b border-white/10 p-4">
-            <MeAvatar name={s.name} size={44} />
+            <MeAvatar name={s.name} photo={s.photo} size={44} />
             <span className="min-w-0">
               <span className="block truncate text-[15px] font-semibold">Welcome back, {s.name}</span>
               <span className="block text-[12.5px] text-white/50">{MEMBER_SINCE}</span>
             </span>
           </div>
+          {/* Check in from anywhere (Ed, 2026-10-28): pick a room, move, or check out. */}
           <div className="border-b border-white/10 px-4 py-3 text-[13px]">
-            {room ? (
-              <span className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-[#4cc773]" /> Checked in · {room.name}
-              </span>
-            ) : s.onWay ? (
-              <span className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-[#d4a030]" /> On your way · {ROOMS.find((r) => r.id === s.onWay)?.name}
-              </span>
-            ) : (
-              <span className="text-white/55">Not checked in</span>
-            )}
+            <div className="flex items-center justify-between gap-2">
+              {room ? (
+                <span className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-[#4cc773]" /> Checked in · {room.name}
+                </span>
+              ) : s.onWay ? (
+                <span className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-[#d4a030]" /> On your way · {ROOMS.find((r) => r.id === s.onWay)?.name}
+                </span>
+              ) : (
+                <span className="text-white/55">Check in to a room</span>
+              )}
+              {room && (
+                <button type="button" onClick={() => setSession({ checkedIn: null })} className="text-[12.5px] text-white/55 hover:text-white">
+                  Check out
+                </button>
+              )}
+            </div>
+            <div className="mt-2.5 grid grid-cols-3 gap-1.5" role="group" aria-label="Check in to a room">
+              {ROOMS.map((r) => {
+                const here = s.checkedIn === r.id;
+                return (
+                  <button
+                    key={r.id}
+                    type="button"
+                    aria-pressed={here}
+                    onClick={() => setSession({ checkedIn: r.id, onWay: null })}
+                    title={here ? `You’re in ${r.name}` : `Check in to ${r.name}`}
+                    className={`truncate rounded-[4px] border px-1.5 py-1.5 text-[12px] transition-colors ${here ? "border-[#4cc773]/60 bg-[#4cc773]/15 text-white" : "border-white/12 text-white/70 hover:border-[#d4a030]/60 hover:text-white"}`}
+                  >
+                    {r.name}
+                  </button>
+                );
+              })}
+            </div>
           </div>
           <ul className="py-1.5 text-[14px]">
             {membersConfigured() && (

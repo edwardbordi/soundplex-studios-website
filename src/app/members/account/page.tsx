@@ -24,7 +24,7 @@ export default function MemberAccountPage() {
             <h1 className="page-head__title">
               My <em>profile.</em>
             </h1>
-            <p className="page-head__lede">How other members see you, and your password.</p>
+            <p className="page-head__lede">Your photo, your work, and where members can find you.</p>
             <div className="mt-10">
               <ProfileForm mode="account" />
             </div>

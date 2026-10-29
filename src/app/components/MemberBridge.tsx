@@ -19,18 +19,31 @@ export default function MemberBridge() {
     const sb = membersBrowser();
     if (!sb) return;
 
+    // Safety net (Ed, 2026-10-28): an emailed link that lands on the WRONG page (Supabase falls back
+    // to its Site URL when a redirect isn't on its allow list) arrives as ?code=… on, say, the home
+    // page, and nothing signs you in. Hand it to /members/welcome, which finishes the job (and asks
+    // for a password if there isn't one yet). Studio's own sign-in (/admin) is left alone.
+    const here = new URL(window.location.href);
+    const code = here.searchParams.get("code");
+    if (code && !here.pathname.startsWith("/members/welcome") && !here.pathname.startsWith("/admin")) {
+      here.searchParams.delete("code");
+      const next = here.pathname + (here.search || "") + here.hash;
+      window.location.replace(`/members/welcome?code=${encodeURIComponent(code)}&next=${encodeURIComponent(next === "/" ? "/studio-productions#members" : next)}`);
+      return;
+    }
+
     const load = async (userId: string | null) => {
       if (!userId) {
-        setSession({ member: false, checkedIn: null, onWay: null });
+        setSession({ member: false, checkedIn: null, onWay: null, photo: "" });
         return;
       }
-      const { data } = await sb.from("members").select("first_name, show_me, status").eq("id", userId).maybeSingle();
-      const row = data as Pick<MemberRow, "first_name" | "show_me" | "status"> | null;
+      const { data } = await sb.from("members").select("first_name, show_me, status, photo_url").eq("id", userId).maybeSingle();
+      const row = data as Pick<MemberRow, "first_name" | "show_me" | "status" | "photo_url"> | null;
       if (!row || row.status !== "active") {
-        setSession({ member: false, checkedIn: null, onWay: null });
+        setSession({ member: false, checkedIn: null, onWay: null, photo: "" });
         return;
       }
-      setSession({ member: true, name: row.first_name, showMe: row.show_me });
+      setSession({ member: true, name: row.first_name, showMe: row.show_me, photo: row.photo_url ?? "" });
     };
 
     void sb.auth.getUser().then(({ data }) => load(data.user?.id ?? null));
