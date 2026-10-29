@@ -5,6 +5,7 @@ import { getCalendarItems } from "../../lib/events/public";
 import AccountMenu from "./widgets/AccountMenu";
 import MobileMenu from "./MobileMenu";
 import NavScroll from "./NavScroll";
+import BookMenu from "./BookMenu";
 import { MembershipMega, ProductionsMega, RoomsMega } from "./NavMega";
 
 /**
@@ -87,9 +88,9 @@ export default function Nav({ overlay = false }: { overlay?: boolean }) {
           </a>
           {/* The one front door (Ed, 2026-10-28): every question, call request, booking or tour
               starts at /start, which asks what brings you and routes it. No separate contact form. */}
-          <Link href="/start?from=nav" className="nav-cta nav-cta--solid">
-            Get in touch
-          </Link>
+          {/* "Book" (Ed, 2026-10-29), replacing "Get in touch": a menu of the real reasons —
+              rent a room, a tour, tickets, a production — each into the right path of /start. */}
+          <BookMenu />
           {/* Members: Log in, or the avatar menu once in (ported from the What's On demo). */}
           <AccountMenu />
         </div>

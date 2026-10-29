@@ -62,7 +62,11 @@ export const PREVIEW_TEST_URL = "https://soundplex-studios-website.vercel.app";
  * Home-page versions to offer the reviewer, when a build is showing more than
  * one. Empty hides the switch entirely. Each `href` needs a real route.
  */
-export const PREVIEW_VARIANTS: { href: string; label: string }[] = [];
+export const PREVIEW_VARIANTS: { href: string; label: string }[] = [
+  // Ed, 2026-10-29: two home heroes for George to choose between.
+  { href: "/", label: "A · Fills on its own" },
+  { href: "/home-b", label: "B · Fills as you scroll" },
+];
 
 /** Last PageSpeed Insights snapshot, filled in by hand after a run. */
 export const PREVIEW_SCORES = {
