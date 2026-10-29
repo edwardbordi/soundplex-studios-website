@@ -10,12 +10,15 @@ import {
   PHONE_TEL,
   SOCIAL_LINKS,
   ORGANIZATION_ID,
+  SHOW_SAMPLE_EVENTS,
 } from "../lib/site-config";
 import JsonLd from "./components/JsonLd";
 import AnalyticsBeacon from "./components/AnalyticsBeacon";
 import ScrollToTop from "./components/ScrollToTop";
 import { StudioBar } from "@realiizlabs/admin/bar";
 import PreviewChrome from "./components/PreviewChrome";
+import SiteLiveFeed from "./components/widgets/SiteLiveFeed";
+import { getCalendarItems } from "../lib/events/public";
 import { STUDIO_ROUTES } from "../lib/admin/content-types";
 import "./globals.css";
 
@@ -119,6 +122,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             PREVIEW_CHROME is on in site-config, and each widget's code is only
             fetched once a reviewer switches that widget on. Delete at launch. */}
         <PreviewChrome />
+        {/* "Live at SoundPlex" — bottom right, every page (simulated while the sample calendar is on). */}
+        <SiteLiveFeed items={getCalendarItems()} showSamples={SHOW_SAMPLE_EVENTS} />
       </body>
     </html>
   );

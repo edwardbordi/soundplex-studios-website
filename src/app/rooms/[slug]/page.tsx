@@ -12,6 +12,7 @@ import ForwardArrow from "../../components/ForwardArrow";
 import JsonLd from "../../components/JsonLd";
 import mdxComponents from "../../blog/mdx-components";
 import UpcomingEvents from "../../components/widgets/UpcomingEvents";
+import ShopSpots from "../../components/ShopSpots";
 import { buildPageMetadata, breadcrumbJsonLd } from "../../../lib/seo";
 import { SITE_NAME, SITE_URL, ORGANIZATION_ID } from "../../../lib/site-config";
 import { getAllRooms, getRoomBySlug } from "../../../lib/rooms/rooms";
@@ -66,6 +67,8 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
           <header className="rmh">
             <Image src={r.heroImage} alt={r.heroImageAlt} fill priority sizes="100vw" className="rmh__img object-cover" />
             <div className="rmh__scrim" aria-hidden />
+            {/* The art on the walls, shoppable: gold dots on each piece for sale (lib/gallery/hotspots). */}
+            <ShopSpots src={r.heroImage} />
             <div className="rmh__inner mx-auto max-w-6xl px-6">
               <Reveal eager><Link href="/rooms" className="evp__back rmh__back group"><BackArrow />All rooms</Link></Reveal>
               <div className="rmh__copy">

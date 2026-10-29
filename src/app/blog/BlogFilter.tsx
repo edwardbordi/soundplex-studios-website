@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Reveal from "../components/Reveal";
@@ -22,15 +22,6 @@ export type BlogCard = {
   readMinutes: number;
 };
 
-// Four-corner registration ticks — the brand framing motif, signal-blue at the
-// same strength used on the homepage testimonial cards.
-const CORNER_TICKS = [
-  "left-3.5 top-3.5 border-l border-t",
-  "right-3.5 top-3.5 border-r border-t",
-  "bottom-3.5 left-3.5 border-b border-l",
-  "bottom-3.5 right-3.5 border-b border-r",
-];
-
 function FilterChip({
   label,
   count,
@@ -47,7 +38,7 @@ function FilterChip({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`font-mono-label inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-colors ${
+      className={`font-mono-label inline-flex h-7 items-center gap-1.5 rounded-[3px] border px-3 text-xs transition-colors ${
         active
           ? "border-signal bg-signal/10 text-signal-strong"
           : "border-line text-slate hover:border-slate/40 hover:text-ink"
@@ -85,13 +76,6 @@ function PostCard({
       href={`/blog/${post.slug}`}
       className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-paper transition-colors hover:border-slate/40"
     >
-      {CORNER_TICKS.map((pos) => (
-        <span
-          key={pos}
-          aria-hidden="true"
-          className={`pointer-events-none absolute z-10 h-2.5 w-2.5 border-signal/40 ${pos}`}
-        />
-      ))}
 
       {post.heroImage && (
         <div className="relative aspect-video w-full overflow-hidden border-b border-line bg-bone-2">
@@ -107,7 +91,7 @@ function PostCard({
             className="object-cover"
           />
           {featured && (
-            <span className="font-mono-label absolute left-6 top-6 z-20 rounded-full bg-signal px-2.5 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.14em] text-paper shadow-sm">
+            <span className="font-mono-label absolute left-6 top-6 z-20 rounded-[3px] bg-signal px-2.5 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.14em] text-paper shadow-sm">
               Featured
             </span>
           )}
@@ -156,7 +140,12 @@ function PostCard({
   );
 }
 
-export default function BlogFilter({ posts }: { posts: BlogCard[] }) {
+/**
+ * `posts` = this page's cards (the paged list, for "All"); `all` = every post in the archive.
+ * Counts are ALWAYS archive-wide, and picking a tag shows every matching post from every page
+ * (Ed, 2026-10-28) — the pager underneath stays real server links for crawlers.
+ */
+export default function BlogFilter({ posts, all = posts }: { posts: BlogCard[]; all?: BlogCard[] }) {
   // null = "All". Single-select.
   const [selected, setSelected] = useState<string | null>(null);
 
@@ -164,17 +153,32 @@ export default function BlogFilter({ posts }: { posts: BlogCard[] }) {
   // new tags appear automatically as posts are added; nothing is hardcoded.
   const tags = useMemo(() => {
     const counts = new Map<string, number>();
-    for (const post of posts) {
+    for (const post of all) {
       for (const tag of post.tags) counts.set(tag, (counts.get(tag) ?? 0) + 1);
     }
+    // Most posts first (ties alphabetical), so the useful tags are the ones you see.
     return [...counts.entries()]
-      .sort((a, b) => a[0].localeCompare(b[0]))
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
       .map(([tag, count]) => ({ tag, count }));
-  }, [posts]);
+  }, [all]);
+
+  // More than two rows of tags? Show two, and a "Show all tags" toggle (Ed, 2026-10-28).
+  // `overflows` is measured, so the toggle only appears when the chips really don't fit.
+  const [expanded, setExpanded] = useState(false);
+  const [overflows, setOverflows] = useState(false);
+  const chipsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = chipsRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const measure = () => setOverflows(el.scrollHeight > el.clientHeight + 2);
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [tags.length]);
 
   const visible = useMemo(
-    () => (selected ? posts.filter((p) => p.tags.includes(selected)) : posts),
-    [posts, selected],
+    () => (selected ? all.filter((p) => p.tags.includes(selected)) : posts),
+    [all, posts, selected],
   );
 
   // Featured posts sort to the front (then newest-first within each group);
@@ -194,13 +198,16 @@ export default function BlogFilter({ posts }: { posts: BlogCard[] }) {
   return (
     <>
       <div
-        className="mt-12 flex flex-wrap items-center gap-2"
+        ref={chipsRef}
+        id="blog-tags"
+        data-expanded={expanded}
+        className={`mt-12 flex flex-wrap items-center gap-2 ${expanded ? "" : "max-h-16 overflow-hidden"}`}
         role="group"
         aria-label="Filter posts by tag"
       >
         <FilterChip
           label="All"
-          count={posts.length}
+          count={all.length}
           active={selected === null}
           onClick={() => setSelected(null)}
         />
@@ -214,6 +221,17 @@ export default function BlogFilter({ posts }: { posts: BlogCard[] }) {
           />
         ))}
       </div>
+      {(overflows || expanded) && (
+        <button
+          type="button"
+          aria-expanded={expanded}
+          aria-controls="blog-tags"
+          onClick={() => setExpanded((e) => !e)}
+          className="mt-3 text-[13px] font-medium text-signal underline-offset-4 transition-colors hover:text-ink hover:underline"
+        >
+          {expanded ? "Show fewer tags" : `Show all ${tags.length} tags`}
+        </button>
+      )}
 
       {visible.length === 0 ? (
         <p className="font-mono-label mt-12 text-sm text-slate">

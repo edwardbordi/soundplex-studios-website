@@ -28,13 +28,13 @@ function isOver(start: Date): boolean {
 }
 
 export function generateStaticParams() {
-  return getAllEvents().filter((e) => e.frontmatter.visibility !== "private").map((e) => ({ slug: e.frontmatter.slug }));
+  return getAllEvents().filter((e) => e.frontmatter.visibility === "public").map((e) => ({ slug: e.frontmatter.slug }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const item = getEventBySlug(slug);
-  if (!item || item.frontmatter.visibility === "private") return {};
+  if (!item || item.frontmatter.visibility !== "public") return {};
   const fm = item.frontmatter;
   return buildPageMetadata({
     title: `${fm.title} — ${SITE_NAME}`,
@@ -48,7 +48,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function EventPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const item = getEventBySlug(slug);
-  if (!item || item.frontmatter.visibility === "private") notFound();
+  if (!item || item.frontmatter.visibility !== "public") notFound();
   const fm = item.frontmatter;
   const when = eventWhen(fm, { defaultZone: SITE_TIMEZONE });
   const past = isOver(when.start);
@@ -68,14 +68,25 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
       <main id="main" className="flex-1">
         <article className="evp">
           {fm.heroImage && (
-            <div className="evp__hero">
-              <Image src={fm.heroImage} alt={fm.heroImageAlt ?? fm.title} fill priority sizes="100vw" className="object-cover" />
-              <div className="evp__hero-scrim" aria-hidden />
+            // The whole picture, never cropped, centered on black, and fading into the black on
+            // its left, right and bottom edges (not the top), so it melts into the page (Ed).
+            // Sized by height; the width follows the picture's own shape. The fade is a mask on
+            // the image itself (two gradients intersected), so it hits the picture's real edges.
+            <div className="evp__hero flex justify-center overflow-hidden bg-black">
+              <Image
+                src={fm.heroImage}
+                alt={fm.heroImageAlt ?? fm.title}
+                width={1600}
+                height={900}
+                priority
+                sizes="(min-width: 1024px) 1000px, 100vw"
+                className="h-full w-auto max-w-none [mask-composite:intersect] [mask-image:linear-gradient(to_right,transparent_0%,black_14%,black_86%,transparent_100%),linear-gradient(to_top,transparent_0%,black_32%)] [-webkit-mask-composite:source-in] [-webkit-mask-image:linear-gradient(to_right,transparent_0%,black_14%,black_86%,transparent_100%),linear-gradient(to_top,transparent_0%,black_32%)]"
+              />
             </div>
           )}
           <div className="mx-auto max-w-3xl px-6">
             <Reveal eager>
-              <Link href="/studio-productions" className="evp__back group"><BackArrow />All productions</Link>
+              <Link href="/studio-productions" className="evp__back group"><BackArrow />Studio Productions</Link>
             </Reveal>
             <header className="evp__head">
               <Reveal eager>

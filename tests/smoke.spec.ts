@@ -55,7 +55,7 @@ test.describe('site smoke tests', () => {
   });
 
   test('membership, rooms, a room, websites and about render an h1', async ({ page }) => {
-    for (const path of ['/membership', '/rooms', '/rooms/wood-room', '/websites', '/about']) {
+    for (const path of ['/membership', '/rooms', '/rooms/wood-room', '/websites', '/about', '/gallery']) {
       const response = await page.goto(path);
       expect(response?.status(), path).toBeLessThan(400);
       await expect(page.locator('h1').first(), path).not.toBeEmpty();
@@ -143,19 +143,28 @@ test.describe('site smoke tests', () => {
 });
 
 test.describe('studio productions (events)', () => {
-  test('/studio-productions lists what is coming up, or says nothing is', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 812 }); // list view is the phone default
+  // The page is the ported "What's On" demo; it works from the visitor's clock, so these wait for it.
+  test('/studio-productions shows the board and the calendar', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
     await page.goto('/studio-productions');
-    await expect(page.locator('h1')).toContainText('Find your kind');
-    const upcoming = page.getByRole('region', { name: 'Coming up' });
-    await expect(upcoming).toBeVisible();
-    const links = upcoming.locator('a[href^="/studio-productions/"]');
-    if ((await links.count()) === 0) {
-      // An empty calendar is a normal state. It must still say so.
-      await expect(upcoming).not.toBeEmpty();
-      return;
+    await expect(page.locator('h1')).toContainText('Studio Productions');
+    // The board: three rooms and the podcast card.
+    const board = page.locator('#tonight');
+    await expect(board).toBeVisible();
+    await expect(board.locator('ul').first().locator(':scope > li')).toHaveCount(4);
+    // The three views switch.
+    for (const v of ['Calendar', 'Rooms', 'List']) {
+      const tab = page.getByRole('tablist', { name: 'Calendar view' }).getByRole('tab', { name: v });
+      await tab.click();
+      await expect(tab).toHaveAttribute('aria-selected', 'true');
     }
-    await expect(links.first()).toHaveAttribute('href', /^\/studio-productions\/[a-z0-9]+(?:-[a-z0-9]+)*$/);
+    // Members: who's here (the visitor card shows to everyone logged out).
+    await expect(page.locator('#members')).toBeVisible();
+    // Past productions still link to their own pages.
+    const pastLinks = page.locator('#past a[href^="/studio-productions/"]');
+    if ((await pastLinks.count()) > 0) {
+      await expect(pastLinks.first()).toHaveAttribute('href', /^\/studio-productions\/[a-z0-9]+(?:-[a-z0-9]+)*$/);
+    }
     // /events (the template's default) redirects here.
     await page.goto('/events');
     expect(page.url()).toContain('/studio-productions');
@@ -164,7 +173,11 @@ test.describe('studio productions (events)', () => {
   test('the productions page has no horizontal scroll at 375px', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto('/studio-productions');
-    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-    expect(overflow).toBeLessThanOrEqual(0);
+    await expect(page.locator('#tonight')).toBeVisible();
+    for (const v of ['List', 'Calendar', 'Rooms']) {
+      await page.getByRole('tablist', { name: 'Calendar view' }).getByRole('tab', { name: v }).click();
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      expect(overflow, v).toBeLessThanOrEqual(0);
+    }
   });
 });

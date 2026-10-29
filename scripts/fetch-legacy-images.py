@@ -29,8 +29,6 @@ WP = "https://soundplexstudios.com/wp-content/uploads/"
 SQ = "https://images.squarespace-cdn.com/content/v1/5fa1c89c4588f114a833b64d/"
 
 POSTS = {
-    "podcast-studio-setup-what-your-business-needs": WP + "2026/08/podcast-studio-setup.webp",
-    "podcast-studio-rental-cost-whats-included": WP + "2026/08/podcast-studio-rental-cost-whats-included.webp",
     "podcasting-studios-near-moorestown": WP + "2025/08/Podcasting-Studios-Near-Moorestown.jpg",
     "podcasting-studios-near-cherry-hill-nj": WP + "2025/07/Podcasting-Studios-Near-Cherry-Hill-NJ.jpg",
     "how-to-create-a-podcast": WP + "2025/06/How-to-Create-a-Podcast.jpg",

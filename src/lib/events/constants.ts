@@ -45,6 +45,62 @@ export const ROOM_NAMES: Record<string, string> = {
   "whole-building": "The whole building",
 };
 
+/** The three rooms What's On shows (whole-building events appear in every room's lane). */
+export const BOARD_ROOMS = ["wood-room", "studio-a", "sound-lounge"] as const;
+
+/**
+ * A dot color per kind, for the calendar views — muted so the page stays black-and-gold and
+ * the dots only help the eye group things. Private bookings are grey.
+ */
+export const KIND_COLORS: Record<string, string> = {
+  show: "#d4a030",
+  comedy: "#e07a4f",
+  talk: "#7fa7d9",
+  workshop: "#6fb1a0",
+  screening: "#b48ad6",
+  "open-mic": "#e0c35a",
+  "podcast-taping": "#d98aa8",
+  networking: "#8fc77a",
+  private: "#6b6b6b",
+  other: "#a3a3a3",
+};
+
+/** Opening hours (COMPANY-FACTS: Monday–Saturday, 8 AM–10 PM). 0 = Sunday. null = closed. */
+export const HOURS: Record<number, [number, number] | null> = { 0: null, 1: [8, 22], 2: [8, 22], 3: [8, 22], 4: [8, 22], 5: [8, 22], 6: [8, 22] };
+
+export type Visibility = "public" | "members" | "private";
+
+/**
+ * One thing on the calendar, as the What's On page receives it (built on the server by
+ * public.ts — or by samples.ts while sample events are on). Private items arrive already
+ * stripped to "Private event · this room · these times"; members-only items carry their
+ * details for logged-in members but the page shows a lock to everyone else.
+ */
+export type CalItem = {
+  id: string;
+  /** Public events have a page: /studio-productions/<slug>. */
+  slug?: string;
+  title: string;
+  kind: string;
+  kindLabel: string;
+  room: string;
+  startISO: string;
+  endISO: string;
+  visibility: Visibility;
+  summary?: string;
+  price?: string;
+  url?: string;
+  ticketLabel?: string;
+  hostNote?: string;
+  producer?: string;
+  heroImage?: string;
+  heroImageAlt?: string;
+  cancelled?: boolean;
+  closed?: boolean;
+  /** A made-up sample (samples.ts) — never has a page, never goes to search engines. */
+  sample?: boolean;
+};
+
 /** "Find your kind of night" — the mood prompts the calendar filters on (George's #7). */
 export const MOODS = [
   { value: "music", label: "Put me near live music" },

@@ -4,6 +4,7 @@ import Reveal from "../components/Reveal";
 import Eyebrow from "../components/Eyebrow";
 import { formatPostDateShort, readingTimeMinutes } from "../../lib/blog/format";
 import { getPostsForPage, totalBlogPages } from "../../lib/blog/pagination";
+import { getAllPosts } from "../../lib/blog/posts";
 import BlogFilter, { type BlogCard } from "./BlogFilter";
 import Pagination from "./Pagination";
 
@@ -12,17 +13,14 @@ import Pagination from "./Pagination";
  * the rest — both through this component so header, cards and pager can never
  * drift apart.
  *
- * The tag filter (BlogFilter) scopes to the CURRENT page's posts, not the whole
- * archive — a deliberate tradeoff: the pager must be real server links for
- * crawlability, so the client filter only ever holds one page of cards. If a
- * site leans hard on tags, raise POSTS_PER_PAGE (lib/blog/pagination.ts) or
- * build tag pages; don't quietly ship the filter as if it searched everything.
+ * The tag filter (BlogFilter) gets every post: its counts are archive-wide and a tag shows all
+ * its posts (Ed, 2026-10-28). "All" stays the paged list, so the pager remains real server
+ * links for crawlability.
  */
 export default function BlogArchive({ page }: { page: number }) {
   const totalPages = totalBlogPages();
 
-  const cards: BlogCard[] = getPostsForPage(page).map(
-    ({ frontmatter: f, content }) => ({
+  const toCard = ({ frontmatter: f, content }: ReturnType<typeof getAllPosts>[number]): BlogCard => ({
       slug: f.slug,
       title: f.title,
       excerpt: f.excerpt,
@@ -32,8 +30,13 @@ export default function BlogArchive({ page }: { page: number }) {
       tags: f.tags ?? [],
       dateLabel: formatPostDateShort(f.publishedAt),
       readMinutes: readingTimeMinutes(content),
-    }),
-  );
+  });
+  const cards: BlogCard[] = getPostsForPage(page).map(toCard);
+  // Every post, newest first — the filter's counts and tag results cover the whole archive.
+  const allCards: BlogCard[] = getAllPosts()
+    .slice()
+    .sort((a, b) => b.frontmatter.publishedAt.getTime() - a.frontmatter.publishedAt.getTime())
+    .map(toCard);
 
   return (
     <>
@@ -44,17 +47,17 @@ export default function BlogArchive({ page }: { page: number }) {
             {/* section header — same eyebrow → heading → lede rhythm as the site */}
             <div className="max-w-3xl">
               <Reveal>
-                <Eyebrow tone="signal">Writing</Eyebrow>
+                <Eyebrow tone="signal">From the Spotlight</Eyebrow>
               </Reveal>
               <Reveal delay={80}>
                 <h1 className="font-display mt-6 text-pretty text-4xl font-semibold leading-[1.05] tracking-tight text-ink sm:text-5xl">
-                  Notes from the build.
+                  Notes from the building.
                 </h1>
               </Reveal>
               <Reveal delay={160}>
                 <p className="mt-6 max-w-2xl text-lg leading-relaxed text-slate">
-                  Essays on AI, systems, and owning what you build — written from
-                  the work, not the sidelines.
+                  Recording and podcast how-tos, the rooms, the building’s history, and what’s been
+                  happening at SoundPlex.
                 </p>
               </Reveal>
             </div>
@@ -64,7 +67,7 @@ export default function BlogArchive({ page }: { page: number }) {
                 No posts yet — check back soon.
               </p>
             ) : (
-              <BlogFilter posts={cards} />
+              <BlogFilter posts={cards} all={allCards} />
             )}
 
             <Pagination page={page} totalPages={totalPages} />

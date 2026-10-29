@@ -59,7 +59,15 @@ reading from four content files — not one template stamped four times.*
 
 ## 4. Layouts
 
-**Home, in order:**
+**Home — REVISED 2026-10-28 (Ed: "clean, not overdone with fly-through"):** photo hero (WoodRoom
+full, slow 14s push-in, "Find your people. *Create your next chapter.*", Book a tour + What's on
+tonight, a live "on now / next" card from the Studio Productions calendar) → Three ways through the
+door (rent a room · come to a show · join the Collective, photo cards) → This week at SoundPlex (next
+4 public nights) → Connection Wall → the chain (Ideas → Opportunity) + Join → Google reviews (once
+the Places key is in) + From the Spotlight. Room transformations dropped from the home. The scroll
+fly-through is PARKED in the repo (FlythroughV2 etc.) — page.tsx says how to switch it back on.
+
+**Home, in order (wave 2, superseded):**
 1. **Hero — "Step inside"** (FlythroughV2): door → walk-in → the room fills; night chooser
    (workshop · live music · comedy at launch); Book a tour + Join the Collective. Storyline
    under revision with George.
@@ -302,6 +310,21 @@ somewhere on the site later (parked; the home hero gets rethought in the polish 
 - Env: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE` (server
   only), `GHL_SYNC_SECRET` (shared secret on the inbound webhooks). BUILD-ENV law: build passes with
   none of them set; the members half renders the visitor card.
+
+### 11.2b Built (branch `whats-on`, 2026-10-28) — the demo, PORTED
+
+Ed: "make it exactly like the demo — only the colors and fonts change." So the showroom's
+components came across as they are: `WhatsOn`, `TonightBoard`, `FilterMenu`, `RoomPicker`,
+`TimeGrid`, `LiveFeed`, `AccountMenu` (+ `Check`, `MeAvatar`, `src/lib/venue/{session,feed,greetings}`).
+What changed: fonts (Poppins via `--font-poppins`, Lora for the italic), gold `#d4a030`, the name,
+and the DATA — `src/lib/venue/data.ts` keeps the demo's shape but holds SoundPlex's 3 rooms,
+SoundPlex's categories, George's real events (`fromCalItems` ← `getCalendarItems`) and the sample
+week (`eventsAround` ← `samples.ts`, while `SHOW_SAMPLE_EVENTS`). SoundPlex additions: a Podcast
+card as the board's fourth card; real events' tickets open George's ticket link (samples open the
+demo checkout); "Book a room" goes to the guided survey; past productions under the page; nav keeps
+"Studio Productions" (Ed). Honesty rules: no made-up "tickets left", headcounts or ticket-buyer
+feed for real events — samples only. Members: the demo login (first name) and "who's here" stay as
+a PREVIEW until the members wave (real accounts, §11.2). The Log in / avatar menu is in the nav.
 
 ### 11.3 Order of work
 

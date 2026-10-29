@@ -33,6 +33,15 @@ export const SITE_URL = "https://soundplexstudios.com";
 export const PREVIEW_CHROME = true; // wave 2 is in client review; false at launch
 
 /**
+ * SAMPLE EVENTS on What's On (/studio-productions) — made-up nights generated from today's date
+ * (src/lib/events/samples.ts) so the board, the calendar and the room timeline have something
+ * on while George's real calendar is still to come. Samples never get pages, never go in the
+ * sitemap or to Google, and a small note on the page says they're samples.
+ * WHEN THE REAL EVENTS ARE IN: set this to false (and you can delete samples.ts).
+ */
+export const SHOW_SAMPLE_EVENTS = true;
+
+/**
  * The walkthrough video: whoever built the site explaining what this preview is
  * and what feedback is wanted. Put an mp4 at public/preview/walkthrough.mp4 and
  * point here, or use a YouTube embed URL. A Loom URL works but loses the speed
@@ -65,6 +74,19 @@ export const PREVIEW_SCORES = {
  * "America/Chicago", "America/Los_Angeles" or "Europe/London".
  */
 export const SITE_TIMEZONE = "America/New_York";
+
+/**
+ * Opening hours, in SITE_TIMEZONE (the live site: Monday – Saturday, 8 AM – 10 PM). HOURS_SPEC
+ * drives "Open now · until 10 PM" (lib/hours.ts); HOURS_ROWS is the same week written for people.
+ * Change both together.
+ */
+export const HOURS_SPEC = [
+  { days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"], opens: "08:00", closes: "22:00" },
+];
+export const HOURS_ROWS = [
+  { days: "Mon–Sat", time: "8 AM – 10 PM" },
+  { days: "Sun", time: "Closed" },
+];
 
 /** One-line description used as the default meta description + OG description. */
 export const SITE_DESCRIPTION =

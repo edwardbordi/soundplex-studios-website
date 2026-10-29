@@ -4,7 +4,7 @@ import { SITE_NAME, SITE_TIMEZONE, SITE_URL } from "../../../../lib/site-config"
 
 /** /studio-productions/<slug>/invite.ics — "Add to calendar". Public events only. */
 export function generateStaticParams() {
-  return getAllEvents().filter((e) => e.frontmatter.visibility !== "private").map((e) => ({ slug: e.frontmatter.slug }));
+  return getAllEvents().filter((e) => e.frontmatter.visibility === "public").map((e) => ({ slug: e.frontmatter.slug }));
 }
 
 const stamp = (d: Date) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
@@ -13,7 +13,7 @@ const esc = (s: string) => s.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace
 export async function GET(_req: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const item = getEventBySlug(slug);
-  if (!item || item.frontmatter.visibility === "private") return new Response("Not found", { status: 404 });
+  if (!item || item.frontmatter.visibility !== "public") return new Response("Not found", { status: 404 });
   const fm = item.frontmatter;
   const when = eventWhen(fm, { defaultZone: SITE_TIMEZONE });
   const end = when.end ?? new Date(when.start.getTime() + 2 * 3600 * 1000);

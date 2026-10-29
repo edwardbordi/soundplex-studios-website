@@ -214,6 +214,7 @@ copy as-is into /terms and /privacy; keep /terms-of-service and /privacy-policy 
 - [ ] Podcast session rate ($225 or $250/hr incl. operator) and max guests (5 or 6) — now facts of the *use*, not a room
 - [ ] Member self-reservation rules: cap per week, advance notice, can George veto (§11.1 item 6)
 - [ ] Members-only events: does George actually run any? (drives the `members` visibility tier)
+- [ ] Member ticket price: the ported demo shows members 20% off tickets (`MEMBER_DISCOUNT`, src/lib/venue/data.ts) — George to confirm or set
 - [ ] GHL: workflow for "Plex member active/lapsed" → site webhook; "purchase" → ticker webhook (§11.2)
 - [x] Membership: three-step model only; old tiers removed; funnel URLs → /membership
 - [ ] $75 membership join mechanism (checkout vs tour-first)

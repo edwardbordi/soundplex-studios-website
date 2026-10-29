@@ -200,7 +200,7 @@ export default function ConnectionWall({ members: MEMBERS, connections: CONNECTI
   const storyTo = story ? byId[story.between[1]] : null;
 
   return (
-    <section className="wall" aria-labelledby="wall-title">
+    <section id="wall" className="wall scroll-mt-28" aria-labelledby="wall-title">
       <div className="mx-auto max-w-6xl px-6">
         <p className="wall__eyebrow">The Plex Collective</p>
         <h2 id="wall-title" className="wall__title">
