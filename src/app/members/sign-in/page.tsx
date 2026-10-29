@@ -46,29 +46,16 @@ export default async function MemberSignInPage({ searchParams }: { searchParams:
       <Nav />
       <main id="main" className="flex-1">
         <section className="py-[clamp(28px,5vw,64px)]">
-          <div className="mx-auto grid max-w-6xl items-center gap-8 px-6 lg:grid-cols-[1fr_1.1fr] lg:gap-14">
-            <div>
+          {/* items-start + the left column's lg:pt-12 (= the lounge's py-12): the eyebrow lines up with the card's top edge. */}
+          <div className="mx-auto grid max-w-6xl items-start gap-8 px-6 lg:grid-cols-[1fr_1.1fr] lg:gap-14">
+            <div className="lg:pt-12">
               <p className="page-head__eyebrow">The Plex Collective</p>
               <h1 className="page-head__title">
                 Members, <em>welcome back.</em>
               </h1>
-              <p className="page-head__lede">Your rooms, your people, your nights.</p>
+              <p className="page-head__lede !mt-3">Your rooms, your people, your nights.</p>
 
-              <div className="mt-8 flex items-center gap-4">
-                <div className="flex">
-                  {HERE_NOW.map((m, i) => (
-                    <span key={m.name} className={`relative h-10 w-10 overflow-hidden rounded-full border-2 border-[#050505] ${i ? "-ml-3" : ""}`}>
-                      <Image src={m.photo} alt="" fill sizes="40px" className="object-cover" />
-                    </span>
-                  ))}
-                </div>
-                <p className="text-[14px] leading-snug text-white/70">
-                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#4cc773] align-middle shadow-[0_0_0_3px_rgba(76,199,115,0.18)]" aria-hidden="true" />
-                  {HERE_NOW.length} members in the building now
-                </p>
-              </div>
-
-              <ul className="mt-9 space-y-5 border-t border-white/[0.08] pt-8 max-lg:hidden">
+              <ul className="mt-3 space-y-4 border-t border-white/[0.08] pt-4 max-lg:hidden">
                 {INSIDE.map((x) => (
                   <li key={x.title} className="flex gap-4">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[6px] rounded-bl-none border border-[#d4a030]/30 text-[#d4a030]">
@@ -84,11 +71,11 @@ export default async function MemberSignInPage({ searchParams }: { searchParams:
                 ))}
               </ul>
 
-              <div className="mt-9 max-lg:hidden">{bookTour}</div>
+              <div className="mt-6 max-lg:hidden">{bookTour}</div>
             </div>
 
             {/* The lounge: the Wood Room, warm and visible, fading into the page on every side. */}
-            <div className="relative flex min-h-[600px] items-center justify-center px-4 py-12 max-sm:-mx-6 max-sm:min-h-[560px]">
+            <div className="relative flex min-h-[600px] flex-col items-center justify-center px-4 py-12 max-sm:-mx-6 max-sm:min-h-[560px]">
               <div className="absolute inset-0 [mask-image:radial-gradient(ellipse_65%_60%_at_50%_50%,#000_25%,transparent_100%)]" aria-hidden="true">
                 <Image src="/rooms/wood-room-3.webp" alt="" fill priority sizes="(min-width: 1024px) 640px, 100vw" className="object-cover opacity-60" />
                 <div className="absolute inset-0 bg-[#050505]/45" />
@@ -100,6 +87,21 @@ export default async function MemberSignInPage({ searchParams }: { searchParams:
                 <div className="mt-6">
                   <SignInForm next={safeNext} />
                 </div>
+              </div>
+
+              {/* Who's inside right now, just under the door. */}
+              <div className="relative mt-6 flex items-center gap-3">
+                <div className="flex">
+                  {HERE_NOW.map((m, i) => (
+                    <span key={m.name} className={`relative h-9 w-9 overflow-hidden rounded-full border-2 border-[#050505] ${i ? "-ml-3" : ""}`}>
+                      <Image src={m.photo} alt="" fill sizes="36px" className="object-cover" />
+                    </span>
+                  ))}
+                </div>
+                <p className="text-[14px] leading-snug text-white/75">
+                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#4cc773] align-middle shadow-[0_0_0_3px_rgba(76,199,115,0.18)]" aria-hidden="true" />
+                  {HERE_NOW.length} members in the building now
+                </p>
               </div>
             </div>
 
