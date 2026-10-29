@@ -120,6 +120,18 @@ export default function FlythroughV3({ night: nightId, basePath = "/" }: { night
       }
     }
 
+    // The page's main heading (Ed, 2026-10-29: the smoke test caught a home page with no <h1>):
+    // the engine renders every frame's title as an <h2>, so promote the FIRST frame's title —
+    // "You have a home. You have work. This is your third place." — to the one <h1>. Same class,
+    // same look; the engine keeps no reference to the title element, so swapping it is safe.
+    const firstTitle = el.querySelector<HTMLElement>(".sw-copy .sw-copy__title");
+    if (firstTitle && firstTitle.tagName === "H2") {
+      const h1 = document.createElement("h1");
+      h1.className = firstTitle.className;
+      h1.innerHTML = firstTitle.innerHTML;
+      firstTitle.replaceWith(h1);
+    }
+
     // Secondary CTAs carry the site's arrow (the engine renders plain text buttons). On
     // phones CSS turns them into a text link — the two stacked buttons crowded the hint.
     const ARROW =
