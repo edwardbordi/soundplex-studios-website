@@ -32,9 +32,9 @@ export const EXTRA_FIELDS = z.object({
    * never rendered on the public site, but on the same calendar so George (and later,
    * members) can see what's booked where. One data model serves both.
    */
-  visibility: z.enum(["public", "private"]).default("public").meta({
+  visibility: z.enum(["public", "members", "private"]).default("public").meta({
     label: "Visibility",
-    help: "Public events show on the site. Private ones (rentals, member sessions) only appear on the internal calendar.",
+    help: "Public: shown to everyone, with its own page. Members: on What's On with a lock — details for logged-in members only. Private (rentals, bookings): the room just shows as taken.",
   }),
   /** Who's putting it on: SoundPlex, or a member's name. Rendered as "presented by". */
   producer: z.string().trim().max(80).optional().meta({

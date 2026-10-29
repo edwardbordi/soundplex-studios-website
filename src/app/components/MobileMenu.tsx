@@ -1,8 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { NAV_LINKS, NAV_CTA } from "../../lib/site-config";
+import { ROOMS, roomOf } from "../../lib/venue/data";
+import type { CalItem } from "../../lib/events/constants";
+import { nextShow, roomStatus, showLabel, useVenueNow } from "./NavMega";
 
 /**
  * The phone navigation — a disclosure widget, not a div that toggles a class.
@@ -25,8 +29,69 @@ import { NAV_LINKS, NAV_CTA } from "../../lib/site-config";
  * NOT by an effect watching usePathname() — the handler already knows, and the
  * scrim covers every other route out.
  */
-export default function MobileMenu() {
+function Section({
+  label,
+  href,
+  expanded,
+  onToggle,
+  onGo,
+  children,
+}: {
+  label: string;
+  href: string;
+  expanded: boolean;
+  onToggle: () => void;
+  onGo: () => void;
+  children: React.ReactNode;
+}) {
+  const id = useId();
+  return (
+    <div>
+      <div className="flex items-center">
+        <Link href={href} onClick={onGo} className="font-display flex-1 rounded-lg px-3 py-2.5 text-lg font-semibold text-ink transition-colors hover:bg-bone-2">
+          {label}
+        </Link>
+        <button
+          type="button"
+          aria-expanded={expanded}
+          aria-controls={id}
+          aria-label={`${expanded ? "Hide" : "Show"} ${label}`}
+          onClick={onToggle}
+          className="grid h-10 w-10 place-items-center rounded-lg text-ink/60 hover:bg-bone-2"
+        >
+          <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform ${expanded ? "rotate-180" : ""}`}>
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+      </div>
+      {expanded && (
+        <div id={id} className="mb-2 ml-3 flex flex-col gap-1 border-l border-line pl-3">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SubLink({ href, onGo, img, name, sub }: { href: string; onGo: () => void; img: string; name: string; sub: string }) {
+  return (
+    <Link href={href} onClick={onGo} className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-bone-2">
+      <span className="relative h-10 w-14 shrink-0 overflow-hidden rounded-[4px]">
+        <Image src={img} alt="" fill sizes="56px" className="object-cover" />
+      </span>
+      <span className="min-w-0">
+        <span className="block truncate text-[15px] font-medium text-ink">{name}</span>
+        <span className="block truncate text-[12.5px] text-slate">{sub}</span>
+      </span>
+    </Link>
+  );
+}
+
+export default function MobileMenu({ items, showSamples }: { items: CalItem[]; showSamples: boolean }) {
   const [open, setOpen] = useState(false);
+  const [section, setSection] = useState<string | null>(null);
+  const { now, events } = useVenueNow(items, showSamples);
+  const show = nextShow(events, now);
   const panelId = useId();
   const buttonRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -76,7 +141,7 @@ export default function MobileMenu() {
   }, [open]);
 
   return (
-    <div className="sm:hidden">
+    <div className="lg:hidden">
       <button
         ref={buttonRef}
         type="button"
@@ -139,25 +204,93 @@ export default function MobileMenu() {
                 <path d="M6 6l12 12M18 6L6 18" />
               </svg>
             </button>
-            <nav aria-label="Main" className="flex flex-col gap-1 pr-10">
-              {NAV_LINKS.map((l) => (
-                <Link
-                  key={l.label}
-                  href={l.href}
-                  onClick={() => setOpen(false)}
-                  className="font-display rounded-lg px-3 py-2.5 text-lg font-semibold text-ink transition-colors hover:bg-bone-2"
-                >
-                  {l.label}
-                </Link>
-              ))}
+            <nav aria-label="Main" className="flex max-h-[calc(100svh-9rem)] flex-col gap-1 overflow-y-auto pr-10">
+              {NAV_LINKS.map((l) =>
+                l.href === "/membership" ? (
+                  <Section key={l.label} label={l.label} href={l.href} expanded={section === l.href} onToggle={() => setSection(section === l.href ? null : l.href)} onGo={() => setOpen(false)}>
+                    {[
+                      ["How it works", "/membership"],
+                      ["Meet the members", "/membership#wall"],
+                      ["Who’s here now", "/studio-productions#members"],
+                    ].map(([name, href]) => (
+                      <Link key={href} href={href} onClick={() => setOpen(false)} className="rounded-lg px-3 py-2 text-[15px] text-ink/80 transition-colors hover:bg-bone-2">
+                        {name}
+                      </Link>
+                    ))}
+                    <Link href="/start?path=collective&from=menu" onClick={() => setOpen(false)} className="mt-1 self-start rounded-[4px] bg-[#d4a030] px-3.5 py-2 text-[13px] font-semibold text-black">
+                      Book your free tour →
+                    </Link>
+                  </Section>
+                ) : l.href === "/rooms" || l.href === "/studio-productions" ? (
+                  // The desktop mega menus, as accordions (Ed, 2026-10-28).
+                  <Section key={l.label} label={l.label} href={l.href} expanded={section === l.href} onToggle={() => setSection(section === l.href ? null : l.href)} onGo={() => setOpen(false)}>
+                    {l.href === "/rooms" ? (
+                      <>
+                        {ROOMS.map((r) => {
+                          const st = roomStatus(r.id, events, now);
+                          return (
+                            <SubLink key={r.id} href={`/rooms/${r.id}`} onGo={() => setOpen(false)} img={r.photo} name={r.name} sub={`Holds ${r.capacity}${st.text ? ` · ${st.text}` : ""}`} />
+                          );
+                        })}
+                        <SubLink href="/rooms#podcast" onGo={() => setOpen(false)} img="/rooms/podcast-temp.webp" name="Podcast" sub="Any free room · $250/hr" />
+                        <Link href="/start?path=room" onClick={() => setOpen(false)} className="mt-1 self-start rounded-[4px] bg-[#d4a030] px-3.5 py-2 text-[13px] font-semibold text-black">
+                          Book a room →
+                        </Link>
+                      </>
+                    ) : (
+                      <>
+                        {show && now && (
+                          <SubLink
+                            href={show.slug ? `/studio-productions/${show.slug}` : "/studio-productions#tonight"}
+                            onGo={() => setOpen(false)}
+                            img={roomOf(show.room).photo}
+                            name={show.title}
+                            sub={`${showLabel(show, now)} · ${show.start.toLocaleTimeString("en-US", { hour: "numeric", minute: show.start.getMinutes() ? "2-digit" : undefined })}`}
+                          />
+                        )}
+                        {[
+                          ["Tonight", "#tonight"],
+                          ["Calendar", "#calendar"],
+                          ["Past productions", "#past"],
+                        ].map(([name, hash]) => (
+                          <Link
+                            key={hash}
+                            href={`/studio-productions${hash}`}
+                            onClick={() => {
+                              setOpen(false);
+                              if (window.location.pathname === "/studio-productions") window.dispatchEvent(new CustomEvent("sp:view", { detail: hash }));
+                            }}
+                            className="rounded-lg px-3 py-2 text-[15px] text-ink/80 transition-colors hover:bg-bone-2">
+                            {name}
+                          </Link>
+                        ))}
+                        <Link href="/start?path=room&from=productions" onClick={() => setOpen(false)} className="rounded-lg px-3 py-2 text-[15px] text-ink/80 transition-colors hover:bg-bone-2">
+                          Produce your own
+                        </Link>
+                      </>
+                    )}
+                  </Section>
+                ) : (
+                  <Link
+                    key={l.label}
+                    href={l.href}
+                    onClick={() => setOpen(false)}
+                    className="font-display rounded-lg px-3 py-2.5 text-lg font-semibold text-ink transition-colors hover:bg-bone-2"
+                  >
+                    {l.label}
+                  </Link>
+                ),
+              )}
               {/* The phone, as the same hollow gold button the desktop header shows. */}
-              <a
-                href={NAV_CTA.href}
-                onClick={() => setOpen(false)}
-                className="nav-cta mt-3 self-start"
-              >
-                {NAV_CTA.label}
-              </a>
+              {/* The one front door (/start), then the phone. */}
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <Link href="/start?from=menu" onClick={() => setOpen(false)} className="nav-cta nav-cta--solid">
+                  Get in touch
+                </Link>
+                <a href={NAV_CTA.href} onClick={() => setOpen(false)} className="nav-cta">
+                  {NAV_CTA.label}
+                </a>
+              </div>
             </nav>
             <div className="mt-4 flex gap-4 border-t border-line pt-4 font-mono-label text-xs text-slate">
               <Link href="/privacy" onClick={() => setOpen(false)}>

@@ -46,7 +46,9 @@ const redirects = async () => [
   { source: "/sp-event", destination: "/studio-productions", permanent: true },
   { source: "/sp-event/:slug", destination: "/studio-productions/:slug", permanent: true },
   { source: "/events", destination: "/studio-productions", permanent: true },
-  { source: "/events/:slug", destination: "/studio-productions/:slug", permanent: true },
+  // Page slugs only (no dot): the event IMAGES live at /public/events/*.webp, and a catch-all
+  // here redirected every image request too (Ed, 2026-10-28: Carl Cox's poster "not showing").
+  { source: "/events/:slug([^./]+)", destination: "/studio-productions/:slug", permanent: true },
   { source: "/ai-crossroads", destination: "/studio-productions/ai-crossroads-of-humanity-and-machines", permanent: true },
   // Blog: WordPress "spotlight" → /blog. Two root-level posts, two renamed, one duplicate.
   { source: "/soundplex-spotlight", destination: "/blog", permanent: true },

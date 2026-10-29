@@ -43,8 +43,10 @@ export default function ChainRun() {
           </li>
         ))}
       </ol>
+      {/* Two lines on purpose, the first one bigger (Ed): the setup, then the payoff. */}
       <p className="ch__motto">
-        The environment sparks it. The team shapes it. The blueprint directs it. <em>The result is opportunity.</em>
+        <span className="ch__motto-1">The environment sparks it. The team shapes it.</span>
+        <span className="ch__motto-2">The blueprint directs it. <em>The result is opportunity.</em></span>
       </p>
     </RunOnView>
   );

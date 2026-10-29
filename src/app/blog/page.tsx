@@ -8,10 +8,10 @@ import BlogArchive from "./BlogArchive";
  * 308s here (next.config.ts) so page 1 never exists at two URLs.
  */
 export const metadata = buildPageMetadata({
-  title: `Writing — ${SITE_NAME}`,
-  description: `Articles and notes from ${SITE_NAME}.`,
+  title: `The Spotlight — recording, podcast & studio notes — ${SITE_NAME}`,
+  description: `Recording and podcast how-tos, the rooms, the building’s history and what’s happening at ${SITE_NAME} in Pennsauken, NJ.`,
   path: "/blog",
-  focusKeyword: "blog",
+  focusKeyword: "recording studio blog South Jersey",
 });
 
 export default function BlogIndexPage() {

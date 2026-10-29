@@ -49,8 +49,8 @@ export async function generateMetadata({
   if (page === null || page < 2 || page > totalBlogPages()) return {};
 
   return buildPageMetadata({
-    title: `Writing — page ${page} — ${SITE_NAME}`,
-    description: `Page ${page} of articles and notes from ${SITE_NAME}.`,
+    title: `The Spotlight — page ${page} — ${SITE_NAME}`,
+    description: `Page ${page} of the Spotlight: recording and podcast how-tos, the rooms and the building’s history at ${SITE_NAME}.`,
     path: `/blog/page/${page}`,
     focusKeyword: "blog",
   });

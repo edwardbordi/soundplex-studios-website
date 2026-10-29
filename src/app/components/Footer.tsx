@@ -24,7 +24,6 @@ import {
  * Styles: .foot* in globals.css.
  */
 
-const MAPS_URL = `https://maps.google.com/?q=${encodeURIComponent(`${SITE_NAME} ${LOCATION}`)}`;
 
 export default function Footer() {
   return (
@@ -33,8 +32,11 @@ export default function Footer() {
         {/* The closing line + the door. */}
         <div className="foot__hero">
           <p className="foot__eyebrow">Pennsauken, NJ</p>
+          {/* One sentence per line, so it never breaks mid-thought ("…You / have work.", Ed). On a
+              phone the first two share a line when they fit. */}
           <p className="foot__line">
-            You have a home. You have work. <em>This is your third place.</em>
+            <span className="whitespace-nowrap sm:block">You have a home. </span>
+            <span className="whitespace-nowrap sm:block">You have work.</span> <em className="block">This is your third place.</em>
           </p>
           <Link href="/start?path=collective&from=footer" className="foot__cta group inline-flex items-center whitespace-nowrap">
             Book a tour
@@ -45,14 +47,15 @@ export default function Footer() {
         <div className="foot__grid">
           <div className="foot__col">
             <p className="foot__label">Visit</p>
-            <a href={MAPS_URL} target="_blank" rel="noopener noreferrer" className="foot__link foot__link--out group inline-flex items-center gap-1.5 whitespace-nowrap">
+            {/* To About → Getting here (map, hours, parking); directions open from there (Ed). */}
+            <Link href="/about#getting-here" className="foot__link foot__link--out group inline-flex items-center gap-1.5 whitespace-nowrap">
               <span className="foot__link--multi">
                 {LOCATION.split(", ").map((part, i) => (
                   <span key={i}>{part}</span>
                 ))}
               </span>
-              <OutboundArrow />
-            </a>
+              <ForwardArrow />
+            </Link>
           </div>
           <div className="foot__col">
             <p className="foot__label">Talk to us</p>
@@ -75,7 +78,7 @@ export default function Footer() {
           </div>
           <nav className="foot__col" aria-label="Footer">
             <p className="foot__label">Explore</p>
-            {[...NAV_LINKS, { href: "/blog", label: "Spotlight" }, { href: "/websites", label: "Websites" }, { href: "/contact-us", label: "Contact" }].map((l) => (
+            {[...NAV_LINKS, { href: "/blog", label: "Spotlight" }, { href: "/gallery", label: "Gallery" },{ href: "/websites", label: "Websites" }, { href: "/contact-us", label: "Contact" }].map((l) => (
               <Link key={l.label} href={l.href} className="foot__link">
                 {l.label}
               </Link>
@@ -100,6 +103,26 @@ export default function Footer() {
             <Link href="/terms">Terms</Link>
           </p>
         </div>
+      </div>
+
+      {/* The name as a watermark, edge to edge, sinking off the bottom (Ed, 2026-10-28 — like
+          the live site). An SVG so the word always fits the width exactly. Decorative only. */}
+      <div aria-hidden className="foot__mark">
+        <svg viewBox="0 0 1000 190" preserveAspectRatio="xMidYMin meet">
+          <defs>
+            <linearGradient id="foot-mark-fade" x1="0" y1="0" x2="0" y2="1">
+              {/* 0.16 too faint, 0.32 a touch loud, 0.22 too soft, 0.28 a little loud, 0.25 still a little (Ed): 0.21. */}
+              {/* Black, not gold (Ed): the footer is pure black, so the letters are near-black, a
+                  shade above it, sinking into it toward the bottom. Reads as black-on-black. */}
+              {/* #161616 was too close to vanish (Ed: "just enough contrast to see it"). */}
+              <stop offset="0%" stopColor="#222222" stopOpacity="1" />
+              <stop offset="100%" stopColor="#0a0a0a" stopOpacity="1" />
+            </linearGradient>
+          </defs>
+          <text x="500" y="185" textAnchor="middle" textLength="990" lengthAdjust="spacingAndGlyphs" fill="url(#foot-mark-fade)">
+            SoundPlex
+          </text>
+        </svg>
       </div>
     </footer>
   );

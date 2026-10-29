@@ -54,7 +54,7 @@ export default function Rooms() {
                 <div className="rm__pod-photo">
                   {/* TEMPORARY (Ed, 2026-10-28): the showroom demo's podcast shot until George has a
                       real one of the SoundPlex setup. Swap the file, keep the name or update here. */}
-                  <Image src="/rooms/podcast-temp.webp" alt="A podcast setup: four microphones on arms around a round wooden table, headphones at each seat, cameras on tripods and soft studio lights" fill sizes="(max-width: 860px) 100vw, 45vw" className="object-cover" />
+                  <Image src="/rooms/podcast-temp.webp" alt="A podcast setup: four microphones on arms around a round wooden table, headphones at each seat, cameras on tripods and soft studio lights" fill sizes="(max-width: 860px) 100vw, 55vw" className="origin-[52%_60%] scale-[1.18] object-cover object-[50%_58%]" />
                 </div>
                 <div className="rm__pod-body">
                   <p className="rm__label">Podcasts — in any room</p>
