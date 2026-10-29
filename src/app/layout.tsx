@@ -18,6 +18,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import { StudioBar } from "@realiizlabs/admin/bar";
 import PreviewChrome from "./components/PreviewChrome";
 import SiteLiveFeed from "./components/widgets/SiteLiveFeed";
+import MemberBridge from "./components/MemberBridge";
 import { getCalendarItems } from "../lib/events/public";
 import { STUDIO_ROUTES } from "../lib/admin/content-types";
 import "./globals.css";
@@ -124,6 +125,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <PreviewChrome />
         {/* "Live at SoundPlex" — bottom right, every page (simulated while the sample calendar is on). */}
         <SiteLiveFeed items={getCalendarItems()} showSamples={SHOW_SAMPLE_EVENTS} />
+        {/* Real member sign-in → the site's member session (does nothing until the members DB is connected). */}
+        <MemberBridge />
       </body>
     </html>
   );

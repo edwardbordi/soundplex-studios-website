@@ -14,7 +14,12 @@ import { contentTypes } from "@/lib/admin/content-types";
  * first (layouts and pages render in parallel), and every action re-checks.
  */
 export default async function GatedLayout({ children }: { children: React.ReactNode }) {
-  const nav = [{ id: "dashboard", label: "Dashboard", href: "/admin", icon: "home" }, ...navFromContentTypes(contentTypes)];
+  const nav = [
+    { id: "dashboard", label: "Dashboard", href: "/admin", icon: "home" },
+    ...navFromContentTypes(contentTypes),
+    // Plex Collective members: invite / pause / remove (src/app/admin/(gated)/members).
+    { id: "members-db", label: "Members", href: "/admin/members", icon: "users" },
+  ];
   const pinnedNav = [{ id: "settings", label: "Settings", href: "/admin/account" }];
   const frame = (props: { user: Parameters<typeof StudioShellFrame>[0]["user"]; role: string | null; nav: typeof nav; branding?: { name: string; logoUrl: string | null; whiteLabel?: boolean | null } | null; update?: Parameters<typeof StudioShellFrame>[0]["update"] }, body: React.ReactNode) => (
     <StudioShellFrame siteName={SITE_NAME} logoUrl="/logos/favicon.svg" siteUrl="/" pinnedNav={pinnedNav} {...props}>{body}</StudioShellFrame>
