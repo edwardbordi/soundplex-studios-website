@@ -51,7 +51,13 @@ export default function GalleryPage() {
                 </Reveal>
                 {samples && (
                   <Reveal eager delay={220}>
-                    <p className="mt-4 text-[12.5px] text-white/40">Preview: the pieces, artists and prices are samples while the real collection is photographed.</p>
+                    <p
+                      className="mt-4 text-[12.5px] text-white/40"
+                      data-needs="The real art for sale"
+                      data-needs-detail="For each piece: a good photo, title, artist, medium, size and price. Plus the artists' OK to sell their work here."
+                    >
+                      Preview: the pieces, artists and prices are samples while the real collection is photographed.
+                    </p>
                   </Reveal>
                 )}
               </>

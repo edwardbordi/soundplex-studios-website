@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import ForwardArrow from "./ForwardArrow";
+import OpenNow from "./OpenNow";
 import { eventsAround, fromCalItems, MEMBERS, roomOf, ROOMS, type VenueEvent } from "../../lib/venue/data";
 import { buyTickets, setSession, useVenueSession } from "../../lib/venue/session";
 import { membersConfigured } from "../../lib/members/env";
@@ -216,6 +217,13 @@ export function RoomsMega({ items, showSamples }: { items: CalItem[]; showSample
                     <span className={`block font-[family-name:var(--font-poppins)] text-[15px] font-medium ${active === "podcast" ? "text-[#d4a030]" : "text-white"}`}>Podcast</span>
                     <span className="mt-0.5 block truncate text-[12.5px] text-white/50">Any free room · $250/hr</span>
                   </span>
+                </Link>
+              </li>
+              {/* The building's hours, live (moved here from the old top bar, Ed 2026-10-29). */}
+              <li className="mx-4 mt-2 border-t border-white/[0.08] pt-3 text-[12.5px] text-white/55">
+                <Link href="/about#getting-here" onClick={close} className="group flex items-center justify-between gap-3 hover:text-white">
+                  <OpenNow variant="inline" />
+                  <span className="text-white/40 transition-colors group-hover:text-[#e2b34e]">Hours &amp; directions</span>
                 </Link>
               </li>
             </ul>

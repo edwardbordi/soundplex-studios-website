@@ -132,8 +132,8 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-black/35 to-black/55" aria-hidden />
           <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent" aria-hidden />
           {/* Shoppable art on the wall, but only once the room has filled (the empty frame fades
-              out 3s→5.5s; globals.css home-fill), and only the pieces the crowd doesn't hide. */}
-          <ShopSpots src="/flythrough/states/state-C-2.jpg" delayMs={5600} />
+              out 1.2s→3.4s; globals.css home-fill), and only the pieces the crowd doesn't hide. */}
+          <ShopSpots src="/flythrough/states/state-C-2.jpg" delayMs={3500} />
           <div className="relative mx-auto w-full max-w-6xl px-6 pb-14 pt-40 sm:pb-20">
             <Reveal eager><p className={EYEBROW}>SoundPlex Studios · Pennsauken, NJ</p></Reveal>
             <Reveal eager delay={80}>

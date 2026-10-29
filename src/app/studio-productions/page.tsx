@@ -55,7 +55,11 @@ export default function StudioProductionsPage() {
           <div className="relative mx-auto max-w-6xl">
             <WhatsOn items={items} showSamples={SHOW_SAMPLE_EVENTS} />
             {SHOW_SAMPLE_EVENTS && (
-              <p className="mt-10 text-[12.5px] leading-relaxed text-white/40">
+              <p
+                className="mt-10 text-[12.5px] leading-relaxed text-white/40"
+                data-needs="Your real calendar"
+                data-needs-detail="Upcoming events: name, date, time, room, price or free, public or members only, and the ticket link. Also the member ticket discount (we've shown 20%)."
+              >
                 Sample calendar: these nights are examples of a SoundPlex week, shown until the real calendar goes in. The member login is a
                 preview, check-ins are simulated, and nothing is booked, sold, sent or stored.
               </p>

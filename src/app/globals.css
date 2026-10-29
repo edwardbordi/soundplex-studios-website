@@ -606,6 +606,26 @@ p, li, dd, dt, label, figcaption, blockquote, td, th, button, a, span { text-wra
      <div data-needs="A photo of the team" data-needs-detail="Landscape, 1600px wide or more">
 
    Delete this block with the rest of the review kit at launch. */
+/* The review widgets were drawn with the template's colors (ink = panel, paper = text). On
+   SoundPlex those tokens are flipped (ink is white text), which made the panels white. Re-map
+   them inside the review kit only: near-black panels, white text, gold accents, Poppins
+   (Ed, 2026-10-29: "match the colors better"). */
+.review-chrome {
+  --color-ink: #141414;
+  --color-ink-2: #222222;
+  --color-paper: #ffffff;
+  --color-signal-light: #e2b34e;
+  --color-signal-strong: #e2b34e;
+  --font-display: var(--font-poppins), system-ui, sans-serif;
+  font-family: var(--font-body);
+}
+.review-chrome .bg-ink { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 18px 44px rgba(0, 0, 0, 0.55); }
+.review-chrome .eyebrow { font-family: var(--font-poppins), system-ui, sans-serif; letter-spacing: 0.2em; }
+/* Gold buttons get dark text, like every gold button on the site. */
+.review-chrome .bg-signal,
+.review-chrome .hover\:bg-signal:hover,
+.review-chrome .hover\:bg-signal-strong:hover { color: #141414; }
+
 html[data-show-needs] [data-needs] {
   position: relative;
   outline: 2px dashed var(--color-signal);
@@ -925,9 +945,10 @@ p, li,
 .nav-cta--solid:hover { background-color: #e2b34e; border-color: #e2b34e; }
 /* Links share the middle zone with even gaps; they tighten a step between 1024 and 1280 so the
    row never reaches the logo or the right-hand group. */
-.nav-links { gap: 2.25rem; }
+/* Tighter (Ed, 2026-10-29: "not so spread out"): was 2.25rem / 1.4rem. */
+.nav-links { gap: 1.6rem; }
 @media (max-width: 1279px) {
-  .nav-links { gap: 1.4rem; }
+  .nav-links { gap: 1.1rem; }
   .nav-link, .nav-cta { font-size: 0.7rem; letter-spacing: 0.11em; }
   .nav-cta { padding: 0.6rem 1.05rem; }
 }
@@ -1442,7 +1463,10 @@ p, li,
    cropped by the page edge. */
 .foot__mark { margin-top: clamp(24px, 4vw, 56px); margin-bottom: -4.5vw; padding: 0 1vw; pointer-events: none; user-select: none; }
 .foot__mark svg { display: block; width: 100%; height: auto; }
-.foot__mark text { font-family: var(--font-poppins), system-ui, sans-serif; font-weight: 600; font-size: 228px; letter-spacing: -0.02em; }
+/* 192px, not 228px (Ed, 2026-10-29: cut off left/right on iPhone): Safari ignores the SVG's
+   textLength squeeze and draws the word at its natural width, so the natural width itself has to
+   fit the 1000-wide box. Chrome/Firefox still stretch it edge to edge. */
+.foot__mark text { font-family: var(--font-poppins), system-ui, sans-serif; font-weight: 600; font-size: 192px; letter-spacing: -0.02em; }
 .foot__hero {
   padding: 72px 0 56px;
   border-bottom: 1px solid var(--color-line);
@@ -2288,7 +2312,8 @@ input:-webkit-autofill:focus {
    underneath and settles. Reduced motion: the full room, still. */
 .home-hero__img { transform-origin: 50% 60%; animation: home-push 12s cubic-bezier(0.2, 0.6, 0.2, 1) both; }
 @keyframes home-push { from { transform: scale(1.08); } to { transform: scale(1); } }
-.home-loop__empty { animation: home-push 12s cubic-bezier(0.2, 0.6, 0.2, 1) both, home-fill 2.5s ease-in-out 3s both; }
+/* The people fade in from 1.2s to 3.4s (Ed, 2026-10-29: "sooner"; was 3s → 5.5s). Keep ShopSpots' delayMs on the home page just after the end. */
+.home-loop__empty { animation: home-push 12s cubic-bezier(0.2, 0.6, 0.2, 1) both, home-fill 2.2s ease-in-out 1.2s both; }
 @keyframes home-fill { from { opacity: 1; } to { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {
   .home-hero__img { animation: none; }

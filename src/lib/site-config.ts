@@ -52,8 +52,11 @@ export const PREVIEW_WALKTHROUGH_URL: string = "";
 /** Where feedback goes when no FEEDBACK_WEBHOOK_URL is set. Your address, not the client's. */
 export const PREVIEW_FEEDBACK_EMAIL = "ebordi@icloud.com";
 
-/** The URL the speed badge offers to test — usually the preview deployment. */
-export const PREVIEW_TEST_URL = SITE_URL;
+/**
+ * The preview deployment: what the speed badge tests and what the walkthrough's QR code opens on a
+ * phone. NOT SITE_URL while in review — soundplexstudios.com is still the old site (Ed, 2026-10-29).
+ */
+export const PREVIEW_TEST_URL = "https://soundplex-studios-website.vercel.app";
 
 /**
  * Home-page versions to offer the reviewer, when a build is showing more than
