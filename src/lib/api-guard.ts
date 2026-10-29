@@ -39,6 +39,19 @@ export function isAllowedOrigin(request: Request): boolean {
   } catch {
     /* SITE_URL is a constant */
   }
+  // This project's OWN Vercel addresses, in production too (Ed, 2026-10-29: the footer signup
+  // said "unauthorized" on soundplex-studios-website.vercel.app, which is the production
+  // deployment while the real domain still points at the old site). Vercel names them in
+  // system env vars, so only this project's domains pass — not every *.vercel.app site.
+  try {
+    const host = new URL(origin).hostname;
+    const own = [process.env.VERCEL_PROJECT_PRODUCTION_URL, process.env.VERCEL_URL, process.env.VERCEL_BRANCH_URL]
+      .filter((h): h is string => !!h)
+      .map((h) => h.replace(/^https?:\/\//, "").replace(/\/.*$/, ""));
+    if (own.includes(host)) return true;
+  } catch {
+    /* ignore */
+  }
   if (
     process.env.NODE_ENV !== "production" ||
     process.env.VERCEL_ENV === "preview"
