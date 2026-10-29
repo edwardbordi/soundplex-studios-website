@@ -25,7 +25,7 @@ export default function WelcomePage() {
           </div>
         </section>
       </main>
-      <Footer />
+      <Footer hero={false} />
     </>
   );
 }

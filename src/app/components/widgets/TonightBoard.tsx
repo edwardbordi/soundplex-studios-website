@@ -115,7 +115,7 @@ export default function TonightBoard({ events, now, title, locked, onOpen, peopl
     const nextTickets = l && left(l) !== null ? l : undefined;
     const full = countIn(room) >= roomOf(room).capacity;
     const here = s.checkedIn === room;
-    const login = <SubLink onClick={() => setSession({ loginOpen: true })}>Members: log in to come hang out</SubLink>;
+    const login = <SubLink onClick={() => setSession({ loginOpen: true })}>Members: sign in to come hang out</SubLink>;
 
     if (member) {
       // A ticketed show is a show: members buy a ticket like everyone else.
@@ -600,7 +600,7 @@ function TicketSheet({
             <p className="mt-3 text-[13px] text-white/55">
               Members pay {money(Math.round(base * (1 - MEMBER_DISCOUNT) * 100) / 100)}.{" "}
               <button type="button" onClick={onLogin} className="font-semibold underline underline-offset-2" style={{ color: GOLD }}>
-                Log in
+                Sign in
               </button>
             </p>
           )}
