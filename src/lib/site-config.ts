@@ -47,7 +47,8 @@ export const SHOW_SAMPLE_EVENTS = true;
  * point here, or use a YouTube embed URL. A Loom URL works but loses the speed
  * and fullscreen controls. Empty — the default — makes the widget say it's coming.
  */
-export const PREVIEW_WALKTHROUGH_URL: string = "";
+// Ed's walkthrough for George (2026-10-29), from the GHL media library.
+export const PREVIEW_WALKTHROUGH_URL: string = "https://assets.cdn.filesafe.space/oHWt6u5CClNaK3hK8rh0/media/6ae377da736386d0dc549498.mp4";
 
 /** Where feedback goes when no FEEDBACK_WEBHOOK_URL is set. Your address, not the client's. */
 export const PREVIEW_FEEDBACK_EMAIL = "ebordi@icloud.com";
