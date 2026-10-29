@@ -78,6 +78,13 @@ export default function VariantToggle({ current }: { current: string }) {
               href={o.href}
               tabIndex={tucked ? -1 : 0}
               aria-current={active ? "page" : undefined}
+              // A FULL page load, not client navigation (Ed, 2026-10-29): version C's fly-through
+              // engine leaves window listeners and styles behind that can't be torn down, so each
+              // version must start from a fresh page.
+              onClick={(e) => {
+                e.preventDefault();
+                window.location.assign(o.href);
+              }}
               className={`font-display inline-flex min-h-9 items-center rounded-sm px-3 text-sm font-semibold uppercase tracking-[0.04em] ${
                 active ? "bg-signal text-paper" : "text-paper hover:bg-ink-2"
               }`}

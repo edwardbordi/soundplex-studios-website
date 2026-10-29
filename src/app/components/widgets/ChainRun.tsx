@@ -27,9 +27,10 @@ export default function ChainRun() {
         <li className="ch__lead ch__lead--in" style={{ ["--to" as string]: STOPS[0].color }} />
         <li className="ch__lead ch__lead--out" style={{ ["--from" as string]: STOPS[3].color }} />
         {VERBS.map((v, i) => (
-          <li key={`seg${i}`} className="ch__seg" style={{ ["--i" as string]: i, ["--from" as string]: STOPS[i].color, ["--to" as string]: STOPS[i + 1].color }}>
-            <em>{v}</em>
-          </li>
+          // The line segments only: the "become" labels over the line were dropped (Ed,
+          // 2026-10-29: obvious from the line, and they looked cluttered). The screen-reader
+          // sentence above still says "become".
+          <li key={`seg${i}-${v}`} className="ch__seg" style={{ ["--i" as string]: i, ["--from" as string]: STOPS[i].color, ["--to" as string]: STOPS[i + 1].color }} />
         ))}
         {STOPS.map((s, i) => (
           <li

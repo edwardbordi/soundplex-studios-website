@@ -83,8 +83,13 @@ export default function ScrollHero({ live }: { live: React.ReactNode }) {
 
         {/* Shoppable art: every piece in the empty room at the top; at the end, only the pieces
             the crowd doesn't hide (hotspots.ts per photo). None mid-dissolve. */}
-        {phase === "empty" && <ShopSpots key="empty" src={EMPTY} />}
-        {phase === "full" && <ShopSpots key="full" src={FULL} />}
+        {/* The same push-in as the photos (same origin, same scale), so the outlines stay on the
+            paintings as the room zooms (Ed, 2026-10-29: they drifted off in the full room). The
+            wrapper lets clicks through; the spots themselves take the hover. */}
+        <div className="pointer-events-none absolute inset-0 z-20 origin-[50%_60%]" style={{ transform: "scale(calc(1.02 + var(--p) * 0.06))" }}>
+          {phase === "empty" && <ShopSpots key="empty" src={EMPTY} />}
+          {phase === "full" && <ShopSpots key="full" src={FULL} />}
+        </div>
 
         {/* The scroll cue: a thin gold line drawing downward, bottom center, no words (Ed). */}
         <div className="pointer-events-none absolute bottom-6 left-1/2 z-10 -translate-x-1/2" style={{ opacity: "var(--copy-a)" }} aria-hidden>

@@ -64,9 +64,10 @@ export const PREVIEW_TEST_URL = "https://soundplex-studios-website.vercel.app";
  * one. Empty hides the switch entirely. Each `href` needs a real route.
  */
 export const PREVIEW_VARIANTS: { href: string; label: string }[] = [
-  // Ed, 2026-10-29: two home heroes for George to choose between.
-  { href: "/", label: "A · Fills on its own" },
+  // Ed, 2026-10-29: three home heroes for George to choose between. C (the fly-through) is the default home.
+  { href: "/home-a", label: "A · Fills on its own" },
   { href: "/home-b", label: "B · Fills as you scroll" },
+  { href: "/", label: "C · Walk in the doors" },
 ];
 
 /** Last PageSpeed Insights snapshot, filled in by hand after a run. */
