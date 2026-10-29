@@ -1890,11 +1890,59 @@ p, li,
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus {
-  -webkit-text-fill-color: #fff;
-  -webkit-box-shadow: 0 0 0 1000px #0b0b0b inset;
-  caret-color: #fff;
+  -webkit-text-fill-color: var(--mx-text, #fff);
+  -webkit-box-shadow: 0 0 0 1000px var(--mx-field, #0b0b0b) inset;
+  caret-color: var(--mx-text, #fff);
   transition: background-color 9999s;
 }
+
+/* ── Members area theme (Ed, 2026-10-29) ─────────────────────────────────────────────────────
+   The signed-in members area (/members/*) can be dark or light. Everything in it (and the shared
+   profile form, which also shows on the dark welcome page) paints with these tokens, e.g.
+   bg-(--mx-panel) text-(--mx-muted). Dark is the default everywhere; the members shell flips
+   to light with data-mtheme="light". Gold stays gold; gold TEXT darkens in light for contrast. */
+:root {
+  --mx-bg: #050505;
+  --mx-side: #0a0a0a;
+  --mx-panel: rgba(255, 255, 255, 0.025);
+  --mx-raised: #0f0f0f;
+  --mx-pop: #141414;
+  --mx-field: #0b0b0b;
+  --mx-line: rgba(255, 255, 255, 0.09);
+  --mx-line-strong: rgba(255, 255, 255, 0.17);
+  --mx-hover: rgba(255, 255, 255, 0.06);
+  --mx-text: #ffffff;
+  --mx-soft: rgba(255, 255, 255, 0.82);
+  --mx-muted: rgba(255, 255, 255, 0.55);
+  --mx-faint: rgba(255, 255, 255, 0.38);
+  --mx-gold: #d4a030;
+  --mx-gold-text: #e2b34e;
+  --mx-error: #ff8a80;
+  --mx-ok: #4cc773;
+  --mx-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+}
+[data-mtheme="light"] {
+  --mx-bg: #f5f2ec;
+  --mx-side: #fbfaf7;
+  --mx-panel: #ffffff;
+  --mx-raised: #ffffff;
+  --mx-pop: #ffffff;
+  --mx-field: #ffffff;
+  --mx-line: rgba(28, 22, 12, 0.1);
+  --mx-line-strong: rgba(28, 22, 12, 0.2);
+  --mx-hover: rgba(28, 22, 12, 0.05);
+  --mx-text: #17130c;
+  --mx-soft: rgba(23, 19, 12, 0.84);
+  --mx-muted: rgba(23, 19, 12, 0.6);
+  --mx-faint: rgba(23, 19, 12, 0.44);
+  --mx-gold-text: #94660a;
+  --mx-error: #b3261e;
+  --mx-ok: #1e8a4a;
+  --mx-shadow: 0 18px 44px rgba(40, 30, 10, 0.14);
+  color-scheme: light;
+}
+.mx { background: var(--mx-bg); color: var(--mx-text); color-scheme: dark; }
+.mx[data-mtheme="light"] { color-scheme: light; }
 
 /* ─── One production ─────────────────────────────────────────────────────── */
 .evp { padding-bottom: 96px; }

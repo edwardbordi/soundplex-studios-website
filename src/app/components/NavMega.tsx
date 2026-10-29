@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 import ForwardArrow from "./ForwardArrow";
 import { eventsAround, fromCalItems, MEMBERS, roomOf, ROOMS, type VenueEvent } from "../../lib/venue/data";
 import { buyTickets, setSession, useVenueSession } from "../../lib/venue/session";
+import { membersConfigured } from "../../lib/members/env";
 import type { CalItem } from "../../lib/events/constants";
 
 /**
@@ -297,10 +298,13 @@ export function MembershipMega() {
   const s = useVenueSession();
   const faces = MEMBERS.slice(0, 6);
   const logIn = () => {
-    // The (preview) login lives on Studio Productions, as the account menu's does.
-    if (document.getElementById("members")) setSession({ loginOpen: true });
+    // Real members: straight to sign-in (then the members area). Preview: the demo login on Studio Productions.
+    if (membersConfigured() || document.getElementById("members")) setSession({ loginOpen: true });
     else window.location.assign("/studio-productions#members");
   };
+  // Signed in, "who's here" is the members area; signed out, the teaser on Studio Productions.
+  const whoHref = s.member && membersConfigured() ? "/members" : "/studio-productions#members";
+  const links = MEMBER_LINKS.map((l) => (l.href === "/studio-productions#members" ? { ...l, href: whoHref } : l));
 
   return (
     <Mega label="Membership" href="/membership">
@@ -308,7 +312,7 @@ export function MembershipMega() {
         <>
           <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]">
             <ul className="p-3">
-              {MEMBER_LINKS.map((l) => (
+              {links.map((l) => (
                 <li key={l.href}>
                   <Link href={l.href} onClick={close} className="group block rounded-[6px] px-4 py-3 transition-colors hover:bg-white/[0.05]">
                     <span className="block font-[family-name:var(--font-poppins)] text-[15px] font-medium text-white transition-colors group-hover:text-[#d4a030]">{l.name}</span>
@@ -335,7 +339,7 @@ export function MembershipMega() {
                 </p>
                 <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3">
                   {s.member ? (
-                    <Link href="/studio-productions#members" onClick={close} className={GOLD_BTN}>
+                    <Link href={whoHref} onClick={close} className={GOLD_BTN}>
                       See who’s here <ForwardArrow />
                     </Link>
                   ) : (

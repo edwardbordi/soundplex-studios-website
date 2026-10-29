@@ -32,7 +32,9 @@ export default function PreviewChrome() {
     if (prefs?.needs) document.documentElement.setAttribute("data-show-needs", "");
     else document.documentElement.removeAttribute("data-show-needs");
   }, [prefs?.needs]);
-  if (!PREVIEW_CHROME || !prefs || pathname.startsWith("/admin")) return null;
+  // Not inside Studio, and not inside the members' app (its bottom tabs own that corner on a phone).
+  const inMembersApp = pathname.startsWith("/members") && !pathname.startsWith("/members/sign-in") && !pathname.startsWith("/members/welcome");
+  if (!PREVIEW_CHROME || !prefs || pathname.startsWith("/admin") || inMembersApp) return null;
   return (
     <>
       <ReviewMenu />

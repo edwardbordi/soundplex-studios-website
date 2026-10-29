@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "reac
 import Link from "next/link";
 import { MEMBERS, ROOMS, catOf, eventsAround, fromCalItems, ics, roomOf, ticketPrice, type VenueEvent } from "../../../lib/venue/data";
 import { bookRoom, buyTickets, cleanName, setSession, useVenueSession } from "../../../lib/venue/session";
+import { membersConfigured } from "../../../lib/members/env";
 import type { CalItem } from "../../../lib/events/constants";
 import { clearMembersFeed, pushFeed } from "../../../lib/venue/feed";
 import { greet } from "../../../lib/venue/greetings";
@@ -77,6 +78,10 @@ export default function WhatsOn({ items = [], showSamples = false }: { items?: C
   const [room, setRoom] = useState("all");
   const session = useVenueSession();
   const { member, loginOpen, showMe } = session;
+  // Real members (Ed, 2026-10-29): "Who's here" lives in the members area now. This page keeps
+  // the blurred teaser for everyone; a signed-in member gets a door into /members instead of the
+  // full floor plan. (Without the members project, the demo login still shows the full version.)
+  const fullWho = member && !membersConfigured();
   const setLoginOpen = (v: boolean) => setSession({ loginOpen: v });
   const [open, setOpen] = useState<VenueEvent | null>(null);
   const [rsvp, setRsvp] = useState<string[]>([]);
@@ -224,7 +229,7 @@ export default function WhatsOn({ items = [], showSamples = false }: { items?: C
   return (
     <div className="space-y-6">
       {/* ── Right now: every room at a glance ── */}
-      <TonightBoard events={events} now={now} title={title} locked={locked} onOpen={setOpen} people={member ? shown : []} say={say} />
+      <TonightBoard events={events} now={now} title={title} locked={locked} onOpen={setOpen} people={fullWho ? shown : []} say={say} />
 
       {/* ── Controls: one calm bar. View on the left; when (List only), room and filter on the right. ── */}
       <div id="calendar-views" className="scroll-mt-32 pt-6">
@@ -313,7 +318,7 @@ export default function WhatsOn({ items = [], showSamples = false }: { items?: C
             </p>
             <h3 className="mt-2 font-[family-name:var(--font-poppins)] text-3xl font-semibold tracking-tight">Who&apos;s at SoundPlex</h3>
           </div>
-          {member && (
+          {fullWho && (
             <p className="text-[14px] text-white/60">
               {shown.length} {shown.length === 1 ? "person" : "people"} checked in
             </p>
@@ -321,7 +326,7 @@ export default function WhatsOn({ items = [], showSamples = false }: { items?: C
         </div>
 
         <div className="relative mt-6">
-          <div className={`grid gap-5 lg:grid-cols-[minmax(0,1fr)_17rem] ${member ? "" : "pointer-events-none select-none blur-[6px]"}`} aria-hidden={!member}>
+          <div className={`grid gap-5 lg:grid-cols-[minmax(0,1fr)_17rem] ${fullWho ? "" : "pointer-events-none select-none blur-[6px]"}`} aria-hidden={!fullWho}>
             {/* The floor plan (rooms placed as they sit in the building); a stack of rooms on phones. */}
             <div className="grid min-w-0 gap-2.5 self-start sm:relative sm:block sm:aspect-[100/64]">
               {ROOMS.map((r) => {
@@ -417,6 +422,29 @@ export default function WhatsOn({ items = [], showSamples = false }: { items?: C
               </div>
             </div>
           </div>
+          {member && !fullWho && (
+            <div className="absolute inset-0 grid place-items-center">
+              {/* A signed-in member: the live view is in the members area. */}
+              <div className="mx-4 w-full max-w-[30rem] rounded-[8px] border border-white/15 bg-[#050505]/92 p-6 text-center backdrop-blur sm:p-7">
+                <p className="flex items-center justify-center gap-2 font-[family-name:var(--font-poppins)] text-[0.65rem] font-medium uppercase tracking-[0.2em]" style={{ color: ACCENT }}>
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-60" style={{ background: ACCENT }} />
+                    <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: ACCENT }} />
+                  </span>
+                  Live right now
+                </p>
+                <p className="mt-4 font-[family-name:var(--font-poppins)] text-[20px] font-semibold leading-snug">
+                  Welcome back{session.name ? `, ${session.name}` : ""}.
+                  <span className="block text-white/55">See who’s here, room by room.</span>
+                </p>
+                <Link href="/members" className="group mx-auto mt-5 inline-flex h-10 items-center gap-2 whitespace-nowrap rounded-[4px] px-5 font-[family-name:var(--font-poppins)] text-[14px] font-semibold text-[#050505] transition-colors hover:bg-[#e2b34e]" style={{ background: ACCENT }}>
+                  Open the members area
+                  <ForwardArrow />
+                </Link>
+                <p className="mt-3 text-[11.5px] text-white/35">Check in, RSVP and find other members there.</p>
+              </div>
+            </div>
+          )}
           {!member && (
             <div className="absolute inset-0 grid place-items-center">
               {/* The "you're missing out" card for visitors: real numbers, blurred faces, member perks. */}
@@ -471,7 +499,7 @@ export default function WhatsOn({ items = [], showSamples = false }: { items?: C
           )}
         </div>
 
-        {member && (
+        {fullWho && (
           <div className="mt-6 grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
             <div className="min-w-0">
               <p className="text-[14px] font-semibold">

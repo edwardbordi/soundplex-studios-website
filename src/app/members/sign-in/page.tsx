@@ -32,7 +32,7 @@ const INSIDE: { title: string; note: string; d: string }[] = [
 export default async function MemberSignInPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const { next } = await searchParams;
   // Only ever send people back to a page on this site.
-  const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : "/studio-productions#members";
+  const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : "/members";
   const bookTour = (
     <p className="text-[14px] text-white/50">
       Not a member yet? Membership starts with a tour.{" "}

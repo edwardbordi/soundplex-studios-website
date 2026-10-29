@@ -58,6 +58,11 @@ export default function AccountMenu() {
   // On Studio Productions: scroll to the section. Anywhere else: go there.
   const go = (id: string) => {
     setOpen(false);
+    // Real members: who's here and RSVPs live in the members area.
+    if (membersConfigured()) {
+      window.location.assign(id === "calendar" ? "/members/calendar" : "/members");
+      return;
+    }
     // On the page, What's On handles it ("calendar" also switches to the Calendar view).
     if (document.getElementById(id)) window.dispatchEvent(new CustomEvent("sp:view", { detail: id }));
     else window.location.assign(`/studio-productions#${id}`);
@@ -108,7 +113,8 @@ export default function AccountMenu() {
                 </button>
               )}
             </div>
-            <div className="mt-2.5 grid grid-cols-3 gap-1.5" role="group" aria-label="Check in to a room">
+            {/* Sized to their names (not three equal thirds), so "SoundLounge" fits whole. */}
+            <div className="mt-2.5 flex gap-1.5" role="group" aria-label="Check in to a room">
               {ROOMS.map((r) => {
                 const here = s.checkedIn === r.id;
                 return (
@@ -118,7 +124,7 @@ export default function AccountMenu() {
                     aria-pressed={here}
                     onClick={() => setSession({ checkedIn: r.id, onWay: null })}
                     title={here ? `You’re in ${r.name}` : `Check in to ${r.name}`}
-                    className={`truncate rounded-[4px] border px-1.5 py-1.5 text-[12px] transition-colors ${here ? "border-[#4cc773]/60 bg-[#4cc773]/15 text-white" : "border-white/12 text-white/70 hover:border-[#d4a030]/60 hover:text-white"}`}
+                    className={`flex-auto whitespace-nowrap rounded-[4px] border px-2 py-1.5 text-[12px] transition-colors ${here ? "border-[#4cc773]/60 bg-[#4cc773]/15 text-white" : "border-white/12 text-white/70 hover:border-[#d4a030]/60 hover:text-white"}`}
                   >
                     {r.name}
                   </button>
@@ -127,6 +133,14 @@ export default function AccountMenu() {
             </div>
           </div>
           <ul className="py-1.5 text-[14px]">
+            {membersConfigured() && (
+              <li>
+                <Link href="/members" role="menuitem" onClick={() => setOpen(false)} className="flex w-full items-center gap-3 px-4 py-2.5 text-left font-medium text-[#e2b34e] hover:bg-white/[0.06]">
+                  <Ico d="M3 12h4l3-8 4 16 3-8h4" />
+                  Open members area
+                </Link>
+              </li>
+            )}
             {membersConfigured() && (
               <li>
                 <Link href="/members/account" role="menuitem" onClick={() => setOpen(false)} className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-white/[0.06]">

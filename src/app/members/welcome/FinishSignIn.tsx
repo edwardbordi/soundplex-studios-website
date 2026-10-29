@@ -18,7 +18,7 @@ import ProfileForm from "../ProfileForm";
  */
 export default function FinishSignIn() {
   const [state, setState] = useState<"working" | "failed" | "setup" | "reset">("working");
-  const [next, setNext] = useState("/studio-productions#members");
+  const [next, setNext] = useState("/members");
 
   useEffect(() => {
     const sb = membersBrowser();
@@ -29,7 +29,7 @@ export default function FinishSignIn() {
     }
     const url = new URL(window.location.href);
     const raw = url.searchParams.get("next") ?? "";
-    const dest = raw.startsWith("/") && !raw.startsWith("//") ? raw : "/studio-productions#members";
+    const dest = raw.startsWith("/") && !raw.startsWith("//") ? raw : "/members";
     setNext(dest);
     const code = url.searchParams.get("code");
     const tokenHash = url.searchParams.get("token_hash");

@@ -7,6 +7,8 @@ import { NAV_LINKS, NAV_CTA } from "../../lib/site-config";
 import { ROOMS, roomOf } from "../../lib/venue/data";
 import type { CalItem } from "../../lib/events/constants";
 import { nextShow, roomStatus, showLabel, useVenueNow } from "./NavMega";
+import { useVenueSession } from "../../lib/venue/session";
+import { membersConfigured } from "../../lib/members/env";
 
 /**
  * The phone navigation — a disclosure widget, not a div that toggles a class.
@@ -93,6 +95,9 @@ export default function MobileMenu({ items, showSamples }: { items: CalItem[]; s
   const { now, events } = useVenueNow(items, showSamples);
   const show = nextShow(events, now);
   const panelId = useId();
+  // Signed in, "Who's here now" opens the members area; signed out, the teaser on Studio Productions.
+  const session = useVenueSession();
+  const whoHref = session.member && membersConfigured() ? "/members" : "/studio-productions#members";
   const buttonRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -211,7 +216,7 @@ export default function MobileMenu({ items, showSamples }: { items: CalItem[]; s
                     {[
                       ["How it works", "/membership"],
                       ["Meet the members", "/membership#wall"],
-                      ["Who’s here now", "/studio-productions#members"],
+                      ["Who’s here now", whoHref],
                     ].map(([name, href]) => (
                       <Link key={href} href={href} onClick={() => setOpen(false)} className="rounded-lg px-3 py-2 text-[15px] text-ink/80 transition-colors hover:bg-bone-2">
                         {name}

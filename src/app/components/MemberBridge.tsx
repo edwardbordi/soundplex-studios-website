@@ -28,7 +28,7 @@ export default function MemberBridge() {
     if (code && !here.pathname.startsWith("/members/welcome") && !here.pathname.startsWith("/admin")) {
       here.searchParams.delete("code");
       const next = here.pathname + (here.search || "") + here.hash;
-      window.location.replace(`/members/welcome?code=${encodeURIComponent(code)}&next=${encodeURIComponent(next === "/" ? "/studio-productions#members" : next)}`);
+      window.location.replace(`/members/welcome?code=${encodeURIComponent(code)}&next=${encodeURIComponent(next === "/" ? "/members" : next)}`);
       return;
     }
 
