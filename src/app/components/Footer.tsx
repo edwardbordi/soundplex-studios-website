@@ -3,6 +3,7 @@ import Image from "next/image";
 import ForwardArrow from "./ForwardArrow";
 import OutboundArrow from "./OutboundArrow";
 import NewsletterForm from "./widgets/NewsletterForm";
+import OpenNow from "./OpenNow";
 import {
   SITE_NAME,
   LEGAL_ENTITY,
@@ -59,6 +60,10 @@ export default function Footer({ hero = true }: { hero?: boolean }) {
               </span>
               <ForwardArrow />
             </Link>
+            {/* Open now / closed, live (moved from the old top bar, Ed 2026-10-29). */}
+            <div className="mt-3 text-[14px] text-white/60">
+              <OpenNow variant="inline" />
+            </div>
           </div>
           <div className="foot__col">
             <p className="foot__label">Talk to us</p>

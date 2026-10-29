@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
-import { PREVIEW_CHROME } from "../../lib/site-config";
+import { PREVIEW_CHROME, PREVIEW_VARIANTS } from "../../lib/site-config";
 import { usePreviewPrefs } from "./previewPrefs";
 import ReviewMenu from "./ReviewMenu";
 
@@ -13,7 +13,6 @@ import ReviewMenu from "./ReviewMenu";
 const Walkthrough = dynamic(() => import("./Walkthrough"), { ssr: false });
 const VariantToggle = dynamic(() => import("./VariantToggle"), { ssr: false });
 const NotesWidget = dynamic(() => import("./NotesWidget"), { ssr: false });
-const SpeedBadge = dynamic(() => import("./SpeedBadge"), { ssr: false });
 
 /**
  * TEMPORARY — everything that floats on the page only for the client review:
@@ -35,13 +34,16 @@ export default function PreviewChrome() {
   // Not inside Studio, and not inside the members' app (its bottom tabs own that corner on a phone).
   const inMembersApp = pathname.startsWith("/members") && !pathname.startsWith("/members/sign-in") && !pathname.startsWith("/members/welcome");
   if (!PREVIEW_CHROME || !prefs || pathname.startsWith("/admin") || inMembersApp) return null;
+  // .review-chrome re-maps the template colors these widgets were drawn with (ink = panel,
+  // paper = text) to SoundPlex's: near-black panels, white text, gold accents (globals.css).
   return (
-    <>
+    <div className="review-chrome">
       <ReviewMenu />
       {prefs.walkthrough && <Walkthrough />}
-      {prefs.versions && <VariantToggle current={pathname} />}
+      {prefs.versions && PREVIEW_VARIANTS.length > 0 && <VariantToggle current={pathname} />}
       {prefs.notes && <NotesWidget />}
-      {prefs.speed && <SpeedBadge />}
-    </>
+      {/* Page speed: off for now (Ed, 2026-10-29). To turn back on before launch, restore
+          {prefs.speed && <SpeedBadge />}, its dynamic import above, and its line in ReviewMenu. */}
+    </div>
   );
 }

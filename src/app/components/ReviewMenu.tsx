@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { usePreviewPrefs, WIDGETS } from "./previewPrefs";
 import { GaugeIcon, LayoutIcon, PlayIcon, NoteIcon, NeedsIcon } from "./ReviewIcons";
 import { useEdgeDock } from "./useEdgeDock";
+import { PREVIEW_VARIANTS } from "../../lib/site-config";
 
 /**
  * TEMPORARY — a very small eye nub on the screen edge (starts top-right,
@@ -40,7 +41,10 @@ export default function ReviewMenu() {
   }, [open]);
 
   if (!prefs) return null;
-  const floating = WIDGETS.filter((w) => w.key !== "needs");
+  // No home-page versions on this build: don't offer the switch. Page speed is off until
+  // the scores are set up before launch (Ed, 2026-10-29).
+  const menu = WIDGETS.filter((w) => (w.key !== "versions" || PREVIEW_VARIANTS.length > 0) && w.key !== "speed");
+  const floating = menu.filter((w) => w.key !== "needs");
   const anyOn = floating.some((w) => prefs[w.key]);
   const count = floating.filter((w) => prefs[w.key]).length;
 
@@ -81,7 +85,7 @@ export default function ReviewMenu() {
           <p className="eyebrow text-signal">Review widgets</p>
           <p className="mt-1 text-xs leading-snug text-paper/60">Build-preview tools. None of this ships with the live site.</p>
           <ul className="mt-3 flex flex-col gap-1">
-            {WIDGETS.map((w) => (
+            {menu.map((w) => (
               <li key={w.key}>
                 <label className="flex min-h-10 cursor-pointer items-start gap-3 rounded-sm px-1 py-1.5 hover:bg-ink-2">
                   <input
