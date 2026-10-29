@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { ROOMS } from "../../../lib/venue/data";
 import { MEMBER_SINCE, setSession, useVenueSession } from "../../../lib/venue/session";
 import MeAvatar from "./MeAvatar";
+import { membersBrowser } from "../../../lib/members/browser";
+import { membersConfigured } from "../../../lib/members/env";
 
 /**
  * Top-right account area for the SoundPlex demo, like a SaaS app: "Log in" when signed
@@ -34,8 +36,9 @@ export default function AccountMenu() {
       <button
         type="button"
         onClick={() => {
-          // The (preview) login lives on Studio Productions; from any other page, go there first.
-          if (document.getElementById("members")) setSession({ loginOpen: true });
+          // Real members: straight to the emailed-link sign-in (setSession routes loginOpen there).
+          // Preview: the demo login lives on Studio Productions; from any other page, go there first.
+          if (membersConfigured() || document.getElementById("members")) setSession({ loginOpen: true });
           else window.location.assign("/studio-productions#members");
         }}
         aria-label="Log in"
@@ -133,6 +136,8 @@ export default function AccountMenu() {
             onClick={() => {
               setOpen(false);
               setSession({ member: false, checkedIn: null, onWay: null });
+              // Real members: end the Supabase session too.
+              void membersBrowser()?.auth.signOut();
             }}
             className="flex w-full items-center gap-3 border-t border-white/10 px-4 py-3 text-left text-[14px] text-white/70 hover:bg-white/[0.06] hover:text-white"
           >
