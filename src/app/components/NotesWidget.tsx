@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { PREVIEW_FEEDBACK_EMAIL, PREVIEW_TEST_URL, SITE_NAME } from "../../lib/site-config";
+import { PREVIEW_FEEDBACK_EMAIL, PREVIEW_TEST_URL, PREVIEW_VARIANTS, SITE_NAME } from "../../lib/site-config";
 import { useEdgeDock } from "./useEdgeDock";
 import { NoteIcon } from "./ReviewIcons";
 
@@ -27,17 +27,25 @@ type Note = { page: string; version: string; title: string; note: string; at: st
 type Mode = "notes" | "approve" | "withdraw";
 type Approval = { name: string; version: string; at: string };
 
-const VERSION_LABEL: Record<string, string> = { "/": "A · Light", "/home-b": "B · Dark", "/home-c": "C · Video" };
-const PAGE_LABEL: Record<string, string> = { "/services": "Services", "/about": "About", "/blog": "Blog", "/contact": "Contact", "/privacy": "Privacy", "/terms": "Terms" };
-const VERSIONS = [
-  { href: "/", label: "A · Light" },
-  { href: "/home-b", label: "B · Dark" },
-  { href: "/home-c", label: "C · Video" },
-];
+// The home versions come from PREVIEW_VARIANTS (site-config), so the labels always match the switch.
+const VERSIONS = PREVIEW_VARIANTS.length ? PREVIEW_VARIANTS : [{ href: "/", label: "Home" }];
+const VERSION_LABEL: Record<string, string> = Object.fromEntries(VERSIONS.map((v) => [v.href, v.label]));
+const PAGE_LABEL: Record<string, string> = {
+  "/about": "About",
+  "/studio-productions": "Studio Productions",
+  "/rooms": "Rooms",
+  "/membership": "Membership",
+  "/gallery": "Gallery",
+  "/start": "Get started (form)",
+  "/websites": "Websites",
+  "/blog": "Blog",
+  "/privacy": "Privacy",
+  "/terms": "Terms",
+};
 const ATTESTATION =
   "I have reviewed the entire site and I approve this design. You may proceed to finalize the cutover to production.";
 
-/** "Home (A · Light)", "Services", "Blog: drywall-patch-what-to-expect" — what a note gets tagged with. */
+/** "Home (A · Fills on its own)", "Rooms", "Blog: some-post" — what a note gets tagged with. */
 function pageName(pathname: string) {
   if (VERSION_LABEL[pathname]) return `Home (${VERSION_LABEL[pathname]})`;
   if (PAGE_LABEL[pathname]) return PAGE_LABEL[pathname];
@@ -77,7 +85,7 @@ export default function NotesWidget() {
   const [notesStatus, setNotesStatus] = useState<"idle" | "sending" | "sent" | "fallback" | "error">("idle");
 
   // Approve
-  const [approveVersion, setApproveVersion] = useState("A · Light");
+  const [approveVersion, setApproveVersion] = useState(VERSIONS[0].label);
   const [approveMsg, setApproveMsg] = useState("");
   const [attest, setAttest] = useState(false);
   const [approveStatus, setApproveStatus] = useState<"idle" | "sending" | "fallback" | "error">("idle");
@@ -187,7 +195,7 @@ export default function NotesWidget() {
 
   // ---- approve
   const openApprove = () => {
-    setApproveVersion(VERSION_LABEL[pathname] ?? "A · Light");
+    setApproveVersion(VERSION_LABEL[pathname] ?? VERSIONS[0].label);
     setAttest(false);
     setApproveStatus("idle");
     setMode("approve");
