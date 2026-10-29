@@ -351,7 +351,7 @@ export function MembershipMega() {
                         }}
                         className={QUIET}
                       >
-                        Members’ log in <ForwardArrow />
+                        Members’ sign in <ForwardArrow />
                       </button>
                     </>
                   )}

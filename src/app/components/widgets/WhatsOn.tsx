@@ -462,7 +462,7 @@ export default function WhatsOn({ items = [], showSamples = false }: { items?: C
                     onClick={() => setLoginOpen(true)}
                     className="h-10 whitespace-nowrap rounded-[4px] border border-white/25 px-5 font-[family-name:var(--font-poppins)] text-[14px] font-medium text-white/85 transition-colors hover:border-white/60"
                   >
-                    Already a member? Log in
+                    Already a member? Sign in
                   </button>
                 </div>
                 <p className="mt-3 text-[11.5px] text-white/35">Members check in automatically when they arrive, or with one tap in the app.</p>
@@ -572,7 +572,7 @@ export default function WhatsOn({ items = [], showSamples = false }: { items?: C
                   <>
                     Details are for members.{" "}
                     <button type="button" onClick={() => (setOpen(null), setLoginOpen(true))} className="font-semibold underline underline-offset-2" style={{ color: ACCENT }}>
-                      Log in
+                      Sign in
                     </button>{" "}
                     to see them and RSVP.
                   </>

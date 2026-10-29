@@ -25,11 +25,13 @@ import {
  */
 
 
-export default function Footer() {
+/** `hero={false}` drops the closing line + Book a tour (the member pages already say it; Ed, 2026-10-28). */
+export default function Footer({ hero = true }: { hero?: boolean }) {
   return (
     <footer className="foot">
       <div className="mx-auto max-w-6xl px-6">
         {/* The closing line + the door. */}
+        {hero && (
         <div className="foot__hero">
           <p className="foot__eyebrow">Pennsauken, NJ</p>
           {/* One sentence per line, so it never breaks mid-thought ("…You / have work.", Ed). On a
@@ -43,6 +45,7 @@ export default function Footer() {
             <ForwardArrow />
           </Link>
         </div>
+        )}
 
         <div className="foot__grid">
           <div className="foot__col">

@@ -42,14 +42,14 @@ export default function AccountMenu() {
           if (membersConfigured() || document.getElementById("members")) setSession({ loginOpen: true });
           else window.location.assign("/studio-productions#members");
         }}
-        aria-label="Log in"
+        aria-label="Sign in"
         className="nav-link flex h-9 items-center gap-2 px-1"
       >
         <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
           <circle cx="12" cy="8" r="4" />
           <path d="M4 21a8 8 0 0 1 16 0" />
         </svg>
-        <span className="max-sm:hidden">Log in</span>
+        <span className="max-sm:hidden">Sign in</span>
       </button>
     );
   }
@@ -151,7 +151,7 @@ export default function AccountMenu() {
             className="flex w-full items-center gap-3 border-t border-white/10 px-4 py-3 text-left text-[14px] text-white/70 hover:bg-white/[0.06] hover:text-white"
           >
             <Ico d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
-            Log out
+            Sign out
           </button>
         </div>
       )}

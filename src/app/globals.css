@@ -1886,6 +1886,15 @@ p, li,
 }
 .page-head__title em { display: block; font-family: var(--font-lora), Georgia, serif; font-style: italic; font-weight: 400; }
 .page-head__lede { margin-top: 18px; max-width: 58ch; font-size: 1.1rem; line-height: 1.6; color: var(--color-ink-2); }
+/* Browser autofill paints inputs pale blue; keep our dark fields dark (Ed, 2026-10-28). */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #fff;
+  -webkit-box-shadow: 0 0 0 1000px #0b0b0b inset;
+  caret-color: #fff;
+  transition: background-color 9999s;
+}
 
 /* ─── One production ─────────────────────────────────────────────────────── */
 .evp { padding-bottom: 96px; }

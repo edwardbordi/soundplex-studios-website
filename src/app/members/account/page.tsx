@@ -31,7 +31,7 @@ export default function MemberAccountPage() {
           </div>
         </section>
       </main>
-      <Footer />
+      <Footer hero={false} />
     </>
   );
 }

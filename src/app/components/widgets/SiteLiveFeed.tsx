@@ -25,6 +25,7 @@ export default function SiteLiveFeed({ items, showSamples }: { items: CalItem[];
     () => (minute ? [...fromCalItems(items), ...(showSamples ? eventsAround(new Date(minute * 60_000)) : [])].sort((a, b) => a.start.getTime() - b.start.getTime()) : []),
     [day, items, showSamples], // eslint-disable-line react-hooks/exhaustive-deps
   );
-  if (!showSamples || !minute || path?.startsWith("/admin")) return null;
+  // Not inside Studio, and not on the member sign-in / setup / profile pages (they're a quiet door).
+  if (!showSamples || !minute || path?.startsWith("/admin") || path?.startsWith("/members")) return null;
   return <LiveFeed events={events} />;
 }
