@@ -17,8 +17,9 @@ export default async function GatedLayout({ children }: { children: React.ReactN
   const nav = [
     { id: "dashboard", label: "Dashboard", href: "/admin", icon: "home" },
     ...navFromContentTypes(contentTypes),
-    // Plex Collective members: invite / pause / remove (src/app/admin/(gated)/members).
-    { id: "members-db", label: "Members", href: "/admin/members", icon: "users" },
+    // Plex Collective members: invite / pause / remove (src/app/admin/(gated)/collective).
+    // NOT /admin/members: that's the Connection Wall content type's own address (id "members").
+    { id: "members-db", label: "Members", href: "/admin/collective", icon: "users" },
   ];
   const pinnedNav = [{ id: "settings", label: "Settings", href: "/admin/account" }];
   const frame = (props: { user: Parameters<typeof StudioShellFrame>[0]["user"]; role: string | null; nav: typeof nav; branding?: { name: string; logoUrl: string | null; whiteLabel?: boolean | null } | null; update?: Parameters<typeof StudioShellFrame>[0]["update"] }, body: React.ReactNode) => (

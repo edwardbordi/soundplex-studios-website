@@ -50,7 +50,7 @@ export async function inviteMember(form: FormData): Promise<MembersResult> {
   const { data: existing } = await admin.from("members").select("id, status").eq("email", email).maybeSingle();
   if (existing) {
     await admin.from("members").update({ status: "active", first_name: first, last_name: last, role }).eq("id", existing.id);
-    revalidatePath("/admin/members");
+    revalidatePath("/admin/collective");
     return { ok: true, message: `${first} was already on the list. Their membership is active.` };
   }
 
@@ -73,7 +73,7 @@ export async function inviteMember(form: FormData): Promise<MembersResult> {
   });
   if (rowError) return { ok: false, error: `Invite sent, but saving the profile failed: ${rowError.message}` };
 
-  revalidatePath("/admin/members");
+  revalidatePath("/admin/collective");
   return { ok: true, message: `Invite sent to ${email}.` };
 }
 
@@ -85,7 +85,7 @@ export async function setMemberStatus(id: string, status: "active" | "paused"): 
   if (error) return { ok: false, error: error.message };
   // Pausing also clears where they're checked in, so they vanish from "who's here" at once.
   if (status === "paused") await admin.from("check_ins").delete().eq("member_id", id);
-  revalidatePath("/admin/members");
+  revalidatePath("/admin/collective");
   return { ok: true };
 }
 
@@ -95,6 +95,6 @@ export async function removeMember(id: string): Promise<MembersResult> {
   // Deleting the login cascades to their profile, check-ins and RSVPs.
   const { error } = await membersAdmin().auth.admin.deleteUser(id);
   if (error) return { ok: false, error: error.message };
-  revalidatePath("/admin/members");
+  revalidatePath("/admin/collective");
   return { ok: true };
 }
