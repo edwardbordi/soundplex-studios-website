@@ -131,7 +131,7 @@ export default function Walkthrough() {
 
         <p className="font-display mt-3 text-xl font-bold uppercase leading-none">Start here.</p>
         <p className="mt-2 text-sm leading-snug text-paper/85">
-          A seven-minute tour of this preview: what&apos;s built, how to flip between the home page versions, and the ways you can send feedback.
+          A short tour of this preview: what&apos;s built, how to flip between the home page versions, and the ways you can send feedback.
         </p>
 
         {/* The player: title bar + picture inside one muted frame. */}
@@ -180,14 +180,21 @@ export default function Walkthrough() {
               aria-label="Play the walkthrough"
               className="group absolute inset-0 flex items-center justify-center"
             >
+              {/* The poster (Ed, 2026-10-29): the WoodRoom full of people, darkened, with a title. */}
               <Image
-                src="/preview/walkthrough-poster.webp"
+                src="/flythrough/states/state-C-2.jpg"
                 alt=""
-                width={960}
-                height={540}
+                fill
                 sizes="380px"
-                className="absolute inset-0 h-full w-full object-cover opacity-80 transition-opacity group-hover:opacity-100 motion-reduce:transition-none"
+                className="object-cover transition-transform duration-500 group-hover:scale-[1.04] motion-reduce:transition-none"
               />
+              <span className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20" aria-hidden="true" />
+              <span className="absolute inset-x-3 bottom-2.5 text-left">
+                <span className="block font-[family-name:var(--font-poppins)] text-[10px] font-medium uppercase tracking-[0.2em] text-[#d4a030]">For George</span>
+                <span className="block font-[family-name:var(--font-poppins)] text-[15px] font-medium leading-tight text-white">
+                  Your new site, <em className="font-[family-name:var(--font-lora)] font-normal text-[#e2b34e]">a quick tour.</em>
+                </span>
+              </span>
               <span className="relative flex h-14 w-14 items-center justify-center rounded-sm bg-signal text-paper transition-colors group-hover:bg-signal-strong motion-reduce:transition-none">
                 <svg aria-hidden="true" viewBox="0 0 24 24" className="ml-1 h-7 w-7 fill-current">
                   <path d="M6 4l14 8-14 8z" />
@@ -229,7 +236,7 @@ export default function Walkthrough() {
           )}
           <div className="min-w-0 text-sm leading-snug">
             <p className="font-semibold text-paper">Open this on your phone.</p>
-            <p className="mt-0.5 text-xs text-paper/60">Point your camera at the code — most of Jason&apos;s customers will see the site on a phone, so that&apos;s the view that matters.</p>
+            <p className="mt-0.5 text-xs text-paper/60">Point your camera at the code — most SoundPlex visitors will see the site on a phone, so that&apos;s the view that matters.</p>
           </div>
         </div>
 
