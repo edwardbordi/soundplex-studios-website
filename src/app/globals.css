@@ -2323,6 +2323,77 @@ input:-webkit-autofill:focus {
    underneath and settles. Reduced motion: the full room, still. */
 .home-hero__img { transform-origin: 50% 60%; animation: home-push 12s cubic-bezier(0.2, 0.6, 0.2, 1) both; }
 @keyframes home-push { from { transform: scale(1.08); } to { transform: scale(1); } }
+/* The fly-through engine (vendor/scrub-engine, home version C) injects
+   `html,body{overflow-x:hidden}`, which turns <body> into a scroll container and breaks every
+   position:sticky on the page (hero B's frame stopped holding still after visiting C — Ed,
+   2026-10-29). `clip` hides sideways overflow the same way without making a scroll container. */
+html, body { overflow-x: clip !important; }
+
+/* The chain as photo panels (ChainPanels, home version C), Ed 2026-10-29: a COMET of gold runs
+   round each card in turn, 1s apart: a bright head with a fainter tail that fades behind it, so
+   by the time it reaches the next card the one before is clean again. Each photo brightens as
+   its comet passes. Opportunity's comet leaves a line behind it that stays (part-transparent
+   gold), then a steady glow fades in behind the card. Starts on `.run` (RunOnView).
+   ("Almost like a comet trail" — Ed.) */
+.cp__trace { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.cp__trace rect { width: calc(100% - 2px); height: calc(100% - 2px); fill: none; stroke: #d4a030; stroke-width: 2px; stroke-linecap: round; }
+/* Comet parts. pathLength = 100 and each dash pattern repeats every 100, so the comet can run
+   on past the start corner (the journey goes to 121 = across the top a second time). The
+   per-card start/length/offsets come from ChainPanels (JOURNEY). Hidden until it runs. */
+/* The resting border: always there, faint gold, full outline (before and after the comet). */
+.cp__rest { stroke-opacity: 0.28; }
+/* Toned down (Ed, 2026-10-29: "less bright as it's animating, so it doesn't feel too busy"):
+   a warmer, softer head with a gentler glow, and a quieter tail. Motion and timing unchanged. */
+/* "A tad warmer" (Ed): amber-leaning gold instead of yellow-gold. */
+.cp__tail { stroke: #c98a2a; stroke-opacity: 0.4; stroke-dasharray: 30 70; opacity: 0; }
+.cp__head { stroke: #dba04a; stroke-opacity: 0.7; stroke-width: 2px; stroke-dasharray: 8 92; opacity: 0; filter: drop-shadow(0 0 2px rgba(219, 150, 60, 0.5)); }
+.cp .cp__img { filter: brightness(0.5) saturate(0.75); transition: filter 0.9s ease, transform 0.7s; }
+.cp.run .cp__img { filter: none; transition-delay: calc(var(--start) + 0.25s), 0s; }
+/* Constant speed (linear), fading in as it arrives and out as it hops on. */
+.cp.run .cp__tail { animation: cp-tail var(--dur) linear var(--start) forwards, cp-fade var(--dur) linear var(--start) forwards; }
+.cp.run .cp__head { animation: cp-head var(--dur) linear var(--start) forwards, cp-fade var(--dur) linear var(--start) forwards; }
+@keyframes cp-tail { from { stroke-dashoffset: var(--tail-from); } to { stroke-dashoffset: var(--tail-to); } }
+@keyframes cp-head { from { stroke-dashoffset: var(--head-from); } to { stroke-dashoffset: var(--head-to); } }
+@keyframes cp-fade { 0% { opacity: 0; } 6% { opacity: 1; } 86% { opacity: 1; } 100% { opacity: 0; } }
+/* Opportunity: the line draws in step with its comet (same start, length and speed). */
+/* Opportunity finishes like the others (Ed, 2026-10-29: "the yellow text is enough"): its comet
+   laps once and goes, leaving the same faint resting outline. */
+/* The words on each card wait at ~40% and come up to full as that card's comet finishes. */
+.cp .cp__words { opacity: 0.4; transition: opacity 0.8s ease; }
+.cp.run .cp__words { opacity: 1; transition-delay: calc(var(--start) + var(--dur) - 0.25s); }
+/* The eyebrow goes last (Ed, 2026-10-29): faint gold during the comet, then bright gold fills it
+   left to right once Opportunity's border lands (~4.4s). A two-tone gradient clipped to the text,
+   slid from the faint half to the bright half. */
+.cp__eyebrow {
+  background-image: linear-gradient(90deg, #e2b34e 0 50%, rgba(212, 160, 48, 0.3) 50% 100%);
+  background-size: 200% 100%; background-position: 100% 0;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+/* Each sentence sweeps on its own (--d from ChainPanels): the first at 4.4s, a beat's pause, then the second. */
+.cp.run .cp__eyebrow { animation: cp-eyebrow 1s cubic-bezier(0.65, 0, 0.35, 1) var(--d, 4.4s) forwards; }
+@keyframes cp-eyebrow { to { background-position: 0 0; } }
+@media (prefers-reduced-motion: reduce) { .cp__eyebrow, .cp.run .cp__eyebrow { animation: none; background-position: 0 0; } }
+/* The last beat (Ed, 2026-10-29): after "Human science." lands, one gold-white shine sweeps across
+   the Join the Collective button. The buttons are visible the whole time; this is just the payoff.
+   Keyed off the panels' run (the button sits outside it, in the same section). */
+.cp-shine { position: relative; overflow: hidden; }
+.cp-shine::after {
+  content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 45%; pointer-events: none;
+  background: linear-gradient(105deg, transparent 0%, rgba(255, 246, 220, 0.75) 50%, transparent 100%);
+  transform: skewX(-18deg); opacity: 0;
+}
+.ch-stage:has(.cp.run) .cp-shine::after { animation: cp-shine 1.1s ease-in-out 7.5s forwards; }
+@keyframes cp-shine { 0% { left: -60%; opacity: 1; } 100% { left: 130%; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .ch-stage:has(.cp.run) .cp-shine::after { animation: none; } }
+/* The chain section clips sideways overflow (for the old line's glow); with the panels, let the
+   glow spill past the right edge. html/body already clip, so this can't add a sideways scroll. */
+.ch-stage:has(.cp) { overflow-x: visible; }
+@media (prefers-reduced-motion: reduce) {
+  .cp .cp__img, .cp.run .cp__img { filter: none; transition: none; }
+  .cp.run .cp__tail, .cp.run .cp__head { animation: none; opacity: 0; }
+  .cp .cp__words, .cp.run .cp__words { opacity: 1; transition: none; }
+}
+
 /* Home hero B's scroll cue (ScrollHero): a 1px gold line that draws downward and fades, on a loop. */
 .scroll-line { position: relative; display: block; width: 1px; height: 64px; overflow: hidden; background: rgba(255, 255, 255, 0.12); }
 .scroll-line::after {

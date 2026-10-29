@@ -9,7 +9,12 @@ export const metadata = buildPageMetadata({
   focusKeyword: "recording studio Pennsauken NJ",
 });
 
-/** Home, version A: the room fills on its own. (Version B, filling as you scroll: /home-b.) */
-export default function Home() {
-  return <HomeView hero="fill" />;
+/**
+ * Home: version C, the fly-through in through the front doors (Ed, 2026-10-29: the default now).
+ * Previews: A (the room fills on its own) at /home-a, B (fills as you scroll) at /home-b.
+ * ?night= picks the fly-through's night (only the ready ones are offered).
+ */
+export default async function Home({ searchParams }: { searchParams: Promise<{ night?: string }> }) {
+  const { night } = await searchParams;
+  return <HomeView hero="flythrough" night={night} />;
 }

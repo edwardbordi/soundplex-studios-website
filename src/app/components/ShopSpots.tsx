@@ -32,7 +32,7 @@ type Placed = { slug: string; p: ArtPiece; pts: [number, number][]; left: number
 
 /** `delayMs`: keep the spots switched off until the photo has settled (the home hero waits for
  *  the empty room to finish fading into the full one, so the spots match what's on screen). */
-export default function ShopSpots({ src, delayMs = 0 }: { src: string; delayMs?: number }) {
+export default function ShopSpots({ src, delayMs = 0, posY = 0.5 }: { src: string; delayMs?: number; posY?: number }) {
   const map = HOTSPOTS[src];
   const box = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState<{ w: number; h: number } | null>(null);
@@ -62,7 +62,8 @@ export default function ShopSpots({ src, delayMs = 0 }: { src: string; delayMs?:
   if (size && live) {
     const scale = Math.max(size.w / map.w, size.h / map.h);
     const offX = (map.w * scale - size.w) / 2;
-    const offY = (map.h * scale - size.h) / 2;
+    // posY: the photo's vertical object-position (0.5 = centered; the fly-through uses ~42%).
+    const offY = (map.h * scale - size.h) * posY;
     placed = map.spots.flatMap((s) => {
       const p = ART.find((a) => a.slug === s.slug);
       if (!p) return [];

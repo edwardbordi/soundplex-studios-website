@@ -6,10 +6,20 @@ import Reveal from "./Reveal";
 import ForwardArrow from "./ForwardArrow";
 import ConnectionWall from "./widgets/ConnectionWall";
 import ChainRun from "./widgets/ChainRun";
+import ChainPanels from "./widgets/ChainPanels";
+
+/**
+ * The chain section (Ideas → Opportunity), on every home version (Ed, 2026-10-29):
+ *   "panels" — four photo cards, a comet running card to card, the eyebrow and button shine last
+ *   "line"   — the original gold line with dots (ChainRun), kept to switch back to
+ */
+const CHAIN: "panels" | "line" = "panels";
 import GoogleReviews from "./widgets/GoogleReviews";
 import LatestPosts from "./widgets/LatestPosts";
 import ShopSpots from "./ShopSpots";
 import ScrollHero from "./ScrollHero";
+// Version C uses the working copy (V3); the original fly-through is FlythroughV2, untouched.
+import FlythroughV3 from "./widgets/FlythroughV3";
 import { HeroLive, ThisWeek } from "./widgets/HomeNow";
 import { getWall } from "../../lib/members/members";
 import { getCalendarItems } from "../../lib/events/public";
@@ -90,20 +100,21 @@ const EYEBROW = "font-[family-name:var(--font-poppins)] text-xs font-medium uppe
 const H2 = "font-[family-name:var(--font-poppins)] text-4xl font-semibold leading-[1.05] tracking-tight text-white sm:text-5xl";
 
 /**
- * The home page body, shared by / (hero "fill": the room fills on its own) and the preview
- * version /home-b (hero "scroll": the room fills as you scroll). Ed, 2026-10-29: George picks
- * between them with the Preview switch; delete the loser and /home-b once he does.
+ * The home page body, shared by three versions (Ed, 2026-10-29), picked with the Preview switch:
+ *   /        hero "flythrough", version C: in through the front doors (THE DEFAULT)
+ *   /home-a  hero "fill",       version A: the room fills on its own
+ *   /home-b  hero "scroll",     version B: the room fills as you scroll
+ * Delete the losers' routes once George picks.
  *
  * HOME (Ed, 2026-10-28): clean, not overdone. One photo hero with a slow push-in and a live
  * "what's on" card, then: three ways in · this week · the Connection Wall · the chain ·
  * reviews + the Spotlight. Motion in three places only: the push-in, the live dot, the chain.
  *
- * THE FLY-THROUGH IS PARKED, NOT GONE: FlythroughV2 + flythrough-route-v2.ts + vendor/scrub-engine
- * are all still in the repo. To bring it back: import FlythroughV2, render
- * <FlythroughV2 night={night} basePath="/" /> in place of the hero, put <Nav overlay /> back, and
- * wrap the next section in `sw-after relative z-30` (the engine pulls it up over the last frame).
+ * THE FLY-THROUGH is version C (/, Ed 2026-10-29): FlythroughV3 (working copy of V2) + its route +
+ * vendor/scrub-engine. It needs the next section to carry `sw-after relative z-30` (the engine
+ * pulls it up over the last frame), which the "Three ways in" section gets when hero is C.
  */
-export default function HomeView({ hero = "fill" }: { hero?: "fill" | "scroll" }) {
+export default function HomeView({ hero = "fill", night }: { hero?: "fill" | "scroll" | "flythrough"; night?: string }) {
   const wall = getWall();
   const items = getCalendarItems();
   const posts = getAllPosts()
@@ -117,11 +128,15 @@ export default function HomeView({ hero = "fill" }: { hero?: "fill" | "scroll" }
       <JsonLd data={placeJsonLd} />
       <Nav overlay />
       <main id="main" className="flex-1 bg-[#050505]">
-        {/* ── Hero B (preview, /home-b): the room fills as you scroll (ScrollHero). ── */}
-        {hero === "scroll" ? (
+        {/* ── Hero C (the home page, /): the fly-through: in through the front doors, down the
+              hall, to the WoodRoom (FlythroughV3 + the scrub engine). ── */}
+        {hero === "flythrough" ? (
+          <FlythroughV3 night={night} basePath="/" />
+        ) : /* ── Hero B (preview, /home-b): the room fills as you scroll (ScrollHero). ── */
+        hero === "scroll" ? (
           <ScrollHero live={<HeroLive items={items} showSamples={SHOW_SAMPLE_EVENTS} />} />
         ) : (
-        /* ── Hero A: one photo, a slow push-in, George's line, and what's on right now. ── */
+        /* ── Hero A (preview, /home-a): one photo, a slow push-in, George's line, and what's on right now. ── */
         <section className="relative flex min-h-[min(94svh,900px)] items-end overflow-hidden">
           {/* The room fills — once, on its own, not tied to scrolling (Ed, 2026-10-28): the same
               WoodRoom shot, empty and lit, dissolves into the room full of people and stays.
@@ -161,12 +176,12 @@ export default function HomeView({ hero = "fill" }: { hero?: "fill" | "scroll" }
         </section>
         )}
 
-        {/* ── Three ways in ── */}
-        <section className="px-6 py-24">
+        {/* ── Three ways in ── (after the fly-through, `sw-after` pulls it up over the last frame) */}
+        <section className={`px-6 py-24 ${hero === "flythrough" ? "sw-after relative z-30 bg-[#050505]" : ""}`}>
           <div className="mx-auto max-w-6xl">
             <Reveal>
               <p className={EYEBROW}>What brings you in</p>
-              <h2 className={`${H2} mt-4 max-w-2xl`}>Three ways through the door.</h2>
+              <h2 className={`${H2} mt-4 max-w-2xl`}>Three ways to be part of it.</h2>
             </Reveal>
             <ul className="mt-12 grid gap-4 md:grid-cols-3">
               {WAYS.map((w, i) => (
@@ -208,11 +223,19 @@ export default function HomeView({ hero = "fill" }: { hero?: "fill" | "scroll" }
 
         {/* ── The chain: Ideas → Opportunity, then the way in ── */}
         <section className="ch-stage mx-auto max-w-6xl px-6">
-          <Reveal><p className="page-head__eyebrow">Not rocket science. Human science.</p></Reveal>
-          <ChainRun />
+          {CHAIN === "panels" ? (
+            // The photo panels with the comet; the eyebrow animates last (inside ChainPanels).
+            <ChainPanels eyebrow="Not rocket science. Human science." />
+          ) : (
+            <>
+              <Reveal><p className="page-head__eyebrow">Not rocket science. Human science.</p></Reveal>
+              <ChainRun />
+            </>
+          )}
           <Reveal>
             <div className="mt-12 flex flex-wrap items-center justify-center gap-x-6 gap-y-4 max-[719px]:justify-start">
-              <Link href="/start?path=collective&from=home-chain" className="evp__btn group">Join the Collective<ForwardArrow /></Link>
+              {/* With the panels, a gold shine sweeps across this button once the sequence ends (cp-shine). */}
+              <Link href="/start?path=collective&from=home-chain" className={`evp__btn group ${CHAIN === "panels" ? "cp-shine" : ""}`}>Join the Collective<ForwardArrow /></Link>
               <Link href="/membership" className="card-cta group inline-flex items-center gap-2 whitespace-nowrap">How membership works<ForwardArrow /></Link>
             </div>
           </Reveal>
