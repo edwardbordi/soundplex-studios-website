@@ -24,9 +24,11 @@ export type VenueSession = {
   tickets: VenueEvent | null;
   /** The visitor's first name, asked at the demo login so the demo speaks to them. */
   name: string;
+  /** A real member's profile photo (Supabase storage URL), or "" for their initial. */
+  photo: string;
 };
 
-const INITIAL: VenueSession = { member: false, loginOpen: false, showMe: true, checkedIn: null, onWay: null, rsvps: 0, name: "", enquiry: null, tickets: null };
+const INITIAL: VenueSession = { member: false, loginOpen: false, showMe: true, checkedIn: null, onWay: null, rsvps: 0, name: "", photo: "", enquiry: null, tickets: null };
 
 /**
  * Remembered across the whole site (Ed, 2026-10-28): who you are and where you are survive page
@@ -34,7 +36,7 @@ const INITIAL: VenueSession = { member: false, loginOpen: false, showMe: true, c
  * open sheet or a half-done checkout. (The members wave swaps this for a real signed-in session.)
  */
 const KEY = "sp-member-session";
-const KEPT = ["member", "name", "showMe", "checkedIn", "onWay", "rsvps"] as const;
+const KEPT = ["member", "name", "photo", "showMe", "checkedIn", "onWay", "rsvps"] as const;
 function load(): VenueSession {
   if (typeof window === "undefined") return INITIAL;
   try {
