@@ -943,6 +943,14 @@ p, li,
 /* The header's main door ("Get in touch" → /start): filled gold. */
 .nav-cta--solid { background-color: var(--color-signal); color: #000; }
 .nav-cta--solid:hover { background-color: #e2b34e; border-color: #e2b34e; }
+/* The split "Book | ▾" button (BookMenu, Ed 2026-10-29): Book goes to /start, the arrow opens the
+   menu, a thin dark rule between them. Each half lights on its own hover. */
+.nav-split { display: inline-flex; align-items: stretch; padding: 0; overflow: hidden; }
+.nav-split.nav-cta--solid:hover { background-color: var(--color-signal); border-color: var(--color-signal); }
+.nav-split > a { display: flex; align-items: center; padding: 0.7rem 1.15rem 0.7rem 1.4rem; color: inherit; transition: background-color 0.2s; }
+.nav-split > button { display: grid; place-items: center; padding: 0 0.8rem; color: inherit; cursor: pointer; transition: background-color 0.2s; }
+.nav-split > a:hover, .nav-split > button:hover, .nav-split > button[aria-expanded="true"] { background-color: #e2b34e; }
+.nav-split__rule { width: 1px; margin: 0.5rem 0; background: rgba(0, 0, 0, 0.28); }
 /* Links share the middle zone with even gaps; they tighten a step between 1024 and 1280 so the
    row never reaches the logo or the right-hand group. */
 /* Tighter (Ed, 2026-10-29: "not so spread out"): was 2.25rem / 1.4rem. */
@@ -951,6 +959,9 @@ p, li,
   .nav-links { gap: 1.1rem; }
   .nav-link, .nav-cta { font-size: 0.7rem; letter-spacing: 0.11em; }
   .nav-cta { padding: 0.6rem 1.05rem; }
+  .nav-split { padding: 0; }
+  .nav-split > a { padding: 0.6rem 0.9rem 0.6rem 1.05rem; }
+  .nav-split > button { padding: 0 0.65rem; }
 }
 
 /* Hero v2 titles: the live site's pairing — geometric sans for the setup, Lora italic
@@ -2312,6 +2323,16 @@ input:-webkit-autofill:focus {
    underneath and settles. Reduced motion: the full room, still. */
 .home-hero__img { transform-origin: 50% 60%; animation: home-push 12s cubic-bezier(0.2, 0.6, 0.2, 1) both; }
 @keyframes home-push { from { transform: scale(1.08); } to { transform: scale(1); } }
+/* Home hero B's scroll cue (ScrollHero): a 1px gold line that draws downward and fades, on a loop. */
+.scroll-line { position: relative; display: block; width: 1px; height: 64px; overflow: hidden; background: rgba(255, 255, 255, 0.12); }
+.scroll-line::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(to bottom, transparent, #d4a030 60%, transparent);
+  animation: scroll-line 2.2s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+@keyframes scroll-line { from { transform: translateY(-100%); } to { transform: translateY(100%); } }
+@media (prefers-reduced-motion: reduce) { .scroll-line::after { animation: none; transform: none; opacity: 0.6; } }
+
 /* The people fade in from 1.2s to 3.4s (Ed, 2026-10-29: "sooner"; was 3s → 5.5s). Keep ShopSpots' delayMs on the home page just after the end. */
 .home-loop__empty { animation: home-push 12s cubic-bezier(0.2, 0.6, 0.2, 1) both, home-fill 2.2s ease-in-out 1.2s both; }
 @keyframes home-fill { from { opacity: 1; } to { opacity: 0; } }

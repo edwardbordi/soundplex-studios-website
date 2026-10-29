@@ -107,10 +107,11 @@ export default function ShopSpots({ src, delayMs = 0 }: { src: string; delayMs?:
             right: size!.w - (left + width) > CARD_W + 28,
             left: left > CARD_W + 28,
             below: size!.h - (top + height) > 104,
-            above: top > 104,
+            above: top > 132,
           };
           const side: Side = x.card && fits[x.card] ? x.card : fits.right ? "right" : fits.left ? "left" : "below";
-          const cardTop = Math.min(Math.max(top + height / 2 - 40, 12), size!.h - 92);
+          // The card is ~108px tall with its "for sale" line.
+          const cardTop = Math.min(Math.max(top + height / 2 - 54, 12), size!.h - 120);
           const centerX = Math.min(Math.max(left + width / 2 - CARD_W / 2, 12), size!.w - CARD_W - 12);
           const cardStyle =
             side === "right"
@@ -118,7 +119,7 @@ export default function ShopSpots({ src, delayMs = 0 }: { src: string; delayMs?:
               : side === "left"
                 ? { left: left - 14 - CARD_W, top: cardTop }
                 : side === "above"
-                  ? { left: centerX, top: top - 12 - 80 }
+                  ? { left: centerX, top: top - 12 - 108 }
                   : { left: centerX, top: top + height + 12 };
           // Each side gets its own dash spacing so it starts and ends on a whole dash.
           const edges = pts.map((a, i) => {
@@ -151,9 +152,10 @@ export default function ShopSpots({ src, delayMs = 0 }: { src: string; delayMs?:
               {/* The museum card: the piece in true color, its name, its price. */}
               <div
                 aria-hidden
-                className={`pointer-events-none absolute flex items-center gap-3 rounded-[6px] border border-white/10 bg-black/85 p-2 pr-3.5 shadow-[0_14px_34px_-8px_rgba(0,0,0,0.75)] backdrop-blur transition-all duration-250 ${on ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0"}`}
+                className={`pointer-events-none absolute rounded-[6px] border border-white/10 bg-black/85 shadow-[0_14px_34px_-8px_rgba(0,0,0,0.75)] backdrop-blur transition-all duration-250 ${on ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0"}`}
                 style={{ ...cardStyle, width: CARD_W }}
               >
+                <span className="flex items-center gap-3 p-2 pr-3.5">
                 <span className="relative h-16 w-14 shrink-0 overflow-hidden rounded-[2px] bg-[#111]">
                   <Image src={`/gallery/${p.slug}.webp`} alt="" fill sizes="56px" className="object-cover" />
                 </span>
@@ -162,6 +164,9 @@ export default function ShopSpots({ src, delayMs = 0 }: { src: string; delayMs?:
                   <span className="block truncate font-[family-name:var(--font-lora)] text-[12.5px] italic text-white/60">{p.artist}</span>
                   <span className={`mt-1 block font-[family-name:var(--font-poppins)] text-[13px] tabular-nums ${sold ? "text-white/45" : "text-[#e2b34e]"}`}>{sold ? "Sold" : `${usd(p.price)} · View →`}</span>
                 </span>
+                </span>
+                {/* So a visitor who stumbles on the hotspots knows what they are (Ed, 2026-10-29). */}
+                <span className="block border-t border-white/10 px-3 py-1.5 text-[11.5px] text-white/50">Every piece on our walls is for sale.</span>
               </div>
             </div>
           );
