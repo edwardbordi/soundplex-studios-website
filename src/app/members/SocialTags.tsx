@@ -160,7 +160,7 @@ export default function SocialTags({
           }}
           onBlur={() => commit(pending)}
           aria-describedby={`${id}-hint`}
-          className={`w-full rounded-[4px] border border-white/15 bg-[#0b0b0b] px-3.5 py-3 text-[16px] text-white outline-none transition-colors placeholder:text-white/30 focus:border-[#d4a030] ${count ? "pr-28" : ""}`}
+          className={`w-full rounded-[4px] border border-(--mx-line-strong) bg-(--mx-field) px-3.5 py-3 text-[16px] text-(--mx-text) outline-none transition-colors placeholder:text-(--mx-faint) focus:border-[#d4a030] ${count ? "pr-28" : ""}`}
         />
         {count > 0 && (
           <button
@@ -169,7 +169,7 @@ export default function SocialTags({
             aria-expanded={open}
             aria-controls={`${id}-list`}
             aria-label={`${count} added${attention ? ", one needs a quick look" : ""}. Show list`}
-            className="absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center gap-1 rounded-[4px] bg-[#d4a030]/15 px-2.5 py-1 text-[12.5px] font-semibold text-[#e2b34e] hover:bg-[#d4a030]/25"
+            className="absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center gap-1 rounded-[4px] bg-[#d4a030]/15 px-2.5 py-1 text-[12.5px] font-semibold text-(--mx-gold-text) hover:bg-[#d4a030]/25"
           >
             {attention && <span className="h-1.5 w-1.5 rounded-full bg-[#e2b34e]" aria-hidden="true" />}
             {count} added
@@ -179,14 +179,14 @@ export default function SocialTags({
           </button>
         )}
       </div>
-      <p id={`${id}-hint`} className="mt-1.5 text-[13px] normal-case tracking-normal text-white/40">
+      <p id={`${id}-hint`} className="mt-1.5 text-[13px] normal-case tracking-normal text-(--mx-faint)">
         Press Enter to add more than one.
       </p>
 
       {open && count > 0 && (
-        <ul id={`${id}-list`} className="absolute left-0 right-0 top-[calc(100%-1.4rem)] z-20 mt-1 max-h-72 overflow-auto rounded-[6px] border border-white/12 bg-[#141414] p-1.5 normal-case tracking-normal shadow-2xl">
+        <ul id={`${id}-list`} className="absolute left-0 right-0 top-[calc(100%-1.4rem)] z-20 mt-1 max-h-72 overflow-auto rounded-[6px] border border-(--mx-line) bg-(--mx-pop) p-1.5 normal-case tracking-normal shadow-(--mx-shadow)">
           {tags.map((t, i) => (
-            <li key={`${i}-${t}`} className="flex items-start gap-1 rounded-[4px] px-2 py-1 text-[14.5px] text-white hover:bg-white/[0.05]">
+            <li key={`${i}-${t}`} className="flex items-start gap-1 rounded-[4px] px-2 py-1 text-[14.5px] text-(--mx-text) hover:bg-(--mx-hover)">
               {editing === i ? (
                 <input
                   autoFocus
@@ -204,19 +204,19 @@ export default function SocialTags({
                     }
                   }}
                   onBlur={saveEdit}
-                  className="min-w-0 flex-1 rounded-[4px] border border-white/20 bg-[#0b0b0b] px-2 py-1 text-[14.5px] text-white outline-none focus:border-[#d4a030]"
+                  className="min-w-0 flex-1 rounded-[4px] border border-(--mx-line-strong) bg-(--mx-field) px-2 py-1 text-[14.5px] text-(--mx-text) outline-none focus:border-[#d4a030]"
                 />
               ) : (
                 <SocialRow value={t} found={found[t]} kept={kept.includes(t)} onPick={(v) => replaceAt(i, v)} onKeep={() => setKept((k) => [...k, t])} />
               )}
               {editing !== i && (
-                <button type="button" onClick={() => startEdit(i)} aria-label={`Edit ${shortSocial(t)}`} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[4px] text-white/45 hover:bg-white/10 hover:text-white">
+                <button type="button" onClick={() => startEdit(i)} aria-label={`Edit ${shortSocial(t)}`} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[4px] text-(--mx-faint) hover:bg-(--mx-hover) hover:text-(--mx-text)">
                   <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" aria-hidden="true">
                     <path d="M11 2.5l2.5 2.5L6 12.5H3.5V10L11 2.5z" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
                   </svg>
                 </button>
               )}
-              <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => remove(i)} aria-label={`Remove ${shortSocial(t)}`} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[4px] text-lg leading-none text-white/45 hover:bg-white/10 hover:text-white">
+              <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => remove(i)} aria-label={`Remove ${shortSocial(t)}`} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[4px] text-lg leading-none text-(--mx-faint) hover:bg-(--mx-hover) hover:text-(--mx-text)">
                 ×
               </button>
             </li>
@@ -231,18 +231,18 @@ function SocialRow({ value, found, kept, onPick, onKeep }: { value: string; foun
   const info = parseSocial(value);
   const { platform, name } = socialLabel(info);
   const askPlatform = !info.platform && !info.url && !info.problem && !kept;
-  const chip = "rounded-[4px] border border-white/15 px-2 py-0.5 text-white hover:border-[#d4a030]/60 hover:bg-white/[0.05]";
+  const chip = "rounded-[4px] border border-(--mx-line-strong) px-2 py-0.5 text-(--mx-text) hover:border-[#d4a030]/60 hover:bg-(--mx-hover)";
 
   return (
     <div className="min-w-0 flex-1 px-0.5 py-1">
       <div className="flex min-w-0 items-center gap-1.5">
-        {platform && <span className="shrink-0 text-[12.5px] text-white/45">{platform}</span>}
+        {platform && <span className="shrink-0 text-[12.5px] text-(--mx-faint)">{platform}</span>}
         <span className="truncate" title={value}>
           {name}
         </span>
         <span className="ml-auto shrink-0">
           {found === true ? (
-            <span className="flex items-center gap-1 text-[12px] font-medium text-[#4cc773]">
+            <span className="flex items-center gap-1 text-[12px] font-medium text-(--mx-ok)">
               <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" aria-hidden="true">
                 <circle cx="8" cy="8" r="7" fill="currentColor" opacity="0.16" />
                 <path d="M4.8 8.2 7 10.4l4.2-4.6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
@@ -250,29 +250,29 @@ function SocialRow({ value, found, kept, onPick, onKeep }: { value: string; foun
               Found
             </span>
           ) : found === false ? (
-            <span className="text-[12px] font-medium text-[#ff8a80]">Not found</span>
+            <span className="text-[12px] font-medium text-(--mx-error)">Not found</span>
           ) : found === "checking" ? (
-            <span className="text-[12px] text-white/45">Checking…</span>
+            <span className="text-[12px] text-(--mx-faint)">Checking…</span>
           ) : info.url && !info.problem && !info.typoHost ? (
-            <a href={info.url} target="_blank" rel="noopener noreferrer" className="text-[12px] text-[#d4a030] underline-offset-2 hover:underline">
+            <a href={info.url} target="_blank" rel="noopener noreferrer" className="text-[12px] text-(--mx-gold-text) underline-offset-2 hover:underline">
               open
             </a>
           ) : null}
         </span>
       </div>
 
-      {found === false && <p className="mt-0.5 text-[12.5px] text-white/50">We couldn’t find that account. Double-check it?</p>}
-      {info.problem && <p className="mt-0.5 text-[12.5px] text-white/50">{info.problem}. Tap the pencil to fix it.</p>}
+      {found === false && <p className="mt-0.5 text-[12.5px] text-(--mx-muted)">We couldn’t find that account. Double-check it?</p>}
+      {info.problem && <p className="mt-0.5 text-[12.5px] text-(--mx-muted)">{info.problem}. Tap the pencil to fix it.</p>}
       {info.typoHost && (
-        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[12.5px] text-white/50">
+        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[12.5px] text-(--mx-muted)">
           Did you mean {info.typoHost}?
-          <button type="button" onClick={() => onPick(fixSocialHost(value, info.typoHost!))} className="font-medium text-[#e2b34e] hover:underline">
+          <button type="button" onClick={() => onPick(fixSocialHost(value, info.typoHost!))} className="font-medium text-(--mx-gold-text) hover:underline">
             Yes, fix it
           </button>
         </p>
       )}
       {askPlatform && (
-        <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[12.5px] text-white/50">
+        <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[12.5px] text-(--mx-muted)">
           Which app?
           {ASK_PLATFORMS.map((p) => (
             <button key={p} type="button" onClick={() => onPick(socialFromHandle(info.handle, p))} className={chip}>

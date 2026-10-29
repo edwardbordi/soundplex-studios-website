@@ -61,7 +61,7 @@ async function squareWebp(file: File): Promise<Blob> {
   }
 }
 
-export default function ProfileForm({ mode, next = "/studio-productions#members" }: { mode: Mode; next?: string }) {
+export default function ProfileForm({ mode, next = "/members" }: { mode: Mode; next?: string }) {
   const sb = membersBrowser();
   const [loaded, setLoaded] = useState(false);
   const [email, setEmail] = useState("");
@@ -108,8 +108,8 @@ export default function ProfileForm({ mode, next = "/studio-productions#members"
     })();
   }, [sb]);
 
-  if (!sb) return <p className="text-white/60">Member accounts aren’t switched on yet.</p>;
-  if (!loaded) return <p className="text-white/50">Loading your profile…</p>;
+  if (!sb) return <p className="text-(--mx-muted)">Member accounts aren’t switched on yet.</p>;
+  if (!loaded) return <p className="text-(--mx-muted)">Loading your profile…</p>;
 
   const needsPw = mode !== "account";
   const set = <K extends keyof Fields>(k: K, v: Fields[K]) => setF((x) => ({ ...x, [k]: v }));
@@ -123,12 +123,20 @@ export default function ProfileForm({ mode, next = "/studio-productions#members"
     setPhotoBusy(true);
     try {
       const blob = await squareWebp(file);
-      const path = `${userId}/${Date.now()}.webp`;
-      const { error: upErr } = await sb.storage.from("avatars").upload(path, blob, { contentType: "image/webp", cacheControl: "31536000" });
-      if (upErr) throw upErr;
+      // Safari can't encode WebP and hands back a PNG: name and label the file by what it really is.
+      const type = blob.type === "image/webp" || blob.type === "image/png" || blob.type === "image/jpeg" ? blob.type : "image/png";
+      const path = `${userId}/${Date.now()}.${type.split("/")[1]}`;
+      const { error: upErr } = await sb.storage.from("avatars").upload(path, blob, { contentType: type, cacheControl: "31536000" });
+      if (upErr) {
+        console.error("[avatar] upload failed:", upErr);
+        throw new Error(/bucket not found/i.test(upErr.message) ? "no-bucket" : /row-level security|policy|unauthorized/i.test(upErr.message) ? "denied" : "upload");
+      }
       const url = sb.storage.from("avatars").getPublicUrl(path).data.publicUrl;
       const { error: dbErr } = await sb.from("members").update({ photo_url: url }).eq("id", userId);
-      if (dbErr) throw dbErr;
+      if (dbErr) {
+        console.error("[avatar] saving photo_url failed:", dbErr);
+        throw new Error("db");
+      }
       set("photo_url", url);
       setSession({ photo: url });
       setPhotoMsg({ ok: true, text: "Photo updated." });
@@ -138,7 +146,19 @@ export default function ProfileForm({ mode, next = "/studio-productions#members"
       if (old.length) await sb.storage.from("avatars").remove(old);
     } catch (e) {
       const m = e instanceof Error ? e.message : "";
-      setPhotoMsg({ ok: false, text: m === "unreadable" ? "Couldn’t read that image. Try a JPG or PNG." : "Couldn’t save your photo. Try again in a moment." });
+      setPhotoMsg({
+        ok: false,
+        text:
+          m === "unreadable"
+            ? "Couldn’t read that image. Try a JPG or PNG."
+            : m === "no-bucket"
+              ? "Photo storage isn’t set up yet (the avatars bucket is missing)."
+              : m === "denied"
+                ? "Photo upload isn’t allowed for this account yet (storage permissions)."
+                : m === "db"
+                  ? "The photo uploaded but couldn’t be saved to your profile."
+                  : "Couldn’t save your photo. Try again in a moment.",
+      });
     } finally {
       setPhotoBusy(false);
       if (fileRef.current) fileRef.current.value = "";
@@ -215,11 +235,11 @@ export default function ProfileForm({ mode, next = "/studio-productions#members"
     window.location.replace(next);
   };
 
-  const field = "w-full rounded-[4px] border border-white/15 bg-[#0b0b0b] px-3.5 py-3 text-[16px] text-white outline-none transition-colors placeholder:text-white/30 focus:border-[#d4a030]";
-  const label = "block text-[12px] uppercase tracking-[0.16em] text-white/50";
-  const section = "rounded-[8px] rounded-bl-none border border-white/10 bg-white/[0.02] p-5 sm:p-7";
-  const sectionTitle = "font-[family-name:var(--font-poppins)] text-[17px] font-medium text-white";
-  const sectionNote = "mt-1 text-[14px] text-white/50";
+  const field = "w-full rounded-[4px] border border-(--mx-line-strong) bg-(--mx-field) px-3.5 py-3 text-[16px] text-(--mx-text) outline-none transition-colors placeholder:text-(--mx-faint) focus:border-[#d4a030]";
+  const label = "block text-[12px] uppercase tracking-[0.16em] text-(--mx-muted)";
+  const section = "rounded-[8px] rounded-bl-none border border-(--mx-line) bg-(--mx-panel) p-5 sm:p-7";
+  const sectionTitle = "font-[family-name:var(--font-poppins)] text-[17px] font-medium text-(--mx-text)";
+  const sectionNote = "mt-1 text-[14px] text-(--mx-muted)";
 
   const passwordBlock = (
     <div className={mode === "reset" ? "" : section}>
@@ -249,7 +269,7 @@ export default function ProfileForm({ mode, next = "/studio-productions#members"
         {!busy && <ForwardArrow />}
       </button>
       {msg && (
-        <p role="status" className={`text-[14px] ${msg.ok ? "text-[#e2b34e]" : "text-[#ff8a80]"}`}>
+        <p role="status" className={`text-[14px] ${msg.ok ? "text-(--mx-gold-text)" : "text-(--mx-error)"}`}>
           {msg.text}
         </p>
       )}
@@ -265,8 +285,8 @@ export default function ProfileForm({ mode, next = "/studio-productions#members"
   if (mode === "reset") {
     return (
       <form onSubmit={onSubmit} noValidate className="max-w-[36rem]">
-        <p className="text-[14px] text-white/50">
-          Signed in as <span className="text-white/80">{email}</span>.
+        <p className="text-[14px] text-(--mx-muted)">
+          Signed in as <span className="text-(--mx-soft)">{email}</span>.
         </p>
         <div className="mt-8">{passwordBlock}</div>
         <div className="mt-8">{actions}</div>
@@ -279,8 +299,8 @@ export default function ProfileForm({ mode, next = "/studio-productions#members"
   return (
     <form onSubmit={onSubmit} noValidate className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-12">
       <div className="min-w-0 space-y-6">
-        <p className="text-[14px] text-white/50">
-          Signed in as <span className="text-white/80">{email}</span>. That’s your username.
+        <p className="text-[14px] text-(--mx-muted)">
+          Signed in as <span className="text-(--mx-soft)">{email}</span>. That’s your username.
         </p>
 
         {/* Photo */}
@@ -303,10 +323,10 @@ export default function ProfileForm({ mode, next = "/studio-productions#members"
               onClick={() => fileRef.current?.click()}
               disabled={photoBusy}
               aria-label={f.photo_url ? "Change your photo" : "Add a photo"}
-              className="group relative h-24 w-24 shrink-0 overflow-hidden rounded-full ring-2 ring-[#d4a030] ring-offset-4 ring-offset-[#050505]"
+              className="group relative h-24 w-24 shrink-0 overflow-hidden rounded-full ring-2 ring-[#d4a030] ring-offset-4 ring-offset-(--mx-bg)"
             >
               <Avatar url={f.photo_url} name={f.first_name} size={96} />
-              <span className="absolute inset-0 grid place-items-center bg-black/55 text-[12px] font-medium uppercase tracking-[0.14em] text-white opacity-0 transition-opacity group-hover:opacity-100">
+              <span className="absolute inset-0 grid place-items-center bg-black/55 text-[12px] font-medium uppercase tracking-[0.14em] text-(--mx-text) opacity-0 transition-opacity group-hover:opacity-100">
                 {photoBusy ? "…" : f.photo_url ? "Change" : "Add"}
               </span>
             </button>
@@ -314,15 +334,15 @@ export default function ProfileForm({ mode, next = "/studio-productions#members"
               <p className={sectionTitle}>Your photo</p>
               <p className={sectionNote}>A clear photo of your face works best. Drop one here or choose a file.</p>
               <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[14px]">
-                <button type="button" onClick={() => fileRef.current?.click()} disabled={photoBusy} className="font-medium text-[#d4a030] hover:text-[#e2b34e] disabled:opacity-50">
+                <button type="button" onClick={() => fileRef.current?.click()} disabled={photoBusy} className="font-medium text-(--mx-gold-text) hover:text-(--mx-gold-text) disabled:opacity-50">
                   {photoBusy ? "Saving…" : f.photo_url ? "Choose a new photo" : "Choose a photo"}
                 </button>
                 {f.photo_url && !photoBusy && (
-                  <button type="button" onClick={() => void removePhoto()} className="text-white/50 hover:text-white">
+                  <button type="button" onClick={() => void removePhoto()} className="text-(--mx-muted) hover:text-(--mx-text)">
                     Remove
                   </button>
                 )}
-                {photoMsg && <span className={photoMsg.ok ? "text-[#e2b34e]" : "text-[#ff8a80]"}>{photoMsg.text}</span>}
+                {photoMsg && <span className={photoMsg.ok ? "text-(--mx-gold-text)" : "text-(--mx-error)"}>{photoMsg.text}</span>}
               </div>
             </div>
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => void uploadPhoto(e.target.files?.[0])} />
@@ -384,35 +404,35 @@ export default function ProfileForm({ mode, next = "/studio-productions#members"
       </div>
 
       {/* How members see you */}
-      <aside className="lg:sticky lg:top-[calc(var(--hdr-h,96px)+24px)]">
-        <p className="text-[12px] uppercase tracking-[0.16em] text-white/45">How members see you</p>
-        <div className="mt-3 overflow-hidden rounded-[8px] rounded-bl-none border border-[#d4a030]/30 bg-[#0d0d0d]">
+      <aside className="lg:sticky lg:top-[calc(var(--mx-sticky,var(--hdr-h,96px))+24px)]">
+        <p className="text-[12px] uppercase tracking-[0.16em] text-(--mx-faint)">How members see you</p>
+        <div className="mt-3 overflow-hidden rounded-[8px] rounded-bl-none border border-[#d4a030]/30 bg-(--mx-raised)">
           <div className="h-1 bg-[#d4a030]" />
           <div className="p-6 text-center">
-            <div className="mx-auto h-20 w-20 overflow-hidden rounded-full ring-2 ring-[#d4a030] ring-offset-4 ring-offset-[#0d0d0d]">
+            <div className="mx-auto h-20 w-20 overflow-hidden rounded-full ring-2 ring-[#d4a030] ring-offset-4 ring-offset-(--mx-raised)">
               <Avatar url={f.photo_url} name={f.first_name} size={80} />
             </div>
-            <p className="mt-5 font-[family-name:var(--font-poppins)] text-[19px] font-medium leading-tight text-white">{fullName}</p>
-            {f.role.trim() && <p className="mt-1 text-[14px] text-[#e2b34e]">{f.role.trim()}</p>}
+            <p className="mt-5 font-[family-name:var(--font-poppins)] text-[19px] font-medium leading-tight text-(--mx-text)">{fullName}</p>
+            {f.role.trim() && <p className="mt-1 text-[14px] text-(--mx-gold-text)">{f.role.trim()}</p>}
           </div>
           {(f.offers.trim() || f.looking.trim()) && (
-            <dl className="space-y-3 border-t border-white/[0.08] px-6 py-5 text-[14px]">
+            <dl className="space-y-3 border-t border-(--mx-line) px-6 py-5 text-[14px]">
               {f.offers.trim() && (
                 <div>
-                  <dt className="text-[11px] uppercase tracking-[0.16em] text-white/40">Offers</dt>
-                  <dd className="mt-1 text-white/80">{f.offers.trim()}</dd>
+                  <dt className="text-[11px] uppercase tracking-[0.16em] text-(--mx-faint)">Offers</dt>
+                  <dd className="mt-1 text-(--mx-soft)">{f.offers.trim()}</dd>
                 </div>
               )}
               {f.looking.trim() && (
                 <div>
-                  <dt className="text-[11px] uppercase tracking-[0.16em] text-white/40">Looking for</dt>
-                  <dd className="mt-1 text-white/80">{f.looking.trim()}</dd>
+                  <dt className="text-[11px] uppercase tracking-[0.16em] text-(--mx-faint)">Looking for</dt>
+                  <dd className="mt-1 text-(--mx-soft)">{f.looking.trim()}</dd>
                 </div>
               )}
             </dl>
           )}
           {f.socials.length > 0 && (
-            <ul className="flex flex-wrap gap-2 border-t border-white/[0.08] px-6 py-5">
+            <ul className="flex flex-wrap gap-2 border-t border-(--mx-line) px-6 py-5">
               {f.socials.map((s) => {
                 const info = parseSocial(s);
                 const { platform, name } = socialLabel(info);
@@ -420,18 +440,18 @@ export default function ProfileForm({ mode, next = "/studio-productions#members"
                 return (
                   <li key={s}>
                     {info.url && !info.problem ? (
-                      <a href={info.url} target="_blank" rel="noopener noreferrer" title={name} className="inline-flex rounded-[4px] border border-white/15 px-2.5 py-1 text-[12.5px] text-white/80 transition-colors hover:border-[#d4a030]/60 hover:text-white">
+                      <a href={info.url} target="_blank" rel="noopener noreferrer" title={name} className="inline-flex rounded-[4px] border border-(--mx-line-strong) px-2.5 py-1 text-[12.5px] text-(--mx-soft) transition-colors hover:border-[#d4a030]/60 hover:text-(--mx-text)">
                         {text}
                       </a>
                     ) : (
-                      <span className="inline-flex rounded-[4px] border border-white/15 px-2.5 py-1 text-[12.5px] text-white/60">{text}</span>
+                      <span className="inline-flex rounded-[4px] border border-(--mx-line-strong) px-2.5 py-1 text-[12.5px] text-(--mx-muted)">{text}</span>
                     )}
                   </li>
                 );
               })}
             </ul>
           )}
-          <p className="border-t border-white/[0.08] px-6 py-4 text-[12.5px] text-white/45">
+          <p className="border-t border-(--mx-line) px-6 py-4 text-[12.5px] text-(--mx-faint)">
             {f.show_me ? (
               <>
                 <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#4cc773] align-middle" aria-hidden="true" />
@@ -462,13 +482,13 @@ function Avatar({ url, name, size }: { url: string; name: string; size: number }
 
 function Toggle({ on, onChange, title, note }: { on: boolean; onChange: (v: boolean) => void; title: string; note: string }) {
   return (
-    <button type="button" role="switch" aria-checked={on} onClick={() => onChange(!on)} className="flex items-start gap-3 rounded-[6px] border border-white/10 bg-white/[0.02] p-4 text-left transition-colors hover:border-white/25">
-      <span className={`relative mt-0.5 h-6 w-10 shrink-0 rounded-[4px] transition-colors ${on ? "bg-[#d4a030]" : "bg-white/15"}`} aria-hidden>
+    <button type="button" role="switch" aria-checked={on} onClick={() => onChange(!on)} className="flex items-start gap-3 rounded-[6px] border border-(--mx-line) bg-(--mx-panel) p-4 text-left transition-colors hover:border-(--mx-line-strong)">
+      <span className={`relative mt-0.5 h-6 w-10 shrink-0 rounded-[4px] transition-colors ${on ? "bg-[#d4a030]" : "bg-(--mx-line-strong)"}`} aria-hidden>
         <span className={`absolute top-1 h-4 w-4 rounded-[3px] bg-white shadow transition-all ${on ? "left-5" : "left-1"}`} />
       </span>
       <span>
-        <span className="block text-[15px] text-white">{title}</span>
-        <span className="mt-0.5 block text-[13px] text-white/50">{note}</span>
+        <span className="block text-[15px] text-(--mx-text)">{title}</span>
+        <span className="mt-0.5 block text-[13px] text-(--mx-muted)">{note}</span>
       </span>
     </button>
   );

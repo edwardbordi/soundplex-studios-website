@@ -55,7 +55,7 @@ export async function inviteMember(form: FormData): Promise<MembersResult> {
   }
 
   const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
-    redirectTo: `${await origin()}${AUTH_LANDING}?next=${encodeURIComponent("/studio-productions#members")}`,
+    redirectTo: `${await origin()}${AUTH_LANDING}?next=${encodeURIComponent("/members")}`,
     data: { first_name: first },
   });
   if (error || !data.user) {

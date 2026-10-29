@@ -80,9 +80,9 @@ export function setSession(patch: Partial<VenueSession>) {
   // REAL members (Ed, 2026-10-28): once the members project is connected, every "Log in" in the
   // UI (the account menu, the members preview, the board) goes to the real emailed-link sign-in
   // instead of the demo first-name prompt. MemberBridge then fills this session from Supabase.
+  // Signing in always lands in the members area (Ed, 2026-10-29), wherever "Sign in" was clicked.
   if (patch.loginOpen && membersConfigured() && typeof window !== "undefined") {
-    const back = window.location.pathname + window.location.hash;
-    window.location.assign(`/members/sign-in?next=${encodeURIComponent(back || "/studio-productions#members")}`);
+    window.location.assign("/members/sign-in?next=%2Fmembers");
     return;
   }
   state = { ...state, ...patch };
