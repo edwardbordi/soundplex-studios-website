@@ -40,7 +40,7 @@
   /* Type — the live site's three faces, loaded in layout.tsx via next/font. */
   --font-display: var(--font-lora), Georgia, "Times New Roman", serif;
   --font-body: var(--font-roboto), system-ui, -apple-system, sans-serif;
-  --font-slab: var(--font-roboto-slab), Georgia, serif;
+  --font-slab: "Roboto Slab", Georgia, serif; /* unused; no longer loaded */
   --font-button: var(--font-poppins), system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
