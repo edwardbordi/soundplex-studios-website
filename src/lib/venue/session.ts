@@ -97,6 +97,10 @@ function subscribe(f: () => void) {
   };
 }
 
+/** Outside React (MemberBridge saves check-ins to the database as they change). */
+export const getVenueSession = () => state;
+export const onVenueSession = subscribe;
+
 export function useVenueSession() {
   return useSyncExternalStore(
     subscribe,

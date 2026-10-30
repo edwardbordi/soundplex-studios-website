@@ -7,6 +7,7 @@ import { MEMBER_SINCE, setSession, useVenueSession } from "../../../lib/venue/se
 import MeAvatar from "./MeAvatar";
 import { membersBrowser } from "../../../lib/members/browser";
 import { membersConfigured } from "../../../lib/members/env";
+import { useUnreadMessages } from "../../../lib/members/messages";
 
 /**
  * Top-right account area for the SoundPlex demo, like a SaaS app: "Log in" when signed
@@ -18,6 +19,8 @@ export default function AccountMenu() {
   const s = useVenueSession();
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
+  // Unread member messages (Ed, 2026-10-30): a gold dot on the avatar and a count in the menu.
+  const unread = useUnreadMessages(s.member && membersConfigured());
 
   useEffect(() => {
     if (!open) return;
@@ -75,13 +78,18 @@ export default function AccountMenu() {
         type="button"
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={`Account menu for ${s.name}`}
+        aria-label={`Account menu for ${s.name}${unread ? `, ${unread} unread message${unread === 1 ? "" : "s"}` : ""}`}
         onClick={() => setOpen((o) => !o)}
         className="flex items-center rounded-full p-1 text-white transition-[box-shadow] hover:shadow-[0_0_0_3px_rgba(212,160,48,0.35)]"
       >
         <span className="relative h-8 w-8 shrink-0 rounded-full ring-2" style={{ ["--tw-ring-color" as string]: GOLD }}>
           <MeAvatar name={s.name} photo={s.photo} size={32} />
           {room && <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[#050505] bg-[#4cc773]" aria-hidden="true" />}
+          {unread > 0 && (
+            <span className="absolute -right-1.5 -top-1.5 grid h-[18px] min-w-[18px] place-items-center rounded-full border-2 border-[#050505] bg-[#d4a030] px-1 text-[10px] font-bold leading-none text-[#141414]" aria-hidden="true">
+              {unread > 9 ? "9+" : unread}
+            </span>
+          )}
         </span>
       </button>
 
@@ -144,9 +152,22 @@ export default function AccountMenu() {
             )}
             {membersConfigured() && (
               <li>
-                <Link href="/members/account" role="menuitem" onClick={() => setOpen(false)} className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-white/[0.06]">
+                <Link href="/members/messages" role="menuitem" onClick={() => setOpen(false)} className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-white/[0.06]">
+                  <Ico d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  <span className="flex-1">Messages</span>
+                  {unread > 0 ? (
+                    <span className="rounded-full bg-[#d4a030] px-2 text-[12px] font-bold text-[#141414]">{unread > 9 ? "9+" : unread} new</span>
+                  ) : (
+                    <span className="text-[12px] text-white/40">None new</span>
+                  )}
+                </Link>
+              </li>
+            )}
+            {membersConfigured() && (
+              <li>
+                <Link href="/members/settings" role="menuitem" onClick={() => setOpen(false)} className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-white/[0.06]">
                   <Ico d="M20 21a8 8 0 0 0-16 0M12 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10" />
-                  My profile &amp; password
+                  My profile &amp; settings
                 </Link>
               </li>
             )}
@@ -185,8 +206,15 @@ export default function AccountMenu() {
             onClick={() => {
               setOpen(false);
               setSession({ member: false, checkedIn: null, onWay: null });
-              // Real members: end the Supabase session too.
-              void membersBrowser()?.auth.signOut();
+              // Real members: check out in the database (so no one sees you "at the Plex"), then
+              // end the Supabase session too.
+              const sb = membersBrowser();
+              if (sb)
+                void (async () => {
+                  const uid = (await sb.auth.getSession()).data.session?.user.id;
+                  if (uid) await sb.from("check_ins").delete().eq("member_id", uid);
+                  await sb.auth.signOut();
+                })();
             }}
             className="flex w-full items-center gap-3 border-t border-white/10 px-4 py-3 text-left text-[14px] text-white/70 hover:bg-white/[0.06] hover:text-white"
           >

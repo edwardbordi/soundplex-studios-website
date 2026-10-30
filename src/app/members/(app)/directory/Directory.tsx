@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { startConversation } from "../../../../lib/members/messages";
 import { parseSocial, socialLabel } from "../../../../lib/social";
-import { Avatar } from "../MemberShell";
+import ContactIcons from "../../ContactIcons";
+import PresenceAvatar from "../PresenceAvatar";
 import { Em, PANEL, PageHead } from "../shared";
 
 /** Members: the Plex Collective as cards, searchable by name, what they do, offer or look for. */
@@ -16,10 +19,26 @@ export type DirMember = {
   looking: string;
   photo_url: string | null;
   socials: string[];
+  phone: string | null;
+  contact_email: string | null;
+  /** Whether I can message them right now (their privacy settings and blocks). */
+  can_message: boolean;
 };
 
 export default function Directory({ list, meId }: { list: DirMember[]; meId: string }) {
+  const router = useRouter();
   const [q, setQ] = useState("");
+  const [busy, setBusy] = useState<string | null>(null);
+  const [err, setErr] = useState<{ id: string; text: string } | null>(null);
+  // Opens (or starts) your private conversation with them.
+  const message = async (id: string) => {
+    setErr(null);
+    setBusy(id);
+    const r = await startConversation(id);
+    if (r.ok) return router.push(`/members/messages/${r.id}`);
+    setBusy(null);
+    setErr({ id, text: r.error });
+  };
   const needle = q.trim().toLowerCase();
   const shown = needle ? list.filter((m) => [m.first_name, m.last_name, m.role, m.offers, m.looking].join(" ").toLowerCase().includes(needle)) : list;
 
@@ -62,9 +81,7 @@ export default function Directory({ list, meId }: { list: DirMember[]; meId: str
               <li key={m.id} className="flex flex-col overflow-hidden rounded-[8px] rounded-bl-none border border-(--mx-line) bg-(--mx-raised)">
                 <div className="h-1 bg-(--mx-gold)" />
                 <div className="flex items-center gap-4 p-5">
-                  <span className="rounded-full ring-2 ring-(--mx-gold) ring-offset-2 ring-offset-(--mx-raised)">
-                    <Avatar photo={m.photo_url ?? ""} name={m.first_name} size={56} />
-                  </span>
+                  <PresenceAvatar id={m.id} photo={m.photo_url} name={m.first_name} size={56} bg="var(--mx-raised)" />
                   <span className="min-w-0">
                     <span className="flex items-center gap-2">
                       <span className="truncate font-[family-name:var(--font-poppins)] text-[17px] font-medium">{name}</span>
@@ -89,6 +106,13 @@ export default function Directory({ list, meId }: { list: DirMember[]; meId: str
                     )}
                   </dl>
                 )}
+                {/* Message · call · email, as icons (Ed, 2026-10-30). Message only if they allow it. */}
+                {!me && (m.phone || m.contact_email || m.can_message) && (
+                  <div className="border-t border-(--mx-line) px-5 py-3.5">
+                    <ContactIcons name={m.first_name || name} phone={m.phone} email={m.contact_email} canMessage={m.can_message} onMessage={() => void message(m.id)} busy={busy === m.id} />
+                    {err?.id === m.id && <p className="mt-2 text-[13px] text-[#e2735e]">{err.text}</p>}
+                  </div>
+                )}
                 <div className="mt-auto flex flex-wrap items-center gap-2 border-t border-(--mx-line) px-5 py-4">
                   {m.socials.map((s) => {
                     const info = parseSocial(s);
@@ -100,7 +124,7 @@ export default function Directory({ list, meId }: { list: DirMember[]; meId: str
                     ) : null;
                   })}
                   {me && (
-                    <Link href="/members/account" className="ml-auto text-[13px] text-(--mx-gold-text) hover:underline">
+                    <Link href="/members/settings" className="ml-auto text-[13px] text-(--mx-gold-text) hover:underline">
                       Edit profile
                     </Link>
                   )}

@@ -11,7 +11,7 @@ import { useSyncExternalStore } from "react";
 export type FeedItem = {
   id: number;
   audience: "members" | "all";
-  kind: "checkin" | "onway" | "left" | "ticket" | "soon" | "live";
+  kind: "checkin" | "onway" | "left" | "ticket" | "soon" | "live" | "message";
   text: string;
   /** Who it's about, when it's a person. */
   who?: { name: string; photo?: string };

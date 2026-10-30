@@ -1,20 +1,6 @@
-import ProfileForm from "../../ProfileForm";
-import { Em, PageHead } from "../shared";
+import { redirect } from "next/navigation";
 
-/** /members/account — Profile: photo, about you, where to find you, privacy, password. */
+/** /members/account moved into Settings (Ed, 2026-10-30); old links land on its Profile tab. */
 export default function MemberAccountPage() {
-  return (
-    <>
-      <PageHead
-        eyebrow="Profile"
-        title={
-          <>
-            Your <Em>profile.</Em>
-          </>
-        }
-        sub="Your photo, your work, and where members can find you."
-      />
-      <ProfileForm mode="account" />
-    </>
-  );
+  redirect("/members/settings");
 }

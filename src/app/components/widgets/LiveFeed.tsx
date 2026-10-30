@@ -215,7 +215,9 @@ function KindIcon({ kind }: { kind: FeedItem["kind"] }) {
   const p =
     kind === "ticket"
       ? "M4 8a2 2 0 0 0 0 4v4h16v-4a2 2 0 0 1 0-4V4H4zM10 4v12"
-      : kind === "live"
+      : kind === "message"
+        ? "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+        : kind === "live"
         ? "M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0M5 12a7 7 0 0 1 14 0"
         : "M12 7v5l3 2M12 3a9 9 0 1 0 0 18a9 9 0 0 0 0-18";
   return (

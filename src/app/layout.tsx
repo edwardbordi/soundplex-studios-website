@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Lora, Roboto, Roboto_Slab, Poppins } from "next/font/google";
+import { Lora, Roboto, Poppins } from "next/font/google";
 import {
   SITE_URL,
   SITE_NAME,
@@ -19,6 +19,7 @@ import { StudioBar } from "@realiizlabs/admin/bar";
 import PreviewChrome from "./components/PreviewChrome";
 import SiteLiveFeed from "./components/widgets/SiteLiveFeed";
 import MemberBridge from "./components/MemberBridge";
+import SiteMessageAlerts from "./components/SiteMessageAlerts";
 import { getCalendarItems } from "../lib/events/public";
 import { STUDIO_ROUTES } from "../lib/admin/content-types";
 import "./globals.css";
@@ -29,16 +30,16 @@ import "./globals.css";
  * computed styles + Elementor globals, 2026-09-02):
  *   Lora italic 400  → headlines / the payload line
  *   Roboto           → body
- *   Roboto Slab      → card titles
+ *   (Roboto Slab was loaded too but never used; dropped 2026-10-30. It also broke the CI
+ *    build: Google's font download for it started failing in next/font.)
  *   Poppins 500      → labels, buttons, nav (uppercase, letterspaced)
  * Exposed as CSS variables so globals.css and the fly-through engine both read
  * one source of truth. */
 const lora = Lora({ subsets: ["latin"], style: ["normal", "italic"], display: "swap", variable: "--font-lora" });
 const roboto = Roboto({ subsets: ["latin"], weight: ["400", "500", "700"], display: "swap", variable: "--font-roboto" });
-const robotoSlab = Roboto_Slab({ subsets: ["latin"], weight: ["400", "700"], display: "swap", variable: "--font-roboto-slab" });
 const poppins = Poppins({ subsets: ["latin"], weight: ["500", "600"], display: "swap", variable: "--font-poppins" });
 
-const fontVars = `${lora.variable} ${roboto.variable} ${robotoSlab.variable} ${poppins.variable}`;
+const fontVars = `${lora.variable} ${roboto.variable} ${poppins.variable}`;
 
 // Default social-share image (1200×630) — used for any page that doesn't set its own.
 const OG_IMAGE = `${SITE_URL}${OG_IMAGE_PATH}`;
@@ -127,6 +128,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <SiteLiveFeed items={getCalendarItems()} showSamples={SHOW_SAMPLE_EVENTS} />
         {/* Real member sign-in → the site's member session (does nothing until the members DB is connected). */}
         <MemberBridge />
+        {/* New-message pop-up + chime for signed-in members anywhere on the website. */}
+        <SiteMessageAlerts />
       </body>
     </html>
   );

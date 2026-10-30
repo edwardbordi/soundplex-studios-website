@@ -20,6 +20,12 @@ export type MemberRow = {
   offers: string;
   looking: string;
   photo_url: string | null;
+  portrait_url: string | null;
+  /** Members-only contact details (never on the public wall). */
+  phone: string | null;
+  contact_email: string | null;
+  /** Who can message them in the app (Settings → Privacy). */
+  messages_from: "everyone" | "allowed" | "nobody";
   socials: string[];
   show_me: boolean;
   on_wall: boolean;

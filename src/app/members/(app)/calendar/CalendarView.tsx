@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import type { CalItem } from "../../../../lib/events/constants";
-import type { VenueEvent } from "../../../../lib/venue/data";
+import { catOf, roomOf, type VenueEvent } from "../../../../lib/venue/data";
 import { EventRow } from "../NowView";
-import { Em, PANEL, PageHead, fmtDay, useEvents, useNow, useRsvps } from "../shared";
+import { Em, PANEL, PageHead, eventTitle, fmtDay, useEvents, useNow, useRsvps } from "../shared";
 
 /** Calendar (members): the next six weeks, grouped by day. Filters: everything, members-only, going. */
 type Filter = "all" | "members" | "going";
@@ -15,12 +15,17 @@ export default function CalendarView({ items, showSamples }: { items: CalItem[];
   const rsvps = useRsvps();
   const events = useEvents(items, showSamples, now);
   const [filter, setFilter] = useState<Filter>("all");
+  // Search (Ed, 2026-10-30): by title, room, kind of night or description, on top of the filter.
+  const [q, setQ] = useState("");
 
   if (!now) return <div className="h-96" aria-hidden="true" />;
 
   const until = now.getTime() + DAYS_AHEAD * 86_400_000;
   const ahead = events.filter((e) => e.end > now && e.start.getTime() < until && !e.ambient);
-  const shown = ahead.filter((e) => (filter === "members" ? e.visibility === "members" : filter === "going" ? rsvps.includes(e.id) : true));
+  const needle = q.trim().toLowerCase();
+  const matches = (e: VenueEvent) =>
+    !needle || [eventTitle(e), roomOf(e.room).name, catOf(e.category).name, e.visibility === "private" ? "" : e.blurb].join(" ").toLowerCase().includes(needle);
+  const shown = ahead.filter((e) => (filter === "members" ? e.visibility === "members" : filter === "going" ? rsvps.includes(e.id) : true)).filter(matches);
 
   const days: { key: string; date: Date; list: VenueEvent[] }[] = [];
   for (const e of shown) {
@@ -46,6 +51,22 @@ export default function CalendarView({ items, showSamples }: { items: CalItem[];
           </>
         }
         sub="The next six weeks at SoundPlex. RSVP so George and the other members know you’re coming."
+        right={
+          <label className="relative block w-full sm:w-72">
+            <span className="sr-only">Search events</span>
+            <svg viewBox="0 0 24 24" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-(--mx-faint)" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.5-3.5" />
+            </svg>
+            <input
+              type="search"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search events, rooms…"
+              className="w-full rounded-[4px] border border-(--mx-line-strong) bg-(--mx-field) py-2.5 pl-9 pr-3 text-[15px] text-(--mx-text) outline-none placeholder:text-(--mx-faint) focus:border-(--mx-gold)"
+            />
+          </label>
+        }
       />
 
       <div className="mb-6 flex flex-wrap gap-2" role="tablist" aria-label="Show">
@@ -64,7 +85,7 @@ export default function CalendarView({ items, showSamples }: { items: CalItem[];
       </div>
 
       {days.length === 0 ? (
-        <div className={`${PANEL} p-8 text-center text-(--mx-muted)`}>{filter === "going" ? "You haven’t RSVP’d to anything yet." : "Nothing here yet."}</div>
+        <div className={`${PANEL} p-8 text-center text-(--mx-muted)`}>{needle ? `No events match “${q.trim()}”.` : filter === "going" ? "You haven’t RSVP’d to anything yet." : "Nothing here yet."}</div>
       ) : (
         <div className="space-y-6">
           {days.map((d) => (
