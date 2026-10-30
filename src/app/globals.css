@@ -537,6 +537,17 @@ body {
   outline-offset: 3px;
   border-radius: 2px;
 }
+/* Members: a new-message pop-up slides in; the gold bar along its bottom counts down. */
+.mx-toast { animation: mx-toast-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.mx-toast__bar { width: 100%; animation: mx-toast-bar linear forwards; }
+@keyframes mx-toast-in { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: none; } }
+@keyframes mx-toast-bar { from { width: 100%; } to { width: 0; } }
+@media (prefers-reduced-motion: reduce) { .mx-toast { animation: none; } .mx-toast__bar { display: none; } }
+/* The members' message box: its pill already turns gold on focus, so no second ring. */
+.mx-compose:focus,
+.mx-compose:focus-visible {
+  outline: none;
+}
 
 /* Respect reduced-motion: no reveal animation, no smooth scroll */
 @media (prefers-reduced-motion: reduce) {
@@ -1938,6 +1949,8 @@ input:-webkit-autofill:focus {
    to light with data-mtheme="light". Gold stays gold; gold TEXT darkens in light for contrast. */
 :root {
   --mx-bg: #050505;
+  /* The members top bar: black on dark, near-white on light. */
+  --mx-top: #050505;
   --mx-side: #0a0a0a;
   --mx-panel: rgba(255, 255, 255, 0.025);
   --mx-raised: #0f0f0f;
@@ -1958,6 +1971,7 @@ input:-webkit-autofill:focus {
 }
 [data-mtheme="light"] {
   --mx-bg: #f5f2ec;
+  --mx-top: #fbfaf7;
   --mx-side: #fbfaf7;
   --mx-panel: #ffffff;
   --mx-raised: #ffffff;
@@ -1977,6 +1991,13 @@ input:-webkit-autofill:focus {
   color-scheme: light;
 }
 .mx { background: var(--mx-bg); color: var(--mx-text); color-scheme: dark; }
+/* Members top bar logo: gold-and-white on dark, the ink version on light. */
+.mx .mx-logo--light { display: none; }
+.mx[data-mtheme="light"] .mx-logo--light { display: block; }
+.mx[data-mtheme="light"] .mx-logo--dark { display: none; }
+/* Always keep room for the scrollbar in the members area, so a short page (Settings → Password)
+   and a long one (Settings → Profile) are the same width and nothing jumps sideways (Ed). */
+html:has(#mx-root) { scrollbar-gutter: stable; }
 .mx[data-mtheme="light"] { color-scheme: light; }
 
 /* ─── One production ─────────────────────────────────────────────────────── */

@@ -2,7 +2,8 @@
 
 import { useEffect } from "react";
 import { membersBrowser } from "../../lib/members/browser";
-import { setSession } from "../../lib/venue/session";
+import { getVenueSession, onVenueSession, setSession } from "../../lib/venue/session";
+import { PRESENCE_EVENT } from "../../lib/members/presence";
 import type { MemberRow } from "../../lib/members/env";
 
 /**
@@ -32,23 +33,64 @@ export default function MemberBridge() {
       return;
     }
 
+    // Check-ins live in the database (Ed, 2026-10-30), so other members see who's at the Plex
+    // (the dot on avatars). The database copy wins on load (it lapses on its own: 4 h here,
+    // 1 h on the way); after that, every check-in, move or check-out here is saved there.
+    let me: string | null = null;
+    let synced: { checkedIn: string | null; onWay: string | null } = { checkedIn: null, onWay: null };
+
+    const saveCheckIn = async (userId: string, at: typeof synced) => {
+      const room = at.checkedIn ?? at.onWay;
+      if (room) {
+        const here = !!at.checkedIn;
+        await sb
+          .from("check_ins")
+          .upsert(
+            { member_id: userId, room, kind: here ? "here" : "on_way", created_at: new Date().toISOString(), expires_at: new Date(Date.now() + (here ? 4 : 1) * 3_600_000).toISOString() },
+            { onConflict: "member_id" },
+          );
+      } else {
+        await sb.from("check_ins").delete().eq("member_id", userId);
+      }
+      window.dispatchEvent(new Event(PRESENCE_EVENT));
+    };
+
+    const unwatch = onVenueSession(() => {
+      const s = getVenueSession();
+      if (!me || !s.member) return;
+      if (s.checkedIn === synced.checkedIn && s.onWay === synced.onWay) return;
+      synced = { checkedIn: s.checkedIn, onWay: s.onWay };
+      void saveCheckIn(me, synced);
+    });
+
     const load = async (userId: string | null) => {
       if (!userId) {
+        me = null;
         setSession({ member: false, checkedIn: null, onWay: null, photo: "" });
         return;
       }
-      const { data } = await sb.from("members").select("first_name, show_me, status, photo_url").eq("id", userId).maybeSingle();
+      const [{ data }, { data: ci }] = await Promise.all([
+        sb.from("members").select("first_name, show_me, status, photo_url").eq("id", userId).maybeSingle(),
+        sb.from("check_ins").select("room, kind").eq("member_id", userId).maybeSingle(),
+      ]);
       const row = data as Pick<MemberRow, "first_name" | "show_me" | "status" | "photo_url"> | null;
       if (!row || row.status !== "active") {
+        me = null;
         setSession({ member: false, checkedIn: null, onWay: null, photo: "" });
         return;
       }
-      setSession({ member: true, name: row.first_name, showMe: row.show_me, photo: row.photo_url ?? "" });
+      const c = ci as { room: string; kind: "here" | "on_way" } | null;
+      synced = { checkedIn: c?.kind === "here" ? c.room : null, onWay: c?.kind === "on_way" ? c.room : null };
+      me = userId;
+      setSession({ member: true, name: row.first_name, showMe: row.show_me, photo: row.photo_url ?? "", ...synced });
     };
 
     void sb.auth.getUser().then(({ data }) => load(data.user?.id ?? null));
     const { data: sub } = sb.auth.onAuthStateChange((_event, s) => void load(s?.user?.id ?? null));
-    return () => sub.subscription.unsubscribe();
+    return () => {
+      sub.subscription.unsubscribe();
+      unwatch();
+    };
   }, []);
   return null;
 }

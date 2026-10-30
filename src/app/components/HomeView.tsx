@@ -27,7 +27,6 @@ import { getAllPosts } from "../../lib/blog/posts";
 import JsonLd from "./JsonLd";
 import {
   SITE_NAME,
-  SITE_DESCRIPTION,
   SITE_URL,
   PHONE_TEL,
   ORGANIZATION_ID,

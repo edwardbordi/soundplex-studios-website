@@ -44,13 +44,7 @@ export default function NowView({ items, showSamples }: { items: CalItem[]; show
           </>
         }
         sub={here ? `You’re checked into ${roomOf(here).name}${s.showMe ? "" : " (hidden from other members)"}.` : s.onWay ? `On your way to ${roomOf(s.onWay).name}.` : "You’re not checked in. Tap a room when you arrive."}
-        right={
-          here ? (
-            <button type="button" onClick={() => setSession({ checkedIn: null })} className="rounded-[4px] border border-(--mx-line-strong) px-4 py-2 text-[14px] text-(--mx-soft) hover:border-(--mx-gold) hover:text-(--mx-text)">
-              Check out
-            </button>
-          ) : undefined
-        }
+        // Check out lives in the top bar now, on every page (Ed, 2026-10-30).
       />
 
       {/* Check in */}

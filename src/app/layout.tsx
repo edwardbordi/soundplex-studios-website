@@ -19,6 +19,7 @@ import { StudioBar } from "@realiizlabs/admin/bar";
 import PreviewChrome from "./components/PreviewChrome";
 import SiteLiveFeed from "./components/widgets/SiteLiveFeed";
 import MemberBridge from "./components/MemberBridge";
+import SiteMessageAlerts from "./components/SiteMessageAlerts";
 import { getCalendarItems } from "../lib/events/public";
 import { STUDIO_ROUTES } from "../lib/admin/content-types";
 import "./globals.css";
@@ -127,6 +128,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <SiteLiveFeed items={getCalendarItems()} showSamples={SHOW_SAMPLE_EVENTS} />
         {/* Real member sign-in → the site's member session (does nothing until the members DB is connected). */}
         <MemberBridge />
+        {/* New-message pop-up + chime for signed-in members anywhere on the website. */}
+        <SiteMessageAlerts />
       </body>
     </html>
   );
