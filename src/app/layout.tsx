@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Lora, Roboto, Poppins } from "next/font/google";
+import localFont from "next/font/local";
 import {
   SITE_URL,
   SITE_NAME,
@@ -34,10 +34,37 @@ import "./globals.css";
  *    build: Google's font download for it started failing in next/font.)
  *   Poppins 500      → labels, buttons, nav (uppercase, letterspaced)
  * Exposed as CSS variables so globals.css and the fly-through engine both read
- * one source of truth. */
-const lora = Lora({ subsets: ["latin"], style: ["normal", "italic"], display: "swap", variable: "--font-lora" });
-const roboto = Roboto({ subsets: ["latin"], weight: ["400", "500", "700"], display: "swap", variable: "--font-roboto" });
-const poppins = Poppins({ subsets: ["latin"], weight: ["500", "600"], display: "swap", variable: "--font-poppins" });
+ * one source of truth.
+ *
+ * Self-hosted from the Fontsource npm packages (2026-10-31), not next/font/google: Google's
+ * font download in next/font started failing the build ("next/font/google queries have exactly
+ * one entry"), first for Roboto Slab, then Roboto, in CI and on Vercel. These files ship with
+ * the site, so the build never fetches anything. Latin only, as before. */
+// (Paths are written out in full: next/font only accepts plain literal strings here.)
+const lora = localFont({
+  src: [
+    { path: "../../node_modules/@fontsource-variable/lora/files/lora-latin-wght-normal.woff2", weight: "400 700", style: "normal" },
+    { path: "../../node_modules/@fontsource-variable/lora/files/lora-latin-wght-italic.woff2", weight: "400 700", style: "italic" },
+  ],
+  display: "swap",
+  variable: "--font-lora",
+  fallback: ["Georgia", "Times New Roman", "serif"],
+});
+const roboto = localFont({
+  src: [{ path: "../../node_modules/@fontsource-variable/roboto/files/roboto-latin-wght-normal.woff2", weight: "100 900", style: "normal" }],
+  display: "swap",
+  variable: "--font-roboto",
+  fallback: ["system-ui", "-apple-system", "sans-serif"],
+});
+const poppins = localFont({
+  src: [
+    { path: "../../node_modules/@fontsource/poppins/files/poppins-latin-500-normal.woff2", weight: "500", style: "normal" },
+    { path: "../../node_modules/@fontsource/poppins/files/poppins-latin-600-normal.woff2", weight: "600", style: "normal" },
+  ],
+  display: "swap",
+  variable: "--font-poppins",
+  fallback: ["system-ui", "sans-serif"],
+});
 
 const fontVars = `${lora.variable} ${roboto.variable} ${poppins.variable}`;
 
