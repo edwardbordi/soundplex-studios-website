@@ -268,7 +268,8 @@ export default function MemberShell({ me, theme: initialTheme, children }: { me:
       {/* Top bar: follows the theme (Ed, 2026-10-30: "in light mode make even the header
           light"). The logo swaps to an ink version on light (logos/soundplex-lockup-ink.png). */}
       <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-(--mx-line) bg-(--mx-top) px-4 text-(--mx-text) sm:px-5">
-        <Link href="/members" className="flex items-center gap-3" aria-label="Members home">
+        {/* The logo goes back to the website (Ed, 2026-10-31); Now is in the menu. */}
+        <Link href="/" className="flex items-center gap-3" aria-label="SoundPlex website">
           <Image src="/logos/soundplex-lockup.png" alt="SoundPlex" width={490} height={69} className="mx-logo--dark h-auto w-[118px] sm:w-[132px]" priority />
           <Image src="/logos/soundplex-lockup-ink.png" alt="SoundPlex" width={490} height={69} className="mx-logo--light h-auto w-[118px] sm:w-[132px]" priority />
           <span className="hidden border-l border-(--mx-line-strong) pl-3 text-[12px] uppercase tracking-[0.18em] text-(--mx-muted) sm:inline">Members</span>

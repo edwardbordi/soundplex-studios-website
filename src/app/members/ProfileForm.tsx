@@ -3,11 +3,10 @@
 import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
 import ForwardArrow from "../components/ForwardArrow";
 import SocialTags from "./SocialTags";
-import ContactIcons from "./ContactIcons";
+import MemberCard from "./MemberCard";
 import MessageLists from "./MessageLists";
 import { alertPrefsFrom, playChime, readAlertPrefs, serverAlertPrefs, setAlertPrefs, subAlertPrefs, type MessagesFrom } from "../../lib/members/messages";
 import { membersBrowser } from "../../lib/members/browser";
-import { parseSocial, socialLabel } from "../../lib/social";
 import { setSession } from "../../lib/venue/session";
 import { formatPhone } from "../../lib/phone";
 import { PASSWORD_RULES, passwordOk } from "../../lib/members/passwordRules";
@@ -722,68 +721,33 @@ export default function ProfileForm({ mode, next = "/members", section: tabProp 
         {preview !== "wall" && (
         <>
         <p className="text-[12px] uppercase tracking-[0.16em] text-(--mx-faint)">How members see you</p>
-        <div className="mt-3 overflow-hidden rounded-[8px] rounded-bl-none border border-[#d4a030]/30 bg-(--mx-raised)">
-          <div className="h-1 bg-[#d4a030]" />
-          <div className="p-6 text-center">
-            <div className="mx-auto h-20 w-20 overflow-hidden rounded-full ring-2 ring-[#d4a030] ring-offset-4 ring-offset-(--mx-raised)">
-              <Avatar url={f.photo_url} name={f.first_name} size={80} />
-            </div>
-            <p className="mt-5 font-[family-name:var(--font-poppins)] text-[19px] font-medium leading-tight text-(--mx-text)">{fullName}</p>
-            {f.role.trim() && <p className="mt-1 text-[14px] text-(--mx-gold-text)">{f.role.trim()}</p>}
-          </div>
-          {(f.offers.trim() || f.looking.trim()) && (
-            <dl className="space-y-3 border-t border-(--mx-line) px-6 py-5 text-[14px]">
-              {f.offers.trim() && (
-                <div>
-                  <dt className="text-[11px] uppercase tracking-[0.16em] text-(--mx-faint)">Offers</dt>
-                  <dd className="mt-1 text-(--mx-soft)">{f.offers.trim()}</dd>
-                </div>
-              )}
-              {f.looking.trim() && (
-                <div>
-                  <dt className="text-[11px] uppercase tracking-[0.16em] text-(--mx-faint)">Looking for</dt>
-                  <dd className="mt-1 text-(--mx-soft)">{f.looking.trim()}</dd>
-                </div>
-              )}
-            </dl>
-          )}
-          {/* Message · call · email, as icons (Ed, 2026-10-30), as other members see them. */}
-          {(f.phone.trim() || f.contact_email.trim() || f.messages_from !== "nobody") && (
-            <div className="flex justify-center border-t border-(--mx-line) px-6 py-4">
-              <ContactIcons name={f.first_name.trim() || "you"} phone={f.phone} email={f.contact_email} canMessage={f.messages_from !== "nobody"} />
-            </div>
-          )}
-          {f.socials.length > 0 && (
-            <ul className="flex flex-wrap gap-2 border-t border-(--mx-line) px-6 py-5">
-              {f.socials.map((s) => {
-                const info = parseSocial(s);
-                const { platform, name } = socialLabel(info);
-                const text = platform ?? name;
-                return (
-                  <li key={s}>
-                    {info.url && !info.problem ? (
-                      <a href={info.url} target="_blank" rel="noopener noreferrer" title={name} className="inline-flex rounded-[4px] border border-(--mx-line-strong) px-2.5 py-1 text-[12.5px] text-(--mx-soft) transition-colors hover:border-[#d4a030]/60 hover:text-(--mx-text)">
-                        {text}
-                      </a>
-                    ) : (
-                      <span className="inline-flex rounded-[4px] border border-(--mx-line-strong) px-2.5 py-1 text-[12.5px] text-(--mx-muted)">{text}</span>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-          <p className="flex items-center gap-2 border-t border-(--mx-line) px-6 py-4 text-[12.5px] leading-none text-(--mx-faint)">
-            {f.show_me ? (
+        {/* The same card the Members directory shows (MemberCard), filled from the form as you type. */}
+        <MemberCard
+          className="mt-3"
+          m={{
+            id: userId,
+            first_name: f.first_name,
+            last_name: f.last_name,
+            role: f.role,
+            offers: f.offers,
+            looking: f.looking,
+            photo_url: f.photo_url || null,
+            phone: f.phone.trim() || null,
+            contact_email: f.contact_email.trim() || null,
+            socials: f.socials,
+          }}
+          canMessage={f.messages_from !== "nobody"}
+          note={
+            f.show_me ? (
               <>
                 <span className="h-2 w-2 shrink-0 rounded-full bg-[#4cc773]" aria-hidden="true" />
                 Members see you when you’re in the building
               </>
             ) : (
               "Hidden when you’re in the building"
-            )}
-          </p>
-        </div>
+            )
+          }
+        />
 
         </>
         )}

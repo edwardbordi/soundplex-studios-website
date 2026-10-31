@@ -122,9 +122,10 @@ export default function Footer({ hero = true }: { hero?: boolean }) {
               {/* 0.16 too faint, 0.32 a touch loud, 0.22 too soft, 0.28 a little loud, 0.25 still a little (Ed): 0.21. */}
               {/* Black, not gold (Ed): the footer is pure black, so the letters are near-black, a
                   shade above it, sinking into it toward the bottom. Reads as black-on-black. */}
-              {/* #161616 was too close to vanish (Ed: "just enough contrast to see it"). */}
-              <stop offset="0%" stopColor="#222222" stopOpacity="1" />
-              <stop offset="100%" stopColor="#0a0a0a" stopOpacity="1" />
+              {/* #161616 was too close to vanish (Ed: "just enough contrast to see it"); #222222
+                  then read a little loud (Ed, 2026-10-31: "more muted"), #1b1b1b "a bit more", #181818 "more", #151515 "more", #121212 "more", #0f0f0f "more": #0c0c0c (bottom #050505, so it still fades into the #000 footer). */}
+              <stop offset="0%" stopColor="#0c0c0c" stopOpacity="1" />
+              <stop offset="100%" stopColor="#050505" stopOpacity="1" />
             </linearGradient>
           </defs>
           <text x="500" y="185" textAnchor="middle" textLength="990" lengthAdjust="spacingAndGlyphs" fill="url(#foot-mark-fade)">

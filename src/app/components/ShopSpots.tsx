@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { HOTSPOTS } from "../../lib/gallery/hotspots";
 import { ART, usd, type ArtPiece } from "../../lib/gallery/art";
 import { PieceSheet } from "../gallery/Gallery";
@@ -173,7 +174,9 @@ export default function ShopSpots({ src, delayMs = 0, posY = 0.5 }: { src: strin
           );
         })}
       </div>
-      {open && <PieceSheet piece={open} onClose={() => setOpen(null)} onStep={() => {}} canStep={false} />}
+      {/* Rendered on <body> (Ed, 2026-10-31: no way out on phones): inside the hotspot layer
+          (z-35) the sheet sat UNDER the site header, which hid its Close bar. */}
+      {open && createPortal(<PieceSheet piece={open} onClose={() => setOpen(null)} onStep={() => {}} canStep={false} />, document.body)}
     </>
   );
 }

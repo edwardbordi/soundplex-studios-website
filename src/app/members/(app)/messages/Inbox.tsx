@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type FormEvent, type KeyboardEvent } from "react";
 import { MSG_MAX, READ_EVENT, loadMessages, markRead, mergeMsgs, myConversations, onNewMessage, sendMessage, setPref, type Convo, type Msg } from "../../../../lib/members/messages";
 import { Ico } from "../MemberShell";
 import PresenceAvatar from "../PresenceAvatar";
@@ -54,11 +54,51 @@ function dayLabel(iso: string, now: Date) {
 // The panel fills the screen below the top bar (phone: above the bottom tabs).
 const FRAME = "h-[calc(100dvh-12rem)] min-h-[26rem] md:h-[calc(100dvh-9.5rem)]";
 
-export default function Inbox({ meId, active }: { meId: string; active: Active }) {
+// ── Full screen (Ed, 2026-10-31): the messages window can fill the whole screen, over the top
+// bar, side menu and phone tabs. Kept while you move between conversations (this visit). ──
+const FULL_EVENT = "sp-messages-full";
+let fullNow = false;
+const subFull = (cb: () => void) => {
+  window.addEventListener(FULL_EVENT, cb);
+  return () => window.removeEventListener(FULL_EVENT, cb);
+};
+const setFull = (v: boolean) => {
+  fullNow = v;
+  window.dispatchEvent(new Event(FULL_EVENT));
+};
+const useFull = () => useSyncExternalStore(subFull, () => fullNow, () => false);
+
+function FullToggle({ className = "" }: { className?: string }) {
+  const full = useFull();
   return (
-    <div className={`${PANEL} ${FRAME} grid overflow-hidden lg:grid-cols-[19rem_1fr]`}>
+    <button
+      type="button"
+      onClick={() => setFull(!full)}
+      aria-label={full ? "Exit full screen" : "Full screen"}
+      title={full ? "Exit full screen (Esc)" : "Full screen"}
+      className={`grid h-9 w-9 shrink-0 place-items-center rounded-[4px] border border-(--mx-line-strong) text-(--mx-muted) transition-colors hover:border-(--mx-gold) hover:text-(--mx-text) ${className}`}
+    >
+      <Ico d={full ? "M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7" : "M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"} className="h-4 w-4" />
+    </button>
+  );
+}
+
+export default function Inbox({ meId, active }: { meId: string; active: Active }) {
+  const full = useFull();
+  useEffect(() => {
+    if (!full) return;
+    const onKey = (e: globalThis.KeyboardEvent) => e.key === "Escape" && setFull(false);
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [full]);
+  return (
+    <div
+      className={`grid overflow-hidden lg:grid-cols-[19rem_1fr] ${
+        full ? "fixed inset-0 z-[55] bg-(--mx-panel-solid) pb-[env(safe-area-inset-bottom)]" : `${PANEL} ${FRAME}`
+      }`}
+    >
       <div className={`${active ? "hidden lg:flex" : "flex"} min-h-0 flex-col border-(--mx-line) lg:border-r`}>
-        <List meId={meId} activeId={active?.id ?? null} />
+        <List meId={meId} activeId={active?.id ?? null} showToggle={!active} />
       </div>
       {active ? (
         <Thread key={active.id} meId={meId} active={active} />
@@ -77,7 +117,7 @@ export default function Inbox({ meId, active }: { meId: string; active: Active }
   );
 }
 
-function List({ meId, activeId }: { meId: string; activeId: string | null }) {
+function List({ meId, activeId, showToggle }: { meId: string; activeId: string | null; showToggle: boolean }) {
   const now = useNow();
   const [list, setList] = useState<Convo[] | null>(null);
   const [failed, setFailed] = useState(false);
@@ -107,8 +147,9 @@ function List({ meId, activeId }: { meId: string; activeId: string | null }) {
     <>
       <div className="flex h-16 shrink-0 items-center border-b border-(--mx-line) px-5">
         <h1 className="font-[family-name:var(--font-poppins)] text-[18px] font-medium">Messages</h1>
+        {showToggle && <FullToggle className="ml-auto" />}
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="mx-scroll mx-scroll--panel min-h-0 flex-1 overflow-y-auto">
         {list === null ? (
           <p className="p-5 text-[14px] text-(--mx-muted)">{failed ? "Couldn’t load your messages. Refresh in a moment." : "Loading…"}</p>
         ) : list.length === 0 ? (
@@ -277,9 +318,10 @@ function Thread({ meId, active }: { meId: string; active: NonNullable<Active> })
             {other.blocked ? "Unblock" : "Block"}
           </button>
         )}
+        <FullToggle className={other.gone ? "ml-auto" : "ml-2"} />
       </div>
 
-      <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6" aria-live="polite">
+      <div ref={scroller} className="mx-scroll mx-scroll--panel min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6" aria-live="polite">
         {msgs.length === 0 ? (
           <div className="grid h-full place-items-center text-center">
             <div>
