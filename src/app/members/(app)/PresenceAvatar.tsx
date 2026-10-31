@@ -26,8 +26,11 @@ export default function PresenceAvatar({ id, photo, name, size, bg = "var(--mx-b
           // Exactly the account menu's dot (Ed, 2026-10-30): 12px, with a 2px cut-out ring in the
           // background colour, sitting on the bottom-right of the gold border.
           // On the gold border's bottom-right corner, as in the account menu.
-          className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 ${at.kind === "here" ? "bg-[#4cc773]" : "bg-[#d4a030]"}`}
-          style={{ borderColor: bg }}
+          // Centred ON the gold border at the bottom-right (45°), at any size (Ed, 2026-10-31: on
+          // the big 80px card avatar the corner of the box was well outside the circle). The
+          // circle's 45° point sits 14.6% of its diameter in from the box corner; the dot is 12px.
+          className={`absolute h-3 w-3 rounded-full border-2 ${at.kind === "here" ? "bg-[#4cc773]" : "bg-[#d4a030]"}`}
+          style={{ borderColor: bg, right: (size + 8) * 0.1464 - 6, bottom: (size + 8) * 0.1464 - 6 }}
           aria-label={label}
           role="img"
         />

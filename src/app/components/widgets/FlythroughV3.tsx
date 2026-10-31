@@ -100,16 +100,21 @@ export default function FlythroughV3({ night: nightId, basePath = "/" }: { night
             { passive: false },
           );
           let dragX = 0, dragLeft = 0, dragging = false, moved = false;
+          // Capture the mouse only once it really drags (Ed, 2026-10-31: "the chips don't do
+          // anything"): capturing on pointerdown sent the click to the track, so a plain click
+          // never reached the chip's link.
           track.addEventListener("pointerdown", (e) => {
             if (e.pointerType !== "mouse") return;
             dragging = true; moved = false; dragX = e.clientX; dragLeft = track.scrollLeft;
-            track.setPointerCapture(e.pointerId);
           });
           track.addEventListener("pointermove", (e) => {
             if (!dragging) return;
             const dx = e.clientX - dragX;
-            if (Math.abs(dx) > 3) moved = true;
-            track.scrollLeft = dragLeft - dx;
+            if (!moved && Math.abs(dx) > 4) {
+              moved = true;
+              track.setPointerCapture(e.pointerId);
+            }
+            if (moved) track.scrollLeft = dragLeft - dx;
           });
           const end = () => { dragging = false; };
           track.addEventListener("pointerup", end);

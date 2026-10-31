@@ -1953,6 +1953,8 @@ input:-webkit-autofill:focus {
   --mx-top: #050505;
   --mx-side: #0a0a0a;
   --mx-panel: rgba(255, 255, 255, 0.025);
+  /* The panel as a solid colour (2.5% white on --mx-bg), for scrollbars and full-screen views. */
+  --mx-panel-solid: #0b0b0b;
   --mx-raised: #0f0f0f;
   --mx-pop: #141414;
   --mx-field: #0b0b0b;
@@ -1974,6 +1976,7 @@ input:-webkit-autofill:focus {
   --mx-top: #fbfaf7;
   --mx-side: #fbfaf7;
   --mx-panel: #ffffff;
+  --mx-panel-solid: #ffffff;
   --mx-raised: #ffffff;
   --mx-pop: #ffffff;
   --mx-field: #ffffff;
@@ -1991,6 +1994,17 @@ input:-webkit-autofill:focus {
   color-scheme: light;
 }
 .mx { background: var(--mx-bg); color: var(--mx-text); color-scheme: dark; }
+/* Members: a quiet scrollbar inside panels (Ed, 2026-10-31, the Filters dropdown): no track or
+   border, the panel's own background behind it, and a thin thumb just a shade off the background. */
+/* Plain colours (not color-mix, which some browsers reject here and fall back to the grey
+   default), with the track painted the panel's own colour (--mx-pop). */
+.mx-scroll { --mx-thumb: #2c2c2c; --mx-scroll-bg: var(--mx-pop); scrollbar-width: thin; scrollbar-color: var(--mx-thumb) var(--mx-scroll-bg); }
+[data-mtheme="light"] .mx-scroll { --mx-thumb: #dcd6cb; }
+/* On a page panel (Messages) instead of a pop-up: the panel's solid look (2.5% white on #050505). */
+.mx-scroll--panel { --mx-scroll-bg: var(--mx-panel-solid); }
+.mx-scroll::-webkit-scrollbar { width: 6px; background: var(--mx-scroll-bg); }
+.mx-scroll::-webkit-scrollbar-track { background: var(--mx-scroll-bg); border: 0; box-shadow: none; }
+.mx-scroll::-webkit-scrollbar-thumb { background: var(--mx-thumb); border-radius: 6px; border: 0; }
 /* Members top bar logo: gold-and-white on dark, the ink version on light. */
 .mx .mx-logo--light { display: none; }
 .mx[data-mtheme="light"] .mx-logo--light { display: block; }

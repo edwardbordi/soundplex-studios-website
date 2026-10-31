@@ -83,7 +83,7 @@ export default function MessageToasts({ place = "app" }: { place?: "app" | "site
   const where =
     place === "site"
       ? "fixed inset-x-3 z-[70] flex flex-col items-end gap-2.5 sm:inset-x-auto sm:right-5"
-      : "fixed inset-x-3 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-50 flex flex-col items-end gap-2.5 sm:inset-x-auto sm:right-5 md:bottom-5";
+      : "fixed inset-x-3 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-[60] flex flex-col items-end gap-2.5 sm:inset-x-auto sm:right-5 md:bottom-5";
   return (
     <div className={`pointer-events-none ${where}`} style={place === "site" ? { top: "calc(var(--hdr-h, 76px) + 12px)" } : undefined} aria-live="polite">
       {toasts.map((t) => {
