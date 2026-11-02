@@ -61,8 +61,10 @@ const ALL_SCENES: RouteState[] = [
     // place… connection, conversations, collaboration, opportunity… momentum." He never
     // says "community" — neither do we. Founders and business professionals first.
     eyebrow: "Create. Connect. Perform. \u00b7 Pennsauken, NJ",
-    title: "You have a home. You have work. *This is your third place.*",
-    body: "Where founders and creators meet \u2014 and what starts when they do.",
+    // George, 2026-11-01: his headline and the first sentence of his paragraph (same as the
+    // version A hero). The full paragraph ran to six lines over the film (Ed: "no more than 3").
+    title: "Find your people. *Put your story in motion.*",
+    body: "SoundPlex is a creative third place for artists, entrepreneurs, and big thinkers ready to connect, collaborate, and get seen.",
     // No buttons here in v3 (Ed, 2026-10-29): the "I'm here to" chips above the title do
     // that job, and "Join the Collective" was showing twice.
   },

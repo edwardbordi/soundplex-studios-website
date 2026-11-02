@@ -18,9 +18,12 @@ export const ROOM_USES: RoomUse[] = [
   { id: "podcast", label: "A podcast or interview", plural: "Podcasts", note: "We set up the cameras and mics in whichever room is free" },
   { id: "workshop", label: "A workshop, talk or class", plural: "Workshops & talks" },
   { id: "concert", label: "A concert or showcase", plural: "Concerts" },
+  // George, 2026-11-01 (Studio A): "Music productions, including video" instead of concerts.
+  { id: "production", label: "A music production (with video)", plural: "Music productions, incl. video" },
   { id: "comedy", label: "A comedy night", plural: "Comedy" },
   { id: "screening", label: "A screening", plural: "Screenings" },
-  { id: "party", label: "A party or celebration", plural: "Parties" },
+  // Never "party" on the site (George, 2026-11-02: a zoning matter). "Celebration" is fine.
+  { id: "celebration", label: "A celebration", plural: "Celebrations" },
   { id: "wedding", label: "A wedding", plural: "Weddings" },
   { id: "shoot", label: "A photo or video shoot", plural: "Shoots" },
   { id: "recording", label: "A recording or rehearsal", plural: "Recording" },
@@ -28,7 +31,8 @@ export const ROOM_USES: RoomUse[] = [
   { id: "other", label: "Something else", plural: "Something else" },
 ];
 
-export const useById = (id: string | undefined) => ROOM_USES.find((u) => u.id === id);
+// Older links may still say use=party; they mean a celebration.
+export const useById = (id: string | undefined) => ROOM_USES.find((u) => u.id === (id === "party" ? "celebration" : id));
 
 /** The podcast use as it's sold today (live-site numbers; COMPANY-FACTS §4 — rate/guests OPEN). */
 export const PODCAST = {

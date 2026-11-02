@@ -19,6 +19,16 @@ import { getAllRooms, getRoomBySlug } from "../../../lib/rooms/rooms";
 import { PODCAST, useById, type RoomUse } from "../../../lib/rooms/uses";
 import { getUpcomingAndPast } from "../../../lib/events/public";
 
+/** Rates with their options: a line starting "› " belongs to the rate line before it. */
+function groupRates(lines: string[]) {
+  const out: { rate: string; options: string[] }[] = [];
+  for (const l of lines) {
+    if (l.startsWith("› ") && out.length) out[out.length - 1].options.push(l.slice(2).trim());
+    else out.push({ rate: l, options: [] });
+  }
+  return out;
+}
+
 /** /rooms/[slug] — one room: photo, story, facts, what's included, book it, what's on in it. */
 export function generateStaticParams() {
   return getAllRooms().map((r) => ({ slug: r.frontmatter.slug }));
@@ -100,7 +110,28 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
               <Reveal delay={80}>
                 <aside className="rmp__book">
                   <p className="rm__label">Rates</p>
-                  <ul className="rmp__rates">{r.rates.map((x) => <li key={x}>{x}</li>)}</ul>
+                  {/* A rate line starting "› " is an option under the rate above it (Ed, 2026-11-02:
+                      Studio A's two engineers): "› Name · Company" shows as a nested list. */}
+                  <ul className="rmp__rates">
+                    {groupRates(r.rates).map((g) => (
+                      <li key={g.rate}>
+                        {g.rate}
+                        {g.options.length > 0 && (
+                          <ul className="rmp__opts">
+                            {g.options.map((o) => {
+                              const [who, where] = o.split(" · ");
+                              return (
+                                <li key={o}>
+                                  <span className="rmp__opt-name">{who}</span>
+                                  {where && <span className="rmp__opt-co">{where}</span>}
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
                   <Link href={`/start?path=room&room=${r.slug}`} className="evp__btn group rmp__btn">Book this room<ForwardArrow /></Link>
                   <p className="rmp__fine">Tell us the date and what it’s for; we check the calendar and come back within a business day. Members get member rates.</p>
                 </aside>

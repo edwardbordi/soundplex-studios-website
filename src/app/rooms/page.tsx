@@ -38,7 +38,7 @@ export default function Rooms() {
               <h1 className="page-head__title">Rent the room. <em>Or the whole night.</em></h1>
             </Reveal>
             <Reveal eager delay={160}>
-              <p className="page-head__lede">Weddings, parties, workshops, podcasts, shoots and sessions. Every room comes with the building — the art on the walls, the people in the hallway, parking out back. Pick the room, tell us what it’s for, and we’ll check the calendar.</p>
+              <p className="page-head__lede">Weddings, celebrations, workshops, podcasts, shoots and sessions. Every room comes with the building — the art on the walls, the people in the hallway, parking out back. Pick the room, tell us what it’s for, and we’ll check the calendar.</p>
             </Reveal>
           </div>
         </section>

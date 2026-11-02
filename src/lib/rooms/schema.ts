@@ -25,7 +25,7 @@ export const roomFrontmatterSchema = z
     included: z.array(z.string()).default([]).meta({ label: "What's included", help: "One item per line." }),
     bestFor: z.array(z.string()).default([]).meta({ label: "Best for", help: "One per line: concerts, workshops, screenings…" }),
     /** What this room can be booked for — ids from src/lib/rooms/uses.ts. Drives the chips and the survey. */
-    uses: z.array(z.string()).default([]).meta({ label: "Uses", help: "One id per line: podcast · workshop · concert · comedy · screening · party · wedding · shoot · recording · meeting" }),
+    uses: z.array(z.string()).default([]).meta({ label: "Uses", help: "One id per line: podcast · workshop · concert · comedy · screening · celebration · wedding · shoot · recording · meeting" }),
     heroImage: z.string().min(1).meta({ label: "Hero image" }),
     heroImageAlt: z.string().min(1).meta({ label: "Hero image alt" }),
     gallery: z.array(z.string()).default([]).meta({ label: "Gallery", help: "Image paths under public/rooms/." }),

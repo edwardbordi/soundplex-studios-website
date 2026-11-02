@@ -24,7 +24,9 @@ export default async function StartPage({ searchParams }: { searchParams: Promis
   const params = await searchParams;
   const initialAnswers: Record<string, string> = {};
   if (params.room && ROOMS.some((r) => r.value === params.room)) initialAnswers.room = params.room;
-  if (params.use && USES.some((u) => u.value === params.use)) initialAnswers.use = params.use;
+  // Older links may say use=party; that choice is "celebration" now (George: never "party").
+  const use = params.use === "party" ? "celebration" : params.use;
+  if (use && USES.some((u) => u.value === use)) initialAnswers.use = use;
   // Room facts for the survey, so it can talk about the room you picked.
   const rooms: RoomContext[] = getAllRooms().map(({ frontmatter: r }) => ({
     slug: r.slug,

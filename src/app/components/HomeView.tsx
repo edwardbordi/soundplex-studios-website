@@ -65,29 +65,32 @@ const placeJsonLd = {
 };
 
 /* George's three offers (COMPANY-FACTS §7) — the home page's "what is this place". */
+// George's copy and order (2026-11-01): experience, make the space yours, join. The first
+// sentence of each of his paragraphs (Ed, 2026-11-02: the full text was too long for a card);
+// numbered with a big gold numeral on the photo instead of an eyebrow.
 const WAYS = [
   {
-    eyebrow: "Rent a room",
-    title: "Three rooms, one building.",
-    body: "The WoodRoom stage, Studio A in the round, the SoundLounge speakeasy — for parties, workshops, podcasts and shoots.",
-    image: "/flythrough/states/state-A.jpg",
-    alt: "The WoodRoom at SoundPlex, empty and lit: the stage, the brick wall in magenta, lounge seating",
-    href: "/rooms",
-    cta: "See the rooms",
-  },
-  {
-    eyebrow: "Come to a show",
-    title: "Something on most nights.",
-    body: "Live music four feet from the stage, comedy, talks, screenings and open mics. Come alone — everyone does.",
+    n: "01",
+    title: "Experience a production",
+    body: "There’s something happening at SoundPlex most nights—from live music and comedy to podcasts, screenings, and creative events.",
     image: "/rooms/wood-room-2.webp",
     alt: "A guitarist mid-song on the SoundPlex stage under red and green light",
     href: "/studio-productions",
     cta: "What’s on",
   },
   {
-    eyebrow: "Join the Plex Collective",
-    title: "A third place that works.",
-    body: "Membership for creators and founders: the rooms, the people already here, and a path from idea to finished work.",
+    n: "02",
+    title: "Make the space yours",
+    body: "Rent a studio or the entire complex for your production, workshop, meeting, or celebration.",
+    image: "/flythrough/states/state-A.jpg",
+    alt: "The WoodRoom at SoundPlex, empty and lit: the stage, the brick wall in magenta, lounge seating",
+    href: "/rooms",
+    cta: "See the rooms",
+  },
+  {
+    n: "03",
+    title: "Join the Plex Collective",
+    body: "Find your creative community in a third place that works. Connect with like-minded people and collaborate on new ideas.",
     image: "/flythrough/states/state-B-4.jpg",
     alt: "Three people deep in conversation on the WoodRoom floor",
     href: "/membership",
@@ -154,12 +157,13 @@ export default function HomeView({ hero = "fill", night }: { hero?: "fill" | "sc
             <Reveal eager delay={80}>
               <h1 className="mt-5 max-w-3xl font-[family-name:var(--font-poppins)] text-[clamp(2.6rem,7vw,5.2rem)] font-semibold leading-[0.98] tracking-tight text-white">
                 Find your people.{" "}
-                <em className="font-[family-name:var(--font-lora)] font-normal italic text-[#d4a030]">Create your next chapter.</em>
+                <em className="font-[family-name:var(--font-lora)] font-normal italic text-[#d4a030]">Put your story in motion.</em>
               </h1>
             </Reveal>
             <Reveal eager delay={160}>
-              <p className="mt-6 max-w-xl text-[17px] leading-relaxed text-white/75">
-                Three rooms, a stage and a calendar that’s always on — a third place for creators, founders and everyone who comes to see them.
+              {/* George, 2026-11-01: the first sentence of his paragraph (the hero stays at ~3 lines). */}
+              <p className="mt-6 max-w-2xl text-[17px] leading-relaxed text-white/75">
+                SoundPlex is a creative third place for artists, entrepreneurs, and big thinkers ready to connect, collaborate, and get seen.
               </p>
             </Reveal>
             <Reveal eager delay={220}>
@@ -180,7 +184,10 @@ export default function HomeView({ hero = "fill", night }: { hero?: "fill" | "sc
           <div className="mx-auto max-w-6xl">
             <Reveal>
               <p className={EYEBROW}>What brings you in</p>
-              <h2 className={`${H2} mt-4 max-w-2xl`}>Three ways to be part of it.</h2>
+              <h2 className={`${H2} mt-4 max-w-3xl`}>Three ways to be part of the SoundPlex creative ecosystem.</h2>
+              <p className="mt-5 max-w-2xl text-[17px] leading-relaxed text-white/70">
+                Come for an experience. Bring people together. Become part of the community. Choose one—or make SoundPlex part of your life in all three ways.
+              </p>
             </Reveal>
             <ul className="mt-12 grid gap-4 md:grid-cols-3">
               {WAYS.map((w, i) => (
@@ -189,10 +196,16 @@ export default function HomeView({ hero = "fill", night }: { hero?: "fill" | "sc
                     <span className="relative block aspect-[4/3] overflow-hidden">
                       <Image src={w.image} alt={w.alt} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
                       <span className="absolute inset-0 bg-gradient-to-t from-[#0f0f0f] via-transparent to-transparent" aria-hidden />
+                      {/* The step number, big and gold, on the photo's bottom-left */}
+                      <span className="absolute bottom-1 left-5 font-[family-name:var(--font-lora)] text-[64px] italic leading-none text-[#d4a030] [text-shadow:0_2px_18px_rgba(0,0,0,0.6)]" aria-hidden>
+                        {w.n}
+                      </span>
                     </span>
-                    <div className="flex flex-1 flex-col p-6 pt-3">
-                      <p className={`${EYEBROW} text-[11px]`}>{w.eyebrow}</p>
-                      <h3 className="mt-2 font-[family-name:var(--font-poppins)] text-2xl font-semibold tracking-tight text-white">{w.title}</h3>
+                    <div className="flex flex-1 flex-col p-6 pt-4">
+                      <h3 className="font-[family-name:var(--font-poppins)] text-2xl font-semibold tracking-tight text-white">
+                        <span className="sr-only">{Number(w.n)}. </span>
+                        {w.title}
+                      </h3>
                       <p className="mt-2 text-[15px] leading-relaxed text-white/60">{w.body}</p>
                       <span className="card-cta mt-auto inline-flex items-center gap-2 self-start whitespace-nowrap pt-6">{w.cta}<ForwardArrow /></span>
                     </div>

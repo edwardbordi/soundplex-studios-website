@@ -14,7 +14,7 @@ export const CATEGORIES: Category[] = [
   { id: "web", label: "Web & tech", words: ["web", "website", "site", "developer", "develop", "code", "coding", "app", "software", "tech", "ai", "automation", "seo"] },
   { id: "marketing", label: "Marketing & social", words: ["marketing", "social media", "social", "ads", "advertis", "growth", "promot", "influencer", "audience", "newsletter", "pr "] },
   { id: "business", label: "Business & coaching", words: ["business", "coach", "consult", "founder", "startup", "strategy", "sales", "finance", "invest", "legal", "lawyer", "account", "mentor", "partner"] },
-  { id: "events", label: "Events & hosting", words: ["event", "venue", "booking", "book shows", "promoter", "comedy", "comedian", "mc", "emcee", "workshop", "party"] },
+  { id: "events", label: "Events & hosting", words: ["event", "venue", "booking", "book shows", "promoter", "comedy", "comedian", "mc", "emcee", "workshop", "celebrat"] },
   { id: "writing", label: "Writing", words: ["writ", "copy", "author", "script", "lyric", "blog", "story"] },
 ];
 

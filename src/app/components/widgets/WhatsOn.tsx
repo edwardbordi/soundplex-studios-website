@@ -605,7 +605,7 @@ export default function WhatsOn({ items = [], showSamples = false }: { items?: C
                     to see them and RSVP.
                   </>
                 ) : (
-                  <>This room is booked for a private event. Want it for yours? Rooms can be booked for parties, shoots and team days.</>
+                  <>This room is booked for a private event. Want it for yours? Rooms can be booked for celebrations, shoots and team days.</>
                 )}
               </div>
             ) : (
