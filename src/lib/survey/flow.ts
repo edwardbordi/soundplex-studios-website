@@ -59,7 +59,7 @@ export const PATHS: Path[] = [
   {
     id: "room",
     choice: "I want to rent a room",
-    choiceNote: "A podcast, a party, a workshop, a shoot — any of the three rooms.",
+    choiceNote: "A podcast, a celebration, a workshop, a shoot — any of the three rooms.",
     phoneRequired: true,
     questions: [
       { id: "room", kind: "single", label: "Which room?", help: "Podcasts go in any of them — pick a favorite, or let us set up wherever is free.", options: ROOMS },

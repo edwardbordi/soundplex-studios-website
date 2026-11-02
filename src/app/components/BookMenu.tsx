@@ -13,7 +13,7 @@ import ForwardArrow from "./ForwardArrow";
  */
 // Small photo thumbs, not icons (Ed): each choice shows the real thing.
 const CHOICES = [
-  { href: "/start?path=room&from=nav-book", title: "Rent a room", sub: "Parties, workshops, shoots and sessions", img: "/rooms/wood-room-3.webp" },
+  { href: "/start?path=room&from=nav-book", title: "Rent a room", sub: "Celebrations, workshops, shoots and sessions", img: "/rooms/wood-room-3.webp" },
   { href: "/start?path=collective&from=nav-book", title: "Book a tour", sub: "See the building and hear about membership", img: "/rooms/sound-lounge-1.webp" },
   { href: "/studio-productions", title: "Get tickets", sub: "Shows, comedy, talks and screenings", img: "/rooms/wood-room-2.webp" },
   { href: "/start?path=produce&from=nav-book", title: "Record or produce", sub: "Podcasts, videos and live sessions, with our team", img: "/rooms/podcast-temp.webp" },

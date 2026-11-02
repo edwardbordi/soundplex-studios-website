@@ -16,7 +16,7 @@ import MeAvatar from "./MeAvatar";
  *   2. a member, deciding whether to head over     → each room's Now / Later, and "I'm on my way"
  *   3. a member who just wants to hang out         → no booking: "I'm on my way", then "Check in" at the door
  *      (checking in only happens in the building; once in, "Move here" switches rooms)
- *   4. anyone hosting a party, wedding, workshop   → "Book the whole room" / "Book a room for an event"
+ *   4. anyone hosting a celebration, wedding, workshop   → "Book the whole room" / "Book a room for an event"
  * Members never reserve a room to use it: they check in where there's space. Booking the whole
  * room is a separate thing, for an event they're hosting (Ed, 2026-10-11).
  * Every room card shows one main button, picked by who's looking and what the room is doing.
