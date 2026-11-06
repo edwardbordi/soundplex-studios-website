@@ -22,7 +22,7 @@ export default async function GatedLayout({ children }: { children: React.ReactN
     { id: "members-db", label: "Members", href: "/admin/collective", icon: "users" },
   ];
   const pinnedNav = [{ id: "settings", label: "Settings", href: "/admin/account" }];
-  const frame = (props: { user: Parameters<typeof StudioShellFrame>[0]["user"]; role: string | null; nav: typeof nav; branding?: { name: string; logoUrl: string | null; whiteLabel?: boolean | null } | null; update?: Parameters<typeof StudioShellFrame>[0]["update"] }, body: React.ReactNode) => (
+  const frame = (props: { user: Parameters<typeof StudioShellFrame>[0]["user"]; role: string | null; nav: typeof nav; branding?: Parameters<typeof StudioShellFrame>[0]["branding"]; update?: Parameters<typeof StudioShellFrame>[0]["update"] }, body: React.ReactNode) => (
     <StudioShellFrame siteName={SITE_NAME} logoUrl="/logos/favicon.svg" siteUrl="/" pinnedNav={pinnedNav} {...props}>{body}</StudioShellFrame>
   );
 
@@ -52,7 +52,7 @@ export default async function GatedLayout({ children }: { children: React.ReactN
   ]);
   return (
     <StudioProvider actions={{ ...actions }}>
-      {frame({ user: { email: user.email ?? "", name: me.name, avatarUrl: me.avatarUrl }, role, nav, branding: branding ? { name: branding.name, logoUrl: branding.logoUrl, whiteLabel: branding.whiteLabel } : null, update }, children)}
+      {frame({ user: { email: user.email ?? "", name: me.name, avatarUrl: me.avatarUrl }, role, nav: [...nav, ...studio.extraNav(role)], branding, update }, children)}
     </StudioProvider>
   );
 }
