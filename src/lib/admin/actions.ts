@@ -30,3 +30,6 @@ export async function invite(input: { email: string; role: "owner" | "editor" })
 export async function changeRole(input: { userId: string; role: "owner" | "editor" }) { return a().changeRole(input); }
 export async function resend(input: { email: string }) { return a().resend(input); }
 export async function remove(input: { userId: string }) { return a().remove(input); }
+// The one-time hook (Studio 0.25+): one door for everything Studio adds later — the sign-in address
+// check, brand colour, Leads and more arrive with a normal Studio update, no site edit.
+export async function studioCall(name: string, input?: unknown) { return a().studioCall(name, input); }

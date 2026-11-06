@@ -27,4 +27,7 @@ export const studio = createStudio({
   siteName: SITE_NAME,
   supportName: "your web team",
   timezone: SITE_TIMEZONE,
+  // The one-time hook (Studio 0.25+): optional settings for pages Studio adds later.
+  // Leads reads HIGHLEVEL_TOKEN and HIGHLEVEL_LOCATION_ID (and HIGHLEVEL_APP_URL if set).
+  optionalEnv: (name) => process.env[name],
 });
