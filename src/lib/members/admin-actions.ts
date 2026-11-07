@@ -24,12 +24,70 @@ async function origin() {
   return `${proto}://${host}`;
 }
 
-export async function listMembers(): Promise<{ ok: true; members: MemberRow[] } | { ok: false; error: string }> {
+/** A member row plus their sign-in state, for Studio's list. */
+export type AdminMember = MemberRow & {
+  /** Invited, but hasn't finished setting up (no password chosen yet). */
+  pending: boolean;
+  last_sign_in_at: string | null;
+};
+
+export async function listMembers(): Promise<{ ok: true; members: AdminMember[] } | { ok: false; error: string }> {
   await studio.requireAdmin();
   if (!membersAdminConfigured()) return { ok: false, error: "not-configured" };
-  const { data, error } = await membersAdmin().from("members").select("*").order("created_at", { ascending: false });
+  const admin = membersAdmin();
+  const [{ data, error }, users] = await Promise.all([
+    admin.from("members").select("*").order("created_at", { ascending: false }),
+    admin.auth.admin.listUsers({ perPage: 1000 }),
+  ]);
   if (error) return { ok: false, error: error.message };
-  return { ok: true, members: (data ?? []) as MemberRow[] };
+  const byId = new Map((users.data?.users ?? []).map((u) => [u.id, u]));
+  const members = ((data ?? []) as MemberRow[]).map((m) => {
+    const u = byId.get(m.id);
+    return { ...m, pending: !u?.user_metadata?.password_set, last_sign_in_at: u?.last_sign_in_at ?? null };
+  });
+  return { ok: true, members };
+}
+
+const landing = async (query: string) => `${await origin()}${AUTH_LANDING}?${query}`;
+
+/**
+ * Resend an invite (Ed, 2026-11-07) to someone who hasn't finished setting up. If they've never
+ * opened the first one, it's the same invite email again. If they opened it but never chose a
+ * password (or Supabase won't re-invite), they get a sign-in link instead, which lands on
+ * "Set up your account" just the same.
+ */
+export async function resendInvite(id: string): Promise<MembersResult> {
+  await studio.requireAdmin();
+  if (!membersAdminConfigured()) return { ok: false, error: "The members database isn’t connected yet." };
+  const admin = membersAdmin();
+  const { data: m } = await admin.from("members").select("email, first_name").eq("id", id).maybeSingle();
+  if (!m?.email) return { ok: false, error: "Couldn’t find that member." };
+  const redirectTo = await landing(`next=${encodeURIComponent("/members")}`);
+
+  const { data: u } = await admin.auth.admin.getUserById(id);
+  if (u.user?.user_metadata?.password_set) return { ok: false, error: `${m.first_name || m.email} has already set up their account. Send a password reset instead.` };
+
+  if (!u.user?.email_confirmed_at) {
+    const { error } = await admin.auth.admin.inviteUserByEmail(m.email, { redirectTo, data: { first_name: m.first_name } });
+    if (!error) return { ok: true, message: `Invite sent again to ${m.email}.` };
+  }
+  const { error } = await admin.auth.signInWithOtp({ email: m.email, options: { shouldCreateUser: false, emailRedirectTo: redirectTo } });
+  if (error) return { ok: false, error: /rate|seconds/i.test(error.message) ? "An email was just sent. Wait a minute and try again." : `Couldn’t send it: ${error.message}` };
+  return { ok: true, message: `A fresh sign-in link is on its way to ${m.email}. It takes them to “Set up your account”.` };
+}
+
+/** Send a member the "choose a new password" email (Ed, 2026-11-07). */
+export async function sendPasswordReset(id: string): Promise<MembersResult> {
+  await studio.requireAdmin();
+  if (!membersAdminConfigured()) return { ok: false, error: "The members database isn’t connected yet." };
+  const admin = membersAdmin();
+  const { data: m } = await admin.from("members").select("email, first_name").eq("id", id).maybeSingle();
+  if (!m?.email) return { ok: false, error: "Couldn’t find that member." };
+  const { error } = await admin.auth.resetPasswordForEmail(m.email, {
+    redirectTo: await landing(`reset=1&next=${encodeURIComponent("/members")}`),
+  });
+  if (error) return { ok: false, error: /rate|seconds/i.test(error.message) ? "An email was just sent. Wait a minute and try again." : `Couldn’t send it: ${error.message}` };
+  return { ok: true, message: `Password reset sent to ${m.email}. The link lets them choose a new password.` };
 }
 
 export async function inviteMember(form: FormData): Promise<MembersResult> {

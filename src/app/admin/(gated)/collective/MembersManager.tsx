@@ -2,8 +2,9 @@
 
 import { useState, useTransition } from "react";
 import { Button, Card, EmptyState, PageHeader, StatusPill, Tabs } from "@realiizlabs/admin/shell";
-import { inviteMember, removeMember, setMemberStatus } from "@/lib/members/admin-actions";
-import type { MemberRow } from "@/lib/members/env";
+import { inviteMember, removeMember, resendInvite, sendPasswordReset, setMemberStatus, type AdminMember } from "@/lib/members/admin-actions";
+
+type MemberRow = AdminMember;
 
 /**
  * The Members screen inside Studio, built from Studio's own pieces (PageHeader, Tabs, the
@@ -67,6 +68,15 @@ export default function MembersManager({ initial, configured, loadError }: { ini
       if (!res.ok) return setMsg({ ok: false, text: res.error });
       setMembers((list) => list.filter((x) => x.id !== m.id));
       setMsg({ ok: true, text: `${m.first_name || m.email} was removed.` });
+    });
+  };
+
+  // Resend an invite (not set up yet) or send a password reset (set up, forgot it). Ed, 2026-11-07.
+  const email = (m: MemberRow, kind: "invite" | "reset") => {
+    if (kind === "reset" && !window.confirm(`Send ${m.first_name || m.email} an email to choose a new password?`)) return;
+    start(async () => {
+      const res = kind === "invite" ? await resendInvite(m.id) : await sendPasswordReset(m.id);
+      setMsg(res.ok ? { ok: true, text: res.message ?? "Sent." } : { ok: false, text: res.error });
     });
   };
 
@@ -170,9 +180,27 @@ export default function MembersManager({ initial, configured, loadError }: { ini
                         {fmtDate(m.created_at)}
                       </td>
                       <td className="rz-fit">
-                        <StatusPill tone={m.status === "active" ? "up" : "neutral"}>{m.status === "active" ? "Active" : "Paused"}</StatusPill>
+                        {m.status === "active" && m.pending ? (
+                          <StatusPill tone="warn" title="Invited, but hasn’t set up their account yet">Invite pending</StatusPill>
+                        ) : (
+                          <StatusPill tone={m.status === "active" ? "up" : "neutral"}>{m.status === "active" ? "Active" : "Paused"}</StatusPill>
+                        )}
                       </td>
                       <td className="rz-fit">
+                        {m.status === "active" && (
+                          <>
+                            {m.pending ? (
+                              <button type="button" disabled={pending} onClick={() => email(m, "invite")} className={linkBtn} title="Send the invite email again">
+                                Resend invite
+                              </button>
+                            ) : (
+                              <button type="button" disabled={pending} onClick={() => email(m, "reset")} className={linkBtn} title="Email them a link to choose a new password">
+                                Send password reset
+                              </button>
+                            )}
+                            {" · "}
+                          </>
+                        )}
                         {m.status === "active" ? (
                           <button type="button" disabled={pending} onClick={() => status(m, "paused")} className={linkBtn}>
                             Pause
