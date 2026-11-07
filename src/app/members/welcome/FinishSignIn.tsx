@@ -126,13 +126,30 @@ export default function FinishSignIn() {
     };
   }, []);
 
-  if (state === "setup" || state === "reset") {
+  // First time (Ed, 2026-11-07): just choose a password here, then straight into the members area
+  // on Settings → Profile (with a welcome note) to fill in the profile — no second copy of it here.
+  if (state === "setup") {
     return (
       <>
-        <h1 className="page-head__title">{state === "setup" ? <>Set up your <em>account.</em></> : <>Choose a new <em>password.</em></>}</h1>
-        <p className="page-head__lede">{state === "setup" ? "Tell the other members who you are, and choose a password. From now on you sign in with your email and that password." : "Then you’re signed in."}</p>
+        <h1 className="page-head__title">
+          Welcome. <em>Choose a password.</em>
+        </h1>
+        <p className="page-head__lede">From now on you sign in with your email and this password. Next, you’ll add your photo and a line about you.</p>
         <div className="mt-10">
-          <ProfileForm mode={state} next={next} />
+          <ProfileForm mode="reset" next="/members/settings?tab=profile&welcome=1" submitLabel="Continue" />
+        </div>
+      </>
+    );
+  }
+  if (state === "reset") {
+    return (
+      <>
+        <h1 className="page-head__title">
+          Choose a new <em>password.</em>
+        </h1>
+        <p className="page-head__lede">Then you’re signed in.</p>
+        <div className="mt-10">
+          <ProfileForm mode="reset" next={next} />
         </div>
       </>
     );

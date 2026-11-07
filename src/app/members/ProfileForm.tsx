@@ -93,7 +93,7 @@ async function cropWebp(file: File, out: { w: number; h: number }): Promise<Blob
 
 export type SettingsTab = "profile" | "password" | "privacy";
 
-export default function ProfileForm({ mode, next = "/members", section: tabProp }: { mode: Mode; next?: string; section?: SettingsTab }) {
+export default function ProfileForm({ mode, next = "/members", section: tabProp, submitLabel }: { mode: Mode; next?: string; section?: SettingsTab; submitLabel?: string }) {
   // In Settings (mode "account") the form is split into tabs (Ed, 2026-10-30): Profile,
   // Password, Privacy. Setup (from the invite) still shows everything on one page.
   // (The prop is renamed here: `section` is also the panel style below.)
@@ -448,7 +448,7 @@ export default function ProfileForm({ mode, next = "/members", section: tabProp 
   const actions = (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
       <button type="submit" disabled={busy} className="evp__btn group">
-        {busy ? "Saving…" : mode === "setup" ? "Finish setting up" : mode === "reset" ? "Save my new password" : "Save changes"}
+        {busy ? "Saving…" : submitLabel ? submitLabel : mode === "setup" ? "Finish setting up" : mode === "reset" ? "Save my new password" : "Save changes"}
         {!busy && <ForwardArrow />}
       </button>
       {msg && (
