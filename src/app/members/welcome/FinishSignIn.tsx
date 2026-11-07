@@ -16,6 +16,46 @@ import ProfileForm from "../ProfileForm";
  *   • forgot-password (?reset=1)    → "Choose a new password"
  *   • otherwise                     → straight on to ?next
  */
+type Outcome = "failed" | "setup" | "reset" | "go";
+
+/**
+ * One attempt per link (Ed, 2026-11-07: "the first time it says the link doesn't work, but a
+ * refresh works"). Two things used to race for the same one-time code: the Supabase client,
+ * which finishes ?code links on its own as the page loads, and this page's own exchange (twice,
+ * in dev, under React Strict Mode). One use signs you in, the other is told "already used" — so
+ * the page said "didn't work" while you were in fact signed in. Now: the attempt is shared per
+ * URL, an error only counts if no fresh session exists, and the code is cleared from the
+ * address bar afterwards so a refresh never reuses it.
+ */
+const attempts = new Map<string, Promise<Outcome>>();
+
+async function finishLink(href: string): Promise<Outcome> {
+  const sb = membersBrowser();
+  if (!sb) return "failed";
+  const url = new URL(href);
+  const code = url.searchParams.get("code");
+  const tokenHash = url.searchParams.get("token_hash");
+  const type = url.searchParams.get("type") as "magiclink" | "invite" | "email" | "recovery" | null;
+  const reset = url.searchParams.get("reset") === "1" || type === "recovery" || /type=recovery/.test(url.hash);
+
+  let error: unknown = null;
+  if (code) error = (await sb.auth.exchangeCodeForSession(code)).error;
+  else if (tokenHash && type) error = (await sb.auth.verifyOtp({ token_hash: tokenHash, type })).error;
+
+  const { data } = await sb.auth.getUser();
+  const user = data.user;
+  if (!user) return "failed";
+  // The code was "already used" — fine if it was used to sign THIS visit in (the client got there
+  // first): the session is brand new. An older session with a failed link is still a failure.
+  if (error) {
+    const last = user.last_sign_in_at ? Date.parse(user.last_sign_in_at) : 0;
+    if (Date.now() - last > 2 * 60_000) return "failed";
+  }
+  if (reset) return "reset";
+  if (!user.user_metadata?.password_set) return "setup";
+  return "go";
+}
+
 export default function FinishSignIn() {
   const [state, setState] = useState<"working" | "failed" | "setup" | "reset">("working");
   const [next, setNext] = useState("/members");
@@ -27,30 +67,33 @@ export default function FinishSignIn() {
       setState("failed");
       return;
     }
-    const url = new URL(window.location.href);
+    const href = window.location.href;
+    const url = new URL(href);
     const raw = url.searchParams.get("next") ?? "";
     const dest = raw.startsWith("/") && !raw.startsWith("//") ? raw : "/members";
     setNext(dest);
-    const code = url.searchParams.get("code");
-    const tokenHash = url.searchParams.get("token_hash");
-    const type = url.searchParams.get("type") as "magiclink" | "invite" | "email" | "recovery" | null;
-    const reset = url.searchParams.get("reset") === "1" || type === "recovery" || /type=recovery/.test(window.location.hash);
 
-    const finish = async () => {
-      if (code) {
-        const { error } = await sb.auth.exchangeCodeForSession(code);
-        if (error) return setState("failed");
-      } else if (tokenHash && type) {
-        const { error } = await sb.auth.verifyOtp({ token_hash: tokenHash, type });
-        if (error) return setState("failed");
+    let alive = true;
+    let attempt = attempts.get(href);
+    if (!attempt) {
+      attempt = finishLink(href);
+      attempts.set(href, attempt);
+    }
+    void attempt.then((outcome) => {
+      if (!alive) return;
+      if (outcome === "go") return window.location.replace(dest);
+      if (outcome !== "failed") {
+        // Signed in: take the one-time code out of the address bar, so a refresh can't reuse it.
+        const clean = new URL(href);
+        ["code", "token_hash", "type"].forEach((k) => clean.searchParams.delete(k));
+        if (outcome === "reset") clean.searchParams.set("reset", "1");
+        window.history.replaceState(null, "", clean.pathname + clean.search);
       }
-      const { data } = await sb.auth.getUser();
-      if (!data.user) return setState("failed");
-      if (reset) return setState("reset");
-      if (!data.user.user_metadata?.password_set) return setState("setup");
-      window.location.replace(dest);
+      setState(outcome);
+    });
+    return () => {
+      alive = false;
     };
-    void finish();
   }, []);
 
   if (state === "setup" || state === "reset") {
