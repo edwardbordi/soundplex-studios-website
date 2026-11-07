@@ -10,7 +10,8 @@ import ProfileForm from "../ProfileForm";
  * sign-in, whichever shape the link has:
  *   ?code=…                 a link requested from this browser (PKCE)
  *   ?token_hash=…&type=…    a custom email template's link
- *   #access_token=…         an invite / reset (the Supabase client reads the hash itself)
+ *   #access_token=…         a link sent from the server: invite, resent invite, password reset
+ *                           (this page sets the session from the hash itself)
  * then:
  *   • first time (no password yet)  → "Set up your account": profile + choose a password
  *   • forgot-password (?reset=1)    → "Choose a new password"
@@ -38,9 +39,18 @@ async function finishLink(href: string): Promise<Outcome> {
   const type = url.searchParams.get("type") as "magiclink" | "invite" | "email" | "recovery" | null;
   const reset = url.searchParams.get("reset") === "1" || type === "recovery" || /type=recovery/.test(url.hash);
 
+  // Links sent from the server (invites, resent invites, password resets) come back with the
+  // session in the URL HASH (#access_token=…&refresh_token=…). The members client is set up for
+  // ?code= links and won't read a hash on its own (Ed, 2026-11-07: a resent invite landed with
+  // valid tokens and still "didn't work"), so set the session from the hash ourselves.
+  const hash = new URLSearchParams(url.hash.replace(/^#/, ""));
+  const accessToken = hash.get("access_token");
+  const refreshToken = hash.get("refresh_token");
+
   let error: unknown = null;
   if (code) error = (await sb.auth.exchangeCodeForSession(code)).error;
   else if (tokenHash && type) error = (await sb.auth.verifyOtp({ token_hash: tokenHash, type })).error;
+  else if (accessToken && refreshToken) error = (await sb.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })).error;
 
   const { data } = await sb.auth.getUser();
   const user = data.user;
@@ -56,8 +66,26 @@ async function finishLink(href: string): Promise<Outcome> {
   return "go";
 }
 
+/**
+ * Why a link failed, when Supabase says (it adds error_code / error_description to the link it
+ * sends back). Shown under the heading so a failed link can be diagnosed (Ed, 2026-11-07: a
+ * resent invite "didn't work").
+ */
+function linkProblem(href: string): string | null {
+  const url = new URL(href);
+  const hash = new URLSearchParams(url.hash.replace(/^#/, ""));
+  const get = (k: string) => url.searchParams.get(k) ?? hash.get(k);
+  const code = get("error_code") ?? "";
+  const text = (get("error_description") ?? "").replace(/\+/g, " ");
+  if (!code && !text) return null;
+  if (/otp_expired|expired|invalid/i.test(code + " " + text))
+    return "This link has expired or was already used. If someone sent you a newer email, use the link in that one: each new email cancels the one before.";
+  return text || code;
+}
+
 export default function FinishSignIn() {
   const [state, setState] = useState<"working" | "failed" | "setup" | "reset">("working");
+  const [problem, setProblem] = useState<string | null>(null);
   const [next, setNext] = useState("/members");
 
   useEffect(() => {
@@ -82,8 +110,10 @@ export default function FinishSignIn() {
     void attempt.then((outcome) => {
       if (!alive) return;
       if (outcome === "go") return window.location.replace(dest);
+      if (outcome === "failed") setProblem(linkProblem(href));
       if (outcome !== "failed") {
         // Signed in: take the one-time code out of the address bar, so a refresh can't reuse it.
+        // (The #access_token hash goes too: only path + query are kept.)
         const clean = new URL(href);
         ["code", "token_hash", "type"].forEach((k) => clean.searchParams.delete(k));
         if (outcome === "reset") clean.searchParams.set("reset", "1");
@@ -113,7 +143,7 @@ export default function FinishSignIn() {
         <h1 className="page-head__title">
           That link <em>didn’t work.</em>
         </h1>
-        <p className="page-head__lede">Email links work once, on the device they were requested from, for an hour. Sign in with your password, or ask for a fresh link.</p>
+        <p className="page-head__lede">{problem ?? "Email links work once, on the device they were requested from, for an hour. Sign in with your password, or ask for a fresh link."}</p>
         <Link href="/members/sign-in" className="evp__btn group mt-8 inline-flex">
           Go to sign in
         </Link>
