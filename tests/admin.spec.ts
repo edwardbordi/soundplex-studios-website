@@ -35,12 +35,13 @@ test.describe('/admin (unauthenticated)', () => {
 
   test('the sign-in page uses the shell tokens', async ({ page }) => {
     await page.goto('/admin/sign-in');
-    const root = page.locator('.rz-admin');
+    // Newer Studio adds a loading skeleton that also carries .rz-admin (.rz-skel-root); check the real shell.
+    const root = page.locator('.rz-admin:not(.rz-skel-root)');
     await expect(root).toHaveAttribute('data-theme', 'light');
     // Brand: the site's favicon + "{SITE_NAME} Studio" in the top bar; the sign-in card names the product too.
-    await expect(page.locator('.rz-topbar__brand')).toContainText(SITE_NAME);
-    await expect(page.locator('.rz-topbar__brand')).toContainText('Studio');
-    await expect(page.locator('.rz-topbar__logo')).toHaveAttribute('src', '/logos/favicon.svg');
+    await expect(root.locator('.rz-topbar__brand')).toContainText(SITE_NAME);
+    await expect(root.locator('.rz-topbar__brand')).toContainText('Studio');
+    await expect(root.locator('.rz-topbar__logo')).toHaveAttribute('src', '/logos/favicon.svg');
     await expect(page.getByRole('heading', { name: `Sign in to ${SITE_NAME} Studio` })).toBeVisible();
     await expect(page).toHaveTitle(`${SITE_NAME} Studio`);
   });
