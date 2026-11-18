@@ -269,10 +269,30 @@ export default function MemberShell({ me, theme: initialTheme, children }: { me:
           light"). The logo swaps to an ink version on light (logos/soundplex-lockup-ink.png). */}
       <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-(--mx-line) bg-(--mx-top) px-4 text-(--mx-text) sm:px-5">
         {/* The logo goes back to the website (Ed, 2026-10-31); Now is in the menu. */}
-        <Link href="/" className="flex items-center gap-3" aria-label="SoundPlex website">
+        <Link href="/" className="group flex items-center gap-3" aria-label="SoundPlex website" title="Back to the website">
           <Image src="/logos/soundplex-lockup.png" alt="SoundPlex" width={490} height={69} className="mx-logo--dark h-auto w-[118px] sm:w-[132px]" priority />
           <Image src="/logos/soundplex-lockup-ink.png" alt="SoundPlex" width={490} height={69} className="mx-logo--light h-auto w-[118px] sm:w-[132px]" priority />
-          <span className="hidden border-l border-(--mx-line-strong) pl-3 text-[12px] uppercase tracking-[0.18em] text-(--mx-muted) sm:inline">Members</span>
+          {/* Like Studio's top bar (Ed, 2026-11-18): an up-right arrow beside the logo fades in on hover
+              and nudges up and out, so the logo reads as a link to the website. It takes no space until hover. */}
+          <svg
+            viewBox="0 0 24 24"
+            // No space at rest (zero width, and -ml-3 cancels the flex gap) so the | sits evenly
+            // between the logo and MEMBERS; on hover it opens to 16px and the arrow fades in.
+            className="-ml-3 h-4 w-0 shrink-0 overflow-visible text-(--mx-gold-text) opacity-0 transition-all duration-200 ease-out group-hover:-ml-1.5 group-hover:w-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100 group-focus-visible:-ml-1.5 group-focus-visible:w-4 group-focus-visible:opacity-100 motion-reduce:transition-none"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M7 17 17 7M8 7h9v9" />
+          </svg>
+          {/* All caps sit high in their line (room is kept below for descenders): a tight line box
+              plus 1px down centres MEMBERS on the logo (Ed, 2026-11-18). The rule keeps its height. */}
+          <span className="hidden border-l border-(--mx-line-strong) py-1 pl-3 text-[12px] uppercase leading-none tracking-[0.18em] text-(--mx-muted) sm:inline-block">
+            <span className="inline-block translate-y-px">Members</span>
+          </span>
         </Link>
 
         <div className="ml-auto flex items-center gap-3">
