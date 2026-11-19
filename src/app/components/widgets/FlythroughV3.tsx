@@ -38,6 +38,7 @@ import { mountScrollWorld } from "./vendor/scrub-engine";
 export default function FlythroughV3({ night: nightId, basePath = "/" }: { night?: string; basePath?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const veilRef = useRef<HTMLDivElement>(null);
+  const ssrRef = useRef<HTMLDivElement>(null);
   const scrimRef = useRef<HTMLDivElement>(null);
   const night = nightById(nightId);
   void basePath; // night links used it; the "I'm here to" chips go to /start instead
@@ -71,7 +72,10 @@ export default function FlythroughV3({ night: nightId, basePath = "/" }: { night
       dissolveEase: 0.07,
       sections: night.route,
       connectors: [],
+      // The first scene's still is already in the HTML (see the JSX below); the engine adopts it.
+      firstStill: ssrRef.current?.querySelector<HTMLImageElement>("img") ?? null,
     });
+    if (ssrRef.current) ssrRef.current.style.display = "none";
     // The engine's own track now holds the height (in px, from window.innerHeight).
     el.style.minHeight = "";
 
@@ -172,7 +176,7 @@ export default function FlythroughV3({ night: nightId, basePath = "/" }: { night
       spotsOn = on;
       if (!on) return setSpots(null);
       // Match the engine's own framing: the still's vertical object-position (42–46%).
-      const still = Array.from(el.querySelectorAll<HTMLImageElement>(".sw-scene__still")).find((i) => i.src.includes(IDEAS_STILL));
+      const still = Array.from(el.querySelectorAll<HTMLImageElement>(".sw-scene__still")).find((i) => i.src.includes("/flythrough/states/state-A."));
       const y = still ? parseFloat(getComputedStyle(still).objectPosition.split(" ")[1] ?? "50") : 42;
       setSpots({ posY: (Number.isFinite(y) ? y : 42) / 100 });
     };
@@ -232,30 +236,30 @@ export default function FlythroughV3({ night: nightId, basePath = "/" }: { night
           <ShopSpots key={spots.posY} src={IDEAS_STILL} posY={spots.posY} />
         </div>
       )}
-      {/* Start the first scene's still and clip downloading with the HTML, not after the
-          script runs (2026-11-19). The media queries mirror the engine's phone test, and
-          nothing preloads under reduced motion, where the engine never loads clips. */}
-      {first?.still && <link rel="preload" as="image" href={first.still} fetchPriority="high" />}
+      {/* On a desktop, start the first clip downloading with the HTML, not after the script
+          runs (2026-11-19). Not on phones: on a slow connection the clip took bandwidth from
+          the CSS and the first picture. Nothing preloads under reduced motion either. */}
+      {/* The first scene's still, in the HTML itself (2026-11-19, PageSpeed mobile): it is the
+          page's largest paint and used to appear only after the engine's script ran. The engine
+          adopts this exact <img> as scene one (config.firstStill). It's set as HTML, not JSX,
+          because the engine moves the node out of here and React must not track it. */}
+      {first?.still && (
+        <div
+          ref={ssrRef}
+          aria-hidden
+          className="sw-ssr-first"
+          dangerouslySetInnerHTML={{
+            __html: `<img class="sw-scene__still" alt="" decoding="async" fetchpriority="high" src="${first.still}">`,
+          }}
+        />
+      )}
       {first?.clip && (
         <link
           rel="preload"
           as="fetch"
           crossOrigin="anonymous"
           href={first.clip}
-          media={
-            first.clipMobile
-              ? "(min-width: 861px) and (pointer: fine) and (prefers-reduced-motion: no-preference)"
-              : "(prefers-reduced-motion: no-preference)"
-          }
-        />
-      )}
-      {first?.clipMobile && (
-        <link
-          rel="preload"
-          as="fetch"
-          crossOrigin="anonymous"
-          href={first.clipMobile}
-          media="(max-width: 860px) and (prefers-reduced-motion: no-preference)"
+          media="(min-width: 861px) and (pointer: fine) and (prefers-reduced-motion: no-preference)"
         />
       )}
       {/* The engine owns everything INSIDE this div — never render children into it. */}

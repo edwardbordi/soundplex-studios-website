@@ -136,7 +136,7 @@ function Mega({ label, href, children }: { label: string; href: string; children
           clearTimeout(timer.current);
           setOpen((v) => !v);
         }}
-        className="-ml-1 grid h-7 w-6 place-items-center text-white/55 transition-colors hover:text-[#d4a030]"
+        className="grid h-7 w-6 place-items-center text-white/55 transition-colors hover:text-[#d4a030]"
       >
         <svg aria-hidden width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform ${open ? "rotate-180 text-[#d4a030]" : ""}`}>
           <path d="M6 9l6 6 6-6" />

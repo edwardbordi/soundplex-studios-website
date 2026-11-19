@@ -150,11 +150,21 @@ function mountScrollWorld(container, config) {
   [sky, scrollbar, topbar, stage, copylayer, route, hint, track].forEach(n => container.appendChild(n));
 
   // segment scenes
+  // SOUNDPLEX (2026-11-19, PageSpeed mobile): the first scene's still is the page's largest
+  // paint, and it used to exist only once this script had run. The page can now put that
+  // <img> in its own HTML and hand it over as `config.firstStill`; the engine adopts it as
+  // scene one's still instead of making a new one, so it paints with the HTML. The other
+  // scenes' stills wait until the first has loaded, so they don't compete with it.
+  const lateStills = [];
+  const releaseStills = () => { lateStills.splice(0).forEach(([im, src]) => { im.src = src; }); };
   SEGMENTS.forEach(s => {
     const scene = el('div', 'sw-scene'); scene.style.setProperty('--sw-accent', s.accent || '');
-    const img = el('img', 'sw-scene__still'); img.alt = ''; img.decoding = 'async'; img.loading = 'lazy';
+    const adopt = (s === SEGMENTS[0] && config.firstStill) ? config.firstStill : null;
+    const img = adopt || el('img', 'sw-scene__still');
+    img.className = 'sw-scene__still'; img.alt = ''; img.decoding = 'async';
+    if (!adopt) img.loading = 'lazy';
     const poster = (isMobile() && s.stillM) ? s.stillM : s.still;
-    if (poster) img.src = poster;
+    if (poster && !adopt) { if (s === SEGMENTS[0]) img.src = poster; else lateStills.push([img, poster]); }
     // SOUNDPLEX: per-section focal point (inline style beats the breakpoint rules below).
     if (s.focal != null) img.style.objectPosition = `${(s.focal * 100).toFixed(1)}% 44%`;
     // A still that is the whole section (no clip) is content, not a poster: load it eagerly.
@@ -166,6 +176,11 @@ function mountScrollWorld(container, config) {
     s.el = scene; s.img = img; s.video = null; s.hasClip = false;
     s.loading = false; s.ready = false; s.cur = 0; s.target = 0; s.visible = false;
   });
+  {
+    const firstImg = SEGMENTS[0].img;
+    if (firstImg.complete) releaseStills(); else firstImg.addEventListener('load', releaseStills, { once: true });
+    setTimeout(releaseStills, 3000);   // never hold them hostage to a slow or failed first still
+  }
 
   // per-section copy / route / nav
   const copies = [], dots = [];
@@ -183,6 +198,8 @@ function mountScrollWorld(container, config) {
     copylayer.appendChild(c); copies.push(c);
 
     const dot = el('button', 'sw-route__dot'); dot.style.setProperty('--sw-accent', s.accent || '');
+    // SOUNDPLEX: the visible label is hidden on phones, which left the button with no name.
+    dot.setAttribute('aria-label', s.label || `Scene ${i + 1}`);
     dot.innerHTML = `<span class="sw-route__label">${esc(s.label || '')}</span><i></i>`;
     dot.addEventListener('click', () => jumpTo(i)); route.appendChild(dot); dots.push(dot);
 
@@ -246,6 +263,7 @@ function mountScrollWorld(container, config) {
       .then(blob => {
         const v = document.createElement('video');
         v.className = 'sw-scene__video';
+        v.setAttribute('aria-hidden', 'true'); v.tabIndex = -1;   // SOUNDPLEX: decorative, silent
         v.muted = true; v.playsInline = true; v.preload = 'auto';
         v.setAttribute('muted', ''); v.setAttribute('playsinline', '');
         v.src = URL.createObjectURL(blob);
@@ -281,7 +299,10 @@ function mountScrollWorld(container, config) {
 
     for (let i = 0; i < NSEG; i++) {
       const s = SEGMENTS[i];
-      if (y > s.start - 1.6 * vh && y < s.end + 1.6 * vh) loadClip(s);
+      // SOUNDPLEX (2026-11-19): the first clip downloads alone. The next one used to start at
+      // the same moment and halve its speed on a phone; now it starts when the first is ready.
+      const firstBusy = SEGMENTS[0].loading && !SEGMENTS[0].ready;
+      if (y > s.start - 1.6 * vh && y < s.end + 1.6 * vh && (i === 0 || !firstBusy)) loadClip(s);
       const local = clamp((y - s.start) / (s.end - s.start), 0, 1);
       s.target = s.linger ? lingerEase(local, s.linger) : local;
       let outside = 0;
