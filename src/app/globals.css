@@ -905,7 +905,7 @@ p, li,
 }
 /* The first scene's still as it sits in the page's own HTML, before the engine has run
    (FlythroughV3). Same framing as the engine gives it (scrub-engine.js: object-position per
-   breakpoint, the 2vw slide, the 1.03 scale) so nothing moves when the engine adopts it. */
+   breakpoint, the 2vw slide, the 1.03 scale) so nothing moves when the engine's own copy appears on top of it. */
 .sw-ssr-first {
   position: fixed;
   inset: 0;
