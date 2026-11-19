@@ -187,7 +187,7 @@ export default function FlythroughV3({ night: nightId, basePath = "/" }: { night
       spotsOn = on;
       if (!on) return setSpots(null);
       // Match the engine's own framing: the still's vertical object-position (42–46%).
-      const still = Array.from(el.querySelectorAll<HTMLImageElement>(".sw-scene__still")).find((i) => i.src.includes("/flythrough/states/state-A."));
+      const still = Array.from(el.querySelectorAll<HTMLImageElement>(".sw-scene__still")).find((i) => i.src.includes("/flythrough/states/state-A"));
       const y = still ? parseFloat(getComputedStyle(still).objectPosition.split(" ")[1] ?? "50") : 42;
       setSpots({ posY: (Number.isFinite(y) ? y : 42) / 100 });
     };
@@ -256,8 +256,11 @@ export default function FlythroughV3({ night: nightId, basePath = "/" }: { night
           is hidden once the engine's own copy is on screen. */}
       {first?.still && (
         <div ref={ssrRef} aria-hidden className="sw-ssr-first">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="sw-scene__still" alt="" fetchPriority="high" src={first.still} />
+          {/* Phones get the 720p copy, the same test the engine uses for its own (max-width 860). */}
+          <picture>
+            {first.stillMobile && <source media="(max-width: 860px)" srcSet={first.stillMobile} />}
+            <img className="sw-scene__still" alt="" fetchPriority="high" src={first.still} />
+          </picture>
         </div>
       )}
       {first?.clip && (
