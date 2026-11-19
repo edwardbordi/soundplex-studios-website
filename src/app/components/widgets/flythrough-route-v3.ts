@@ -39,7 +39,9 @@ export type RouteState = Omit<RouteLeg, "clip"> & {
 // are untouched (the /rooms film and the v1/v2 routes still use them).
 const webVid = (n: string) => `/flythrough/vid/web/leg${n}.mp4`;
 const mVid = (n: string) => `/flythrough/vid/m/leg${n}.mp4`;
-const pos = (n: string) => `/flythrough/poster/${n}.jpg`;
+// WebP copies of the three stills the home page plays (2026-11-19): about half the bytes.
+const posW = (n: string) => `/flythrough/poster/${n}.webp`;
+const stateW = (k: string) => `/flythrough/states/state-${k}.webp`;
 const state = (k: string) => `/flythrough/states/state-${k}.jpg`;
 
 /** Slow push on every still — nothing is ever static, nothing visibly zooms. */
@@ -59,7 +61,7 @@ const ALL_SCENES: RouteState[] = [
     // leg02-v2: re-rendered from edits/foyer-v2.jpg (the cleaned, warmed foyer — sign and
     // conduit gone, light leaking round the doors) via START_OVERRIDE in chain.sh. v1's
     // leg02 is untouched. Leg 03 still lines up: both versions end on waypoint 04.
-    still: pos("02-v2"),
+    still: posW("02-v2"),
     clip: webVid("02-v2"),
     clipMobile: mVid("02-v2"),
     scroll: 1.2,
@@ -79,7 +81,7 @@ const ALL_SCENES: RouteState[] = [
   {
     id: "walk-in",
     label: "The walk in",
-    still: pos("03"),
+    still: posW("03"),
     clip: webVid("03"),
     clipMobile: mVid("03"),
     scroll: 1.4,
@@ -90,7 +92,7 @@ const ALL_SCENES: RouteState[] = [
   {
     id: "early",
     label: "Ideas",
-    still: state("A"),
+    still: stateW("A"),
     scroll: 1.2,
     // No dissolve and no focal here: same pixels as the end of leg 03, and the same
     // object-position as the video, so the film → still hand-off is invisible.
