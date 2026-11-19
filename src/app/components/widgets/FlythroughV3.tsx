@@ -41,6 +41,12 @@ export default function FlythroughV3({ night: nightId, basePath = "/" }: { night
   const scrimRef = useRef<HTMLDivElement>(null);
   const night = nightById(nightId);
   void basePath; // night links used it; the "I'm here to" chips go to /start instead
+  // The film's full scroll length, known before the engine runs (2026-11-19). The engine sizes
+  // its track as (sum of each scene's scroll + 1) screens; until it has, the mount was 0px
+  // tall and the page below sat at the top, then jumped six screens down (PageSpeed: layout
+  // shift 1.0). Reserving the same height up front means nothing moves.
+  const reserve = night.route.reduce((a, r) => a + (r.scroll || 1.3), 0) + 1;
+  const first = night.route[0];
   const [spots, setSpots] = useState<{ posY: number } | null>(null);
 
   useEffect(() => {
@@ -66,6 +72,8 @@ export default function FlythroughV3({ night: nightId, basePath = "/" }: { night
       sections: night.route,
       connectors: [],
     });
+    // The engine's own track now holds the height (in px, from window.innerHeight).
+    el.style.minHeight = "";
 
     // The chip rail on the first frame (Ed, 2026-10-29): "I'm here to…", one chip per reason
     // people come, each straight into the right path of /start (like the header's Book menu).
@@ -224,8 +232,34 @@ export default function FlythroughV3({ night: nightId, basePath = "/" }: { night
           <ShopSpots key={spots.posY} src={IDEAS_STILL} posY={spots.posY} />
         </div>
       )}
+      {/* Start the first scene's still and clip downloading with the HTML, not after the
+          script runs (2026-11-19). The media queries mirror the engine's phone test, and
+          nothing preloads under reduced motion, where the engine never loads clips. */}
+      {first?.still && <link rel="preload" as="image" href={first.still} fetchPriority="high" />}
+      {first?.clip && (
+        <link
+          rel="preload"
+          as="fetch"
+          crossOrigin="anonymous"
+          href={first.clip}
+          media={
+            first.clipMobile
+              ? "(min-width: 861px) and (pointer: fine) and (prefers-reduced-motion: no-preference)"
+              : "(prefers-reduced-motion: no-preference)"
+          }
+        />
+      )}
+      {first?.clipMobile && (
+        <link
+          rel="preload"
+          as="fetch"
+          crossOrigin="anonymous"
+          href={first.clipMobile}
+          media="(max-width: 860px) and (prefers-reduced-motion: no-preference)"
+        />
+      )}
       {/* The engine owns everything INSIDE this div — never render children into it. */}
-      <div ref={ref} className="sw-mount sw-v2" />
+      <div ref={ref} className="sw-mount sw-v2" style={{ minHeight: `${reserve * 100}vh` }} />
     </>
   );
 }
