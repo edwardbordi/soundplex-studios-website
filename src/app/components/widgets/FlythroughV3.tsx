@@ -72,10 +72,21 @@ export default function FlythroughV3({ night: nightId, basePath = "/" }: { night
       dissolveEase: 0.07,
       sections: night.route,
       connectors: [],
-      // The first scene's still is already in the HTML (see the JSX below); the engine adopts it.
-      firstStill: ssrRef.current?.querySelector<HTMLImageElement>("img") ?? null,
     });
-    if (ssrRef.current) ssrRef.current.style.display = "none";
+    // The HTML's own copy of the first still (see the JSX below) has done its job once the
+    // engine's copy is decoded and on screen: hide it then, two frames later so there's no gap.
+    // Hidden, never removed or moved: either would make the browser re-time the largest paint.
+    {
+      const hideSsr = () =>
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => {
+            if (ssrRef.current) ssrRef.current.style.visibility = "hidden";
+          }),
+        );
+      const engineStill = el.querySelector<HTMLImageElement>(".sw-stage .sw-scene__still");
+      if (engineStill?.decode) engineStill.decode().then(hideSsr, hideSsr);
+      else hideSsr();
+    }
     // The engine's own track now holds the height (in px, from window.innerHeight).
     el.style.minHeight = "";
 
@@ -240,18 +251,14 @@ export default function FlythroughV3({ night: nightId, basePath = "/" }: { night
           runs (2026-11-19). Not on phones: on a slow connection the clip took bandwidth from
           the CSS and the first picture. Nothing preloads under reduced motion either. */}
       {/* The first scene's still, in the HTML itself (2026-11-19, PageSpeed mobile): it is the
-          page's largest paint and used to appear only after the engine's script ran. The engine
-          adopts this exact <img> as scene one (config.firstStill). It's set as HTML, not JSX,
-          because the engine moves the node out of here and React must not track it. */}
+          page's largest paint and used to appear only after the engine's script ran. It sits
+          fixed under the engine's stage with the same framing (globals.css, .sw-ssr-first), and
+          is hidden once the engine's own copy is on screen. */}
       {first?.still && (
-        <div
-          ref={ssrRef}
-          aria-hidden
-          className="sw-ssr-first"
-          dangerouslySetInnerHTML={{
-            __html: `<img class="sw-scene__still" alt="" decoding="async" fetchpriority="high" src="${first.still}">`,
-          }}
-        />
+        <div ref={ssrRef} aria-hidden className="sw-ssr-first">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="sw-scene__still" alt="" fetchPriority="high" src={first.still} />
+        </div>
       )}
       {first?.clip && (
         <link

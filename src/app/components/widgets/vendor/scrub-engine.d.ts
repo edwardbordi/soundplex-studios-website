@@ -46,8 +46,6 @@ export interface ScrollWorldConfig {
   /** SoundPlex: per-frame catch-up rate for eased state dissolves (default 0.1). */
   dissolveEase?: number;
   sections: ScrollWorldSection[];
-  /** SoundPlex: an <img> already in the page's HTML to adopt as the first scene's still. */
-  firstStill?: HTMLImageElement | null;
   /** Architecture A has none — an empty array makes the engine crossfade leg to leg. */
   connectors?: (string | null)[];
   connectorsMobile?: (string | null)[];

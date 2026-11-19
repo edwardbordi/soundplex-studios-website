@@ -150,21 +150,18 @@ function mountScrollWorld(container, config) {
   [sky, scrollbar, topbar, stage, copylayer, route, hint, track].forEach(n => container.appendChild(n));
 
   // segment scenes
-  // SOUNDPLEX (2026-11-19, PageSpeed mobile): the first scene's still is the page's largest
-  // paint, and it used to exist only once this script had run. The page can now put that
-  // <img> in its own HTML and hand it over as `config.firstStill`; the engine adopts it as
-  // scene one's still instead of making a new one, so it paints with the HTML. The other
-  // scenes' stills wait until the first has loaded, so they don't compete with it.
+  // SOUNDPLEX (2026-11-19, PageSpeed mobile): the other scenes' stills wait until the first
+  // has loaded, so they don't compete with it. (The page also paints the first still from
+  // its own HTML, under the stage, before this script runs: see FlythroughV3's .sw-ssr-first.
+  // The engine does NOT take that node over: moving it made the browser re-time the page's
+  // largest paint to the moment this script ran.)
   const lateStills = [];
   const releaseStills = () => { lateStills.splice(0).forEach(([im, src]) => { im.src = src; }); };
   SEGMENTS.forEach(s => {
     const scene = el('div', 'sw-scene'); scene.style.setProperty('--sw-accent', s.accent || '');
-    const adopt = (s === SEGMENTS[0] && config.firstStill) ? config.firstStill : null;
-    const img = adopt || el('img', 'sw-scene__still');
-    img.className = 'sw-scene__still'; img.alt = ''; img.decoding = 'async';
-    if (!adopt) img.loading = 'lazy';
+    const img = el('img', 'sw-scene__still'); img.alt = ''; img.decoding = 'async'; img.loading = 'lazy';
     const poster = (isMobile() && s.stillM) ? s.stillM : s.still;
-    if (poster && !adopt) { if (s === SEGMENTS[0]) img.src = poster; else lateStills.push([img, poster]); }
+    if (poster) { if (s === SEGMENTS[0]) img.src = poster; else lateStills.push([img, poster]); }
     // SOUNDPLEX: per-section focal point (inline style beats the breakpoint rules below).
     if (s.focal != null) img.style.objectPosition = `${(s.focal * 100).toFixed(1)}% 44%`;
     // A still that is the whole section (no clip) is content, not a poster: load it eagerly.
