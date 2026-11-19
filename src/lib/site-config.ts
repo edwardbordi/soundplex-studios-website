@@ -30,7 +30,7 @@ export const SITE_URL = "https://soundplexstudios.com";
  * ------------------------------------------------------------------------- */
 
 /** The master switch. False ships the site with no review chrome at all. */
-export const PREVIEW_CHROME = true; // wave 2 is in client review; false at launch
+export const PREVIEW_CHROME = false; // off since 2026-11-19: the Black Friday emails send people to this site (Ed)
 
 /**
  * SAMPLE EVENTS on What's On (/studio-productions) — made-up nights generated from today's date

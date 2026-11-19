@@ -27,12 +27,18 @@ import type { RouteLeg } from "./flythrough-route";
 
 export type RouteState = Omit<RouteLeg, "clip"> & {
   clip?: string;
+  clipMobile?: string;
   dissolve?: number;
   drift?: number;
   focal?: number;
 };
 
-const vid = (n: string) => `/flythrough/vid/leg${n}.mp4`;
+// The home page's two legs, re-encoded for the web on 2026-11-19 (Ed: "it needs to be fast"):
+// the originals are 9 and 11 MB and the film can't move until a clip has fully downloaded.
+// `web` is 1080p at about a third of the size; `m` is 720p for phones. The originals in vid/
+// are untouched (the /rooms film and the v1/v2 routes still use them).
+const webVid = (n: string) => `/flythrough/vid/web/leg${n}.mp4`;
+const mVid = (n: string) => `/flythrough/vid/m/leg${n}.mp4`;
 const pos = (n: string) => `/flythrough/poster/${n}.jpg`;
 const state = (k: string) => `/flythrough/states/state-${k}.jpg`;
 
@@ -54,7 +60,8 @@ const ALL_SCENES: RouteState[] = [
     // conduit gone, light leaking round the doors) via START_OVERRIDE in chain.sh. v1's
     // leg02 is untouched. Leg 03 still lines up: both versions end on waypoint 04.
     still: pos("02-v2"),
-    clip: vid("02-v2"),
+    clip: webVid("02-v2"),
+    clipMobile: mVid("02-v2"),
     scroll: 1.2,
     // Frame 1 is built only from George's own words on soundplexstudios.com/membership
     // (Aug 2026): "Not just a creative venue. Not just a networking group… a true third
@@ -73,7 +80,8 @@ const ALL_SCENES: RouteState[] = [
     id: "walk-in",
     label: "The walk in",
     still: pos("03"),
-    clip: vid("03"),
+    clip: webVid("03"),
+    clipMobile: mVid("03"),
     scroll: 1.4,
     eyebrow: "The walk in",
     title: "You\u2019ll feel it *before you\u2019ve said a word.*",
