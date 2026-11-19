@@ -28,6 +28,7 @@ import type { RouteLeg } from "./flythrough-route";
 export type RouteState = Omit<RouteLeg, "clip"> & {
   clip?: string;
   clipMobile?: string;
+  stillMobile?: string;
   dissolve?: number;
   drift?: number;
   focal?: number;
@@ -42,6 +43,10 @@ const mVid = (n: string) => `/flythrough/vid/m/leg${n}.mp4`;
 // WebP copies of the three stills the home page plays (2026-11-19): about half the bytes.
 const posW = (n: string) => `/flythrough/poster/${n}.webp`;
 const stateW = (k: string) => `/flythrough/states/state-${k}.webp`;
+// And 720p copies for phones (2026-11-19), the same size as the phone clips: the first one is
+// the page's largest paint, and at 52 KB (from 113) it arrives much sooner on a slow connection.
+const posM = (n: string) => `/flythrough/poster/${n}-m.webp`;
+const stateM = (k: string) => `/flythrough/states/state-${k}-m.webp`;
 const state = (k: string) => `/flythrough/states/state-${k}.jpg`;
 
 /** Slow push on every still — nothing is ever static, nothing visibly zooms. */
@@ -62,6 +67,7 @@ const ALL_SCENES: RouteState[] = [
     // conduit gone, light leaking round the doors) via START_OVERRIDE in chain.sh. v1's
     // leg02 is untouched. Leg 03 still lines up: both versions end on waypoint 04.
     still: posW("02-v2"),
+    stillMobile: posM("02-v2"),
     clip: webVid("02-v2"),
     clipMobile: mVid("02-v2"),
     scroll: 1.2,
@@ -82,6 +88,7 @@ const ALL_SCENES: RouteState[] = [
     id: "walk-in",
     label: "The walk in",
     still: posW("03"),
+    stillMobile: posM("03"),
     clip: webVid("03"),
     clipMobile: mVid("03"),
     scroll: 1.4,
@@ -93,6 +100,7 @@ const ALL_SCENES: RouteState[] = [
     id: "early",
     label: "Ideas",
     still: stateW("A"),
+    stillMobile: stateM("A"),
     scroll: 1.2,
     // No dissolve and no focal here: same pixels as the end of leg 03, and the same
     // object-position as the video, so the film → still hand-off is invisible.
