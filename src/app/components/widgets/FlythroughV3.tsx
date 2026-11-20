@@ -11,7 +11,6 @@ const IDEAS_STILL = "/flythrough/states/state-A.jpg";
 const INTENTS = [
   { label: "Rent a room", href: "/start?path=room&from=home-chips" },
   { label: "Record a podcast", href: "/start?path=produce&from=home-chips" },
-  { label: "See a show", href: "/studio-productions" },
   { label: "Join the Collective", href: "/start?path=collective&from=home-chips" },
   { label: "Take a tour", href: "/start?path=collective&from=home-chips-tour" },
 ];
@@ -38,9 +37,16 @@ import { mountScrollWorld } from "./vendor/scrub-engine";
 export default function FlythroughV3({ night: nightId, basePath = "/" }: { night?: string; basePath?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const veilRef = useRef<HTMLDivElement>(null);
+  const ssrRef = useRef<HTMLDivElement>(null);
   const scrimRef = useRef<HTMLDivElement>(null);
   const night = nightById(nightId);
   void basePath; // night links used it; the "I'm here to" chips go to /start instead
+  // The film's full scroll length, known before the engine runs (2026-11-19). The engine sizes
+  // its track as (sum of each scene's scroll + 1) screens; until it has, the mount was 0px
+  // tall and the page below sat at the top, then jumped six screens down (PageSpeed: layout
+  // shift 1.0). Reserving the same height up front means nothing moves.
+  const reserve = night.route.reduce((a, r) => a + (r.scroll || 1.3), 0) + 1;
+  const first = night.route[0];
   const [spots, setSpots] = useState<{ posY: number } | null>(null);
 
   useEffect(() => {
@@ -66,6 +72,22 @@ export default function FlythroughV3({ night: nightId, basePath = "/" }: { night
       sections: night.route,
       connectors: [],
     });
+    // The HTML's own copy of the first still (see the JSX below) has done its job once the
+    // engine's copy is decoded and on screen: hide it then, two frames later so there's no gap.
+    // Hidden, never removed or moved: either would make the browser re-time the largest paint.
+    {
+      const hideSsr = () =>
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => {
+            if (ssrRef.current) ssrRef.current.style.visibility = "hidden";
+          }),
+        );
+      const engineStill = el.querySelector<HTMLImageElement>(".sw-stage .sw-scene__still");
+      if (engineStill?.decode) engineStill.decode().then(hideSsr, hideSsr);
+      else hideSsr();
+    }
+    // The engine's own track now holds the height (in px, from window.innerHeight).
+    el.style.minHeight = "";
 
     // The chip rail on the first frame (Ed, 2026-10-29): "I'm here to…", one chip per reason
     // people come, each straight into the right path of /start (like the header's Book menu).
@@ -164,7 +186,7 @@ export default function FlythroughV3({ night: nightId, basePath = "/" }: { night
       spotsOn = on;
       if (!on) return setSpots(null);
       // Match the engine's own framing: the still's vertical object-position (42–46%).
-      const still = Array.from(el.querySelectorAll<HTMLImageElement>(".sw-scene__still")).find((i) => i.src.includes(IDEAS_STILL));
+      const still = Array.from(el.querySelectorAll<HTMLImageElement>(".sw-scene__still")).find((i) => i.src.includes("/flythrough/states/state-A"));
       const y = still ? parseFloat(getComputedStyle(still).objectPosition.split(" ")[1] ?? "50") : 42;
       setSpots({ posY: (Number.isFinite(y) ? y : 42) / 100 });
     };
@@ -224,8 +246,33 @@ export default function FlythroughV3({ night: nightId, basePath = "/" }: { night
           <ShopSpots key={spots.posY} src={IDEAS_STILL} posY={spots.posY} />
         </div>
       )}
+      {/* On a desktop, start the first clip downloading with the HTML, not after the script
+          runs (2026-11-19). Not on phones: on a slow connection the clip took bandwidth from
+          the CSS and the first picture. Nothing preloads under reduced motion either. */}
+      {/* The first scene's still, in the HTML itself (2026-11-19, PageSpeed mobile): it is the
+          page's largest paint and used to appear only after the engine's script ran. It sits
+          fixed under the engine's stage with the same framing (globals.css, .sw-ssr-first), and
+          is hidden once the engine's own copy is on screen. */}
+      {first?.still && (
+        <div ref={ssrRef} aria-hidden className="sw-ssr-first">
+          {/* Phones get the 720p copy, the same test the engine uses for its own (max-width 860). */}
+          <picture>
+            {first.stillMobile && <source media="(max-width: 860px)" srcSet={first.stillMobile} />}
+            <img className="sw-scene__still" alt="" fetchPriority="high" src={first.still} />
+          </picture>
+        </div>
+      )}
+      {first?.clip && (
+        <link
+          rel="preload"
+          as="fetch"
+          crossOrigin="anonymous"
+          href={first.clip}
+          media="(min-width: 861px) and (pointer: fine) and (prefers-reduced-motion: no-preference)"
+        />
+      )}
       {/* The engine owns everything INSIDE this div — never render children into it. */}
-      <div ref={ref} className="sw-mount sw-v2" />
+      <div ref={ref} className="sw-mount sw-v2" style={{ minHeight: `${reserve * 100}vh` }} />
     </>
   );
 }

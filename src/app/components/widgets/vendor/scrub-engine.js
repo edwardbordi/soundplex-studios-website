@@ -142,24 +142,42 @@ function mountScrollWorld(container, config) {
   const hint = el('div', 'sw-hint');
   const hintText = el('span'); hintText.textContent = config.hint || 'scroll'; hint.appendChild(hintText);
   hint.appendChild(el('i'));
+  // SOUNDPLEX: progress bar for the first clip (see setLoading); hidden unless .is-loading.
+  const hintBarWrap = el('b', 'sw-hint__bar'); const hintBar = el('span'); hintBarWrap.appendChild(hintBar);
+  hint.appendChild(hintBarWrap); hint.setAttribute('role', 'status');
   const track = el('div', 'sw-track');
 
   [sky, scrollbar, topbar, stage, copylayer, route, hint, track].forEach(n => container.appendChild(n));
 
   // segment scenes
+  // SOUNDPLEX (2026-11-19, PageSpeed mobile): the other scenes' stills wait until the first
+  // has loaded, so they don't compete with it. (The page also paints the first still from
+  // its own HTML, under the stage, before this script runs: see FlythroughV3's .sw-ssr-first.
+  // The engine does NOT take that node over: moving it made the browser re-time the page's
+  // largest paint to the moment this script ran.)
+  const lateStills = [];
+  const releaseStills = () => { lateStills.splice(0).forEach(([im, src]) => { im.src = src; }); };
   SEGMENTS.forEach(s => {
     const scene = el('div', 'sw-scene'); scene.style.setProperty('--sw-accent', s.accent || '');
     const img = el('img', 'sw-scene__still'); img.alt = ''; img.decoding = 'async'; img.loading = 'lazy';
     const poster = (isMobile() && s.stillM) ? s.stillM : s.still;
-    if (poster) img.src = poster;
+    if (poster) { if (s === SEGMENTS[0]) img.src = poster; else lateStills.push([img, poster]); }
     // SOUNDPLEX: per-section focal point (inline style beats the breakpoint rules below).
     if (s.focal != null) img.style.objectPosition = `${(s.focal * 100).toFixed(1)}% 44%`;
     // A still that is the whole section (no clip) is content, not a poster: load it eagerly.
     if (!s.clip) img.loading = 'eager';
+    // SOUNDPLEX (2026-11-19): the first scene's still is the page's largest paint. Load it
+    // first and at high priority instead of lazily (PageSpeed: "LCP request discovery").
+    if (s === SEGMENTS[0]) { img.loading = 'eager'; img.fetchPriority = 'high'; }
     scene.appendChild(img); stage.appendChild(scene);
     s.el = scene; s.img = img; s.video = null; s.hasClip = false;
     s.loading = false; s.ready = false; s.cur = 0; s.target = 0; s.visible = false;
   });
+  {
+    const firstImg = SEGMENTS[0].img;
+    if (firstImg.complete) releaseStills(); else firstImg.addEventListener('load', releaseStills, { once: true });
+    setTimeout(releaseStills, 3000);   // never hold them hostage to a slow or failed first still
+  }
 
   // per-section copy / route / nav
   const copies = [], dots = [];
@@ -177,6 +195,8 @@ function mountScrollWorld(container, config) {
     copylayer.appendChild(c); copies.push(c);
 
     const dot = el('button', 'sw-route__dot'); dot.style.setProperty('--sw-accent', s.accent || '');
+    // SOUNDPLEX: the visible label is hidden on phones, which left the button with no name.
+    dot.setAttribute('aria-label', s.label || `Scene ${i + 1}`);
     dot.innerHTML = `<span class="sw-route__label">${esc(s.label || '')}</span><i></i>`;
     dot.addEventListener('click', () => jumpTo(i)); route.appendChild(dot); dots.push(dot);
 
@@ -219,21 +239,53 @@ function mountScrollWorld(container, config) {
     s.loading = true;
     // Serve the lighter mobile encode on phones when one was provided.
     const url = (isMobile() && s.clipM) ? s.clipM : s.clip;
-    fetch(url).then(r => r.ok ? r.blob() : Promise.reject(new Error('404')))
+    // SOUNDPLEX (2026-11-19): the film can't move until the FIRST clip is fully downloaded.
+    // Say so: the hint shows a spinner, "Loading the walk-through" and a progress bar until
+    // that clip is ready, then turns back into the scroll hint. Only the first clip reports.
+    const first = (s === SEGMENTS[0]);
+    if (first) setLoading(0);
+    const done = () => { if (first) setLoading(null); };
+    fetch(url).then(r => {
+        if (!r.ok) return Promise.reject(new Error('404'));
+        const total = +(r.headers.get('content-length') || 0);
+        if (!first || !total || !r.body || !r.body.getReader) return r.blob();
+        const reader = r.body.getReader(); const parts = []; let got = 0;
+        const pump = () => reader.read().then(({ done: end, value }) => {
+          if (end) return new Blob(parts, { type: 'video/mp4' });
+          parts.push(value); got += value.length; setLoading(got / total);
+          return pump();
+        });
+        return pump();
+      })
       .then(blob => {
         const v = document.createElement('video');
         v.className = 'sw-scene__video';
+        v.setAttribute('aria-hidden', 'true'); v.tabIndex = -1;   // SOUNDPLEX: decorative, silent
         v.muted = true; v.playsInline = true; v.preload = 'auto';
         v.setAttribute('muted', ''); v.setAttribute('playsinline', '');
         v.src = URL.createObjectURL(blob);
-        v.addEventListener('loadedmetadata', () => { s.ready = true; read(); });
+        v.addEventListener('loadedmetadata', () => { s.ready = true; done(); read(); });
         // Reveal the video (hide the still poster) only once a real frame has
         // painted — on iOS a seeked-but-never-played muted video stays blank, so
         // hiding the still on metadata alone would flash an empty scene.
         v.addEventListener('seeked', () => { s.el.classList.add('has-clip'); }, { once: true });
         v.addEventListener('loadeddata', () => { try { v.pause(); } catch (e) {} if (userReady) primeVideo(v); });
         s.el.appendChild(v); s.video = v; s.hasClip = true;
-      }).catch(() => { s.loading = false; });
+      }).catch(() => { s.loading = false; done(); });
+  }
+
+  // SOUNDPLEX: the first clip's loading state, shown in the hint. p = 0..1, or null when done.
+  function setLoading(p) {
+    if (p == null) {
+      hint.classList.remove('is-loading');
+      hintText.textContent = config.hint || 'scroll';
+      return;
+    }
+    if (!hint.classList.contains('is-loading')) {
+      hint.classList.add('is-loading');
+      hintText.textContent = 'Loading the walk-through';
+    }
+    hintBar.style.transform = `scaleX(${clamp(p)})`;
   }
 
   function read() {
@@ -244,7 +296,10 @@ function mountScrollWorld(container, config) {
 
     for (let i = 0; i < NSEG; i++) {
       const s = SEGMENTS[i];
-      if (y > s.start - 1.6 * vh && y < s.end + 1.6 * vh) loadClip(s);
+      // SOUNDPLEX (2026-11-19): the first clip downloads alone. The next one used to start at
+      // the same moment and halve its speed on a phone; now it starts when the first is ready.
+      const firstBusy = SEGMENTS[0].loading && !SEGMENTS[0].ready;
+      if (y > s.start - 1.6 * vh && y < s.end + 1.6 * vh && (i === 0 || !firstBusy)) loadClip(s);
       const local = clamp((y - s.start) / (s.end - s.start), 0, 1);
       s.target = s.linger ? lingerEase(local, s.linger) : local;
       let outside = 0;
@@ -462,6 +517,14 @@ function injectCSS() {
   .sw-hint{position:fixed;left:50%;bottom:26px;z-index:30;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:10px;font-size:.76rem;letter-spacing:.14em;text-transform:uppercase;color:var(--sw-ink-soft);transition:opacity .3s;}
   .sw-hint i{width:22px;height:34px;border-radius:12px;border:2px solid color-mix(in srgb,var(--sw-ink) 28%,transparent);position:relative;}
   .sw-hint i::after{content:"";position:absolute;left:50%;top:7px;width:4px;height:7px;border-radius:2px;background:var(--sw-accent);transform:translateX(-50%);animation:sw-wheel 1.7s ease-in-out infinite;}
+  /* SOUNDPLEX: while the first clip downloads the hint is a loader: spinner, label, bar. */
+  .sw-hint__bar{display:none;width:150px;height:3px;border-radius:2px;overflow:hidden;background:color-mix(in srgb,var(--sw-ink) 22%,transparent);}
+  .sw-hint__bar span{display:block;width:100%;height:100%;background:var(--sw-accent);transform:scaleX(0);transform-origin:left;transition:transform .2s linear;}
+  .sw-hint.is-loading{color:var(--sw-ink);}
+  .sw-hint.is-loading .sw-hint__bar{display:block;}
+  .sw-hint.is-loading i{order:-1;width:26px;height:26px;border-radius:50%;border:2.5px solid color-mix(in srgb,var(--sw-ink) 25%,transparent);border-top-color:var(--sw-accent);animation:sw-spin .8s linear infinite;}
+  .sw-hint.is-loading i::after{display:none;}
+  @keyframes sw-spin{to{transform:rotate(360deg);}}
   @keyframes sw-wheel{0%{opacity:0;top:6px}40%{opacity:1}100%{opacity:0;top:17px}}
   .sw-track{position:relative;z-index:1;width:100%;pointer-events:none;}
   @media (max-width:860px){

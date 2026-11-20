@@ -12,7 +12,9 @@
 function required(name: string): string {
   const value = process.env[name];
   if (!value) {
-    throw new Error(`/admin is not configured: ${name} is missing. See .env.example.`);
+    throw new Error(
+      `/admin is not configured: ${name} is missing. See .env.example.`,
+    );
   }
   return value;
 }
@@ -40,7 +42,8 @@ export function siteId(): string {
  * on, nor the identity service-role key, which opens the whole sign-in database.
  */
 export function brokerConfig(): { url: string; secret: string } | null {
-  const url = process.env.REALIIZ_BROKER_URL, secret = process.env.REALIIZ_SITE_SECRET;
+  const url = process.env.REALIIZ_BROKER_URL,
+    secret = process.env.REALIIZ_SITE_SECRET;
   return url && secret ? { url, secret } : null;
 }
 
@@ -54,10 +57,17 @@ export function brokerConfig(): { url: string; secret: string } | null {
 export function repoConfig() {
   const slug = required("GITHUB_REPO");
   const [owner, repo] = slug.split("/");
-  if (!owner || !repo) throw new Error(`GITHUB_REPO must be "owner/repo", got "${slug}"`);
+  if (!owner || !repo)
+    throw new Error(`GITHUB_REPO must be "owner/repo", got "${slug}"`);
   const broker = brokerConfig();
-  if (broker) return { owner, repo, broker: { url: broker.url, siteId: siteId(), secret: broker.secret } };
-  const appId = process.env.GITHUB_APP_ID, privateKey = process.env.GITHUB_APP_PRIVATE_KEY;
+  if (broker)
+    return {
+      owner,
+      repo,
+      broker: { url: broker.url, siteId: siteId(), secret: broker.secret },
+    };
+  const appId = process.env.GITHUB_APP_ID,
+    privateKey = process.env.GITHUB_APP_PRIVATE_KEY;
   if (appId && privateKey) return { owner, repo, app: { appId, privateKey } };
   return { owner, repo, token: required("GITHUB_CONTENT_TOKEN") };
 }
@@ -67,10 +77,16 @@ export function repoConfig() {
  * invite people, change roles and resend invites (Team tab). Everything else in
  * /admin works without it; the Team tab says so instead of crashing.
  */
-export function serviceConfig(): { url: string; serviceRoleKey: string } | null {
+export function serviceConfig(): {
+  url: string;
+  serviceRoleKey: string;
+} | null {
   const key = process.env.IDENTITY_SUPABASE_SERVICE_ROLE_KEY;
   if (!key) return null;
-  return { url: required("NEXT_PUBLIC_IDENTITY_SUPABASE_URL"), serviceRoleKey: key };
+  return {
+    url: required("NEXT_PUBLIC_IDENTITY_SUPABASE_URL"),
+    serviceRoleKey: key,
+  };
 }
 
 /**
@@ -82,19 +98,53 @@ export function deployHookUrl(): string | null {
   return process.env.VERCEL_DEPLOY_HOOK_URL || null;
 }
 
+/**
+ * SERVER-ONLY, OPTIONAL. What the Black Friday report (Studio → Black Friday) reads the
+ * HighLevel account with: the same private-integration token and location Leads uses.
+ * Opportunities are picked by their source ("Black Friday 2026"); BLACK_FRIDAY_PIPELINE_ID narrows them to one pipeline;
+ * the calendar defaults to the offer page's. Absent: the page says what to add.
+ */
+export function blackFridayConfig(): {
+  token: string;
+  locationId: string;
+  pipelineId: string | null;
+  calendarId: string;
+  stats: { url: string; key: string } | null;
+} | null {
+  const token = process.env.HIGHLEVEL_TOKEN;
+  const locationId = process.env.HIGHLEVEL_LOCATION_ID;
+  if (!token || !locationId) return null;
+  return {
+    token,
+    locationId,
+    pipelineId: process.env.BLACK_FRIDAY_PIPELINE_ID || null,
+    calendarId: process.env.BLACK_FRIDAY_CALENDAR_ID || "xyPCrxOdKKkz5oTz6Waq",
+    // Visits to the offer page: a counts-only address and its key. Absent: the report leaves visits out.
+    stats:
+      process.env.BLACK_FRIDAY_STATS_URL && process.env.BLACK_FRIDAY_STATS_KEY
+        ? {
+            url: process.env.BLACK_FRIDAY_STATS_URL,
+            key: process.env.BLACK_FRIDAY_STATS_KEY,
+          }
+        : null,
+  };
+}
+
 /** True when every variable the dashboard needs is present. Used to render a setup page instead of a 500. */
 export function adminConfigured(): boolean {
-  return [
-    "NEXT_PUBLIC_IDENTITY_SUPABASE_URL",
-    "NEXT_PUBLIC_IDENTITY_SUPABASE_ANON_KEY",
-    "ADMIN_SITE_ID",
-    "GITHUB_REPO",
-  ].every((n) => Boolean(process.env[n]))
-    && Boolean(
-      (process.env.REALIIZ_BROKER_URL && process.env.REALIIZ_SITE_SECRET)
-      || (process.env.GITHUB_APP_ID && process.env.GITHUB_APP_PRIVATE_KEY)
-      || process.env.GITHUB_CONTENT_TOKEN,
-    );
+  return (
+    [
+      "NEXT_PUBLIC_IDENTITY_SUPABASE_URL",
+      "NEXT_PUBLIC_IDENTITY_SUPABASE_ANON_KEY",
+      "ADMIN_SITE_ID",
+      "GITHUB_REPO",
+    ].every((n) => Boolean(process.env[n])) &&
+    Boolean(
+      (process.env.REALIIZ_BROKER_URL && process.env.REALIIZ_SITE_SECRET) ||
+      (process.env.GITHUB_APP_ID && process.env.GITHUB_APP_PRIVATE_KEY) ||
+      process.env.GITHUB_CONTENT_TOKEN,
+    )
+  );
 }
 
 /**
@@ -102,13 +152,57 @@ export function adminConfigured(): boolean {
  * /admin until adminConfigured() is true, so whoever is deploying can see what's left.
  */
 export function adminSetup() {
-  const has = (...names: string[]) => names.every((n) => Boolean(process.env[n]));
+  const has = (...names: string[]) =>
+    names.every((n) => Boolean(process.env[n]));
   return [
-    { label: "Identity service", vars: ["NEXT_PUBLIC_IDENTITY_SUPABASE_URL", "NEXT_PUBLIC_IDENTITY_SUPABASE_ANON_KEY"], ok: has("NEXT_PUBLIC_IDENTITY_SUPABASE_URL", "NEXT_PUBLIC_IDENTITY_SUPABASE_ANON_KEY"), note: "The shared sign-in service. Same two values on every site." },
-    { label: "Site ID", vars: ["ADMIN_SITE_ID"], ok: has("ADMIN_SITE_ID"), note: "A short stable name for this site, e.g. the business name in lowercase. Never the repository name." },
-    { label: "Repository", vars: ["GITHUB_REPO"], ok: has("GITHUB_REPO"), note: "owner/name of the repository this site is built from." },
-    { label: "Realiiz service", vars: ["REALIIZ_BROKER_URL", "REALIIZ_SITE_SECRET"], ok: has("REALIIZ_BROKER_URL", "REALIIZ_SITE_SECRET") || has("GITHUB_APP_ID", "GITHUB_APP_PRIVATE_KEY") || has("GITHUB_CONTENT_TOKEN"), note: "This site's own credential. It asks Realiiz for permission to save changes, so no master key lives here." },
-    { label: "Team invites", vars: ["REALIIZ_SITE_SECRET"], ok: has("REALIIZ_BROKER_URL", "REALIIZ_SITE_SECRET") || has("IDENTITY_SUPABASE_SERVICE_ROLE_KEY"), optional: true, note: "Lets owners invite people from Settings → Team. Included with the Realiiz service credential." },
-    { label: "Build nudge", vars: ["VERCEL_DEPLOY_HOOK_URL"], ok: has("VERCEL_DEPLOY_HOOK_URL"), optional: true, note: "A Deploy Hook for the production branch, so a stalled update can be kicked from Studio." },
+    {
+      label: "Identity service",
+      vars: [
+        "NEXT_PUBLIC_IDENTITY_SUPABASE_URL",
+        "NEXT_PUBLIC_IDENTITY_SUPABASE_ANON_KEY",
+      ],
+      ok: has(
+        "NEXT_PUBLIC_IDENTITY_SUPABASE_URL",
+        "NEXT_PUBLIC_IDENTITY_SUPABASE_ANON_KEY",
+      ),
+      note: "The shared sign-in service. Same two values on every site.",
+    },
+    {
+      label: "Site ID",
+      vars: ["ADMIN_SITE_ID"],
+      ok: has("ADMIN_SITE_ID"),
+      note: "A short stable name for this site, e.g. the business name in lowercase. Never the repository name.",
+    },
+    {
+      label: "Repository",
+      vars: ["GITHUB_REPO"],
+      ok: has("GITHUB_REPO"),
+      note: "owner/name of the repository this site is built from.",
+    },
+    {
+      label: "Realiiz service",
+      vars: ["REALIIZ_BROKER_URL", "REALIIZ_SITE_SECRET"],
+      ok:
+        has("REALIIZ_BROKER_URL", "REALIIZ_SITE_SECRET") ||
+        has("GITHUB_APP_ID", "GITHUB_APP_PRIVATE_KEY") ||
+        has("GITHUB_CONTENT_TOKEN"),
+      note: "This site's own credential. It asks Realiiz for permission to save changes, so no master key lives here.",
+    },
+    {
+      label: "Team invites",
+      vars: ["REALIIZ_SITE_SECRET"],
+      ok:
+        has("REALIIZ_BROKER_URL", "REALIIZ_SITE_SECRET") ||
+        has("IDENTITY_SUPABASE_SERVICE_ROLE_KEY"),
+      optional: true,
+      note: "Lets owners invite people from Settings → Team. Included with the Realiiz service credential.",
+    },
+    {
+      label: "Build nudge",
+      vars: ["VERCEL_DEPLOY_HOOK_URL"],
+      ok: has("VERCEL_DEPLOY_HOOK_URL"),
+      optional: true,
+      note: "A Deploy Hook for the production branch, so a stalled update can be kicked from Studio.",
+    },
   ];
 }

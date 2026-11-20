@@ -27,13 +27,26 @@ import type { RouteLeg } from "./flythrough-route";
 
 export type RouteState = Omit<RouteLeg, "clip"> & {
   clip?: string;
+  clipMobile?: string;
+  stillMobile?: string;
   dissolve?: number;
   drift?: number;
   focal?: number;
 };
 
-const vid = (n: string) => `/flythrough/vid/leg${n}.mp4`;
-const pos = (n: string) => `/flythrough/poster/${n}.jpg`;
+// The home page's two legs, re-encoded for the web on 2026-11-19 (Ed: "it needs to be fast"):
+// the originals are 9 and 11 MB and the film can't move until a clip has fully downloaded.
+// `web` is 1080p at about a third of the size; `m` is 720p for phones. The originals in vid/
+// are untouched (the /rooms film and the v1/v2 routes still use them).
+const webVid = (n: string) => `/flythrough/vid/web/leg${n}.mp4`;
+const mVid = (n: string) => `/flythrough/vid/m/leg${n}.mp4`;
+// WebP copies of the three stills the home page plays (2026-11-19): about half the bytes.
+const posW = (n: string) => `/flythrough/poster/${n}.webp`;
+const stateW = (k: string) => `/flythrough/states/state-${k}.webp`;
+// And 720p copies for phones (2026-11-19), the same size as the phone clips: the first one is
+// the page's largest paint, and at 52 KB (from 113) it arrives much sooner on a slow connection.
+const posM = (n: string) => `/flythrough/poster/${n}-m.webp`;
+const stateM = (k: string) => `/flythrough/states/state-${k}-m.webp`;
 const state = (k: string) => `/flythrough/states/state-${k}.jpg`;
 
 /** Slow push on every still — nothing is ever static, nothing visibly zooms. */
@@ -53,8 +66,10 @@ const ALL_SCENES: RouteState[] = [
     // leg02-v2: re-rendered from edits/foyer-v2.jpg (the cleaned, warmed foyer — sign and
     // conduit gone, light leaking round the doors) via START_OVERRIDE in chain.sh. v1's
     // leg02 is untouched. Leg 03 still lines up: both versions end on waypoint 04.
-    still: pos("02-v2"),
-    clip: vid("02-v2"),
+    still: posW("02-v2"),
+    stillMobile: posM("02-v2"),
+    clip: webVid("02-v2"),
+    clipMobile: mVid("02-v2"),
     scroll: 1.2,
     // Frame 1 is built only from George's own words on soundplexstudios.com/membership
     // (Aug 2026): "Not just a creative venue. Not just a networking group… a true third
@@ -72,8 +87,10 @@ const ALL_SCENES: RouteState[] = [
   {
     id: "walk-in",
     label: "The walk in",
-    still: pos("03"),
-    clip: vid("03"),
+    still: posW("03"),
+    stillMobile: posM("03"),
+    clip: webVid("03"),
+    clipMobile: mVid("03"),
     scroll: 1.4,
     eyebrow: "The walk in",
     title: "You\u2019ll feel it *before you\u2019ve said a word.*",
@@ -82,7 +99,8 @@ const ALL_SCENES: RouteState[] = [
   {
     id: "early",
     label: "Ideas",
-    still: state("A"),
+    still: stateW("A"),
+    stillMobile: stateM("A"),
     scroll: 1.2,
     // No dissolve and no focal here: same pixels as the end of leg 03, and the same
     // object-position as the video, so the film → still hand-off is invisible.
