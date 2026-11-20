@@ -101,7 +101,7 @@ export function deployHookUrl(): string | null {
 /**
  * SERVER-ONLY, OPTIONAL. What the Black Friday report (Studio → Black Friday) reads the
  * HighLevel account with: the same private-integration token and location Leads uses.
- * The pipeline is found by name ("Black Friday") unless BLACK_FRIDAY_PIPELINE_ID names it;
+ * Opportunities are picked by their source ("Black Friday 2026"); BLACK_FRIDAY_PIPELINE_ID narrows them to one pipeline;
  * the calendar defaults to the offer page's. Absent: the page says what to add.
  */
 export function blackFridayConfig(): {
@@ -109,6 +109,7 @@ export function blackFridayConfig(): {
   locationId: string;
   pipelineId: string | null;
   calendarId: string;
+  stats: { url: string; key: string } | null;
 } | null {
   const token = process.env.HIGHLEVEL_TOKEN;
   const locationId = process.env.HIGHLEVEL_LOCATION_ID;
@@ -118,6 +119,14 @@ export function blackFridayConfig(): {
     locationId,
     pipelineId: process.env.BLACK_FRIDAY_PIPELINE_ID || null,
     calendarId: process.env.BLACK_FRIDAY_CALENDAR_ID || "xyPCrxOdKKkz5oTz6Waq",
+    // Visits to the offer page: a counts-only address and its key. Absent: the report leaves visits out.
+    stats:
+      process.env.BLACK_FRIDAY_STATS_URL && process.env.BLACK_FRIDAY_STATS_KEY
+        ? {
+            url: process.env.BLACK_FRIDAY_STATS_URL,
+            key: process.env.BLACK_FRIDAY_STATS_KEY,
+          }
+        : null,
   };
 }
 
