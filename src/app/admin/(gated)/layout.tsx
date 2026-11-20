@@ -34,13 +34,8 @@ export default async function GatedLayout({
       href: "/admin/collective",
       icon: "users",
     },
-    // The Black Friday campaign report (src/app/admin/(gated)/black-friday). Remove with the campaign.
-    {
-      id: "black-friday",
-      label: "Black Friday",
-      href: "/admin/black-friday",
-      icon: "leads",
-    },
+    // Custom reports (src/app/admin/(gated)/reports): one card per report; the first is the Black Friday campaign.
+    { id: "reports", label: "Reports", href: "/admin/reports", icon: "doc" },
   ];
   const pinnedNav = [
     { id: "settings", label: "Settings", href: "/admin/account" },
