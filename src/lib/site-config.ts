@@ -85,21 +85,24 @@ export const PREVIEW_SCORES = {
 export const SITE_TIMEZONE = "America/New_York";
 
 /**
- * Opening hours, in SITE_TIMEZONE (the live site: Monday – Saturday, 8 AM – 10 PM). HOURS_SPEC
- * drives "Open now · until 10 PM" (lib/hours.ts); HOURS_ROWS is the same week written for people.
- * Change both together.
+ * Opening hours, in SITE_TIMEZONE. George, 2026-11-23: Monday – Saturday, 12 PM – 8 PM, closed
+ * Sunday, until the township approves longer hours. HOURS_SPEC drives "Open now · until 8 PM"
+ * (lib/hours.ts); HOURS_ROWS is the same week written for people. Change both together, and
+ * the copies in HOURS_TEXT, HomeView's JSON-LD and the survey's start times (lib/survey/flow.ts).
  */
 export const HOURS_SPEC = [
-  { days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"], opens: "08:00", closes: "22:00" },
+  { days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"], opens: "12:00", closes: "20:00" },
 ];
 export const HOURS_ROWS = [
-  { days: "Mon–Sat", time: "8 AM – 10 PM" },
+  { days: "Mon–Sat", time: "12 PM – 8 PM" },
   { days: "Sun", time: "Closed" },
 ];
+/** The hours in a sentence, for About and Contact. */
+export const HOURS_TEXT = "Monday to Saturday, 12 PM to 8 PM";
 
 /** One-line description used as the default meta description + OG description. */
 export const SITE_DESCRIPTION =
-  "A creative production and performance space in Pennsauken, NJ — recording studios, podcast studios, and live event spaces in South Jersey.";
+  "A creative and media production studio in Pennsauken, NJ — recording, podcast, video and photography studios in South Jersey.";
 
 /** Legal entity behind the trade name (compliance / footer). */
 // Per the live Terms of Service ("SOUNDPLEX STUDIOS operates soundplexstudios.com"); exact

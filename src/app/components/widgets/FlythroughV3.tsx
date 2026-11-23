@@ -9,7 +9,7 @@ const IDEAS_STILL = "/flythrough/states/state-A.jpg";
 
 /** "I'm here to…" (Ed, 2026-10-29): the reasons people come, each into the right /start path. */
 const INTENTS = [
-  { label: "Rent a room", href: "/start?path=room&from=home-chips" },
+  { label: "Book a room", href: "/start?path=room&from=home-chips" },
   { label: "Record a podcast", href: "/start?path=produce&from=home-chips" },
   { label: "Join the Collective", href: "/start?path=collective&from=home-chips" },
   { label: "Take a tour", href: "/start?path=collective&from=home-chips-tour" },

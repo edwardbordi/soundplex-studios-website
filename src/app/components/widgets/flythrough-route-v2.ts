@@ -55,7 +55,7 @@ export const ROUTE_V2: RouteState[] = [
     // (Aug 2026): "Not just a creative venue. Not just a networking group… a true third
     // place… connection, conversations, collaboration, opportunity… momentum." He never
     // says "community" — neither do we. Founders and business professionals first.
-    eyebrow: "Create. Connect. Perform. \u00b7 Pennsauken, NJ",
+    eyebrow: "Create. Connect. Produce. \u00b7 Pennsauken, NJ",
     title: "You have a home. You have work. *This is your third place.*",
     body: "Where founders and creators meet \u2014 and what starts when they do.",
     // Not "book a room" / "see the rooms": nobody gets in the car for a room (the talk).
@@ -191,13 +191,14 @@ const ROUTE_MUSIC: RouteState[] = [
 // photograph is better with nothing hung on it.)
 export const NIGHTS: Night[] = [
   { id: "workshop", label: "Business workshop", route: ROUTE_V2, ready: true },
-  { id: "music", label: "Live music", route: ROUTE_MUSIC, ready: false },
-  { id: "wedding", label: "A wedding", route: ROUTE_V2, ready: false },
-  { id: "comedy", label: "Comedy", route: ROUTE_V2, ready: false },
+  // Labels only (George, 2026-11-23, zoning: no live music, weddings, comedy or dinners).
+  { id: "music", label: "A music video", route: ROUTE_MUSIC, ready: false },
+  { id: "wedding", label: "A photo shoot", route: ROUTE_V2, ready: false },
+  { id: "comedy", label: "A livestream", route: ROUTE_V2, ready: false },
   { id: "podcast", label: "A podcast recording", route: ROUTE_V2, ready: false },
   { id: "screening", label: "A screening", route: ROUTE_V2, ready: false },
   { id: "launch", label: "A product launch", route: ROUTE_V2, ready: false },
-  { id: "dinner", label: "A private dinner", route: ROUTE_V2, ready: false },
+  { id: "dinner", label: "Creative networking", route: ROUTE_V2, ready: false },
 ];
 
 /** The last chip, always live: the night nobody listed. Goes to the contact page. */

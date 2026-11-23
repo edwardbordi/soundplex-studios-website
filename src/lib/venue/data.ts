@@ -65,8 +65,9 @@ export const ROOMS: Room[] = [
 ];
 
 export const CATEGORIES: Category[] = [
-  { id: "music", name: "Live music", color: "#e0559b" },
-  { id: "comedy", name: "Comedy", color: "#ff8a3d" },
+  // Names only (George, 2026-11-23, zoning); the ids are what the filters store.
+  { id: "music", name: "Music productions", color: "#e0559b" },
+  { id: "comedy", name: "Studio productions", color: "#ff8a3d" },
   { id: "workshop", name: "Workshops & talks", color: "#4f9dff" },
   { id: "network", name: "Networking", color: "#4ecdc4" },
   { id: "screening", name: "Screenings", color: "#b28dff" },
@@ -117,7 +118,7 @@ export function fromCalItems(items: CalItem[]): VenueEvent[] {
     end: new Date(e.endISO),
     visibility: e.visibility,
     price: e.visibility === "private" ? "" : e.visibility === "members" && !e.price ? "Members" : e.price ?? "",
-    blurb: e.summary ?? (e.visibility === "private" ? "Room booked for a private event." : ""),
+    blurb: e.summary ?? (e.visibility === "private" ? "Room booked privately." : ""),
     ...(e.url ? { url: e.url } : {}),
     ...(e.ticketLabel ? { ticketLabel: e.ticketLabel } : {}),
     ...(e.slug ? { slug: e.slug } : {}),

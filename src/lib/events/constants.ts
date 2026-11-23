@@ -21,17 +21,19 @@ export const EVENT_KINDS = [
 ] as const;
 export type EventKind = (typeof EVENT_KINDS)[number];
 
+// What visitors read. George, 2026-11-23 (zoning): no "live music", "comedy", "open mic" or
+// "event" on the site; everything here is a studio production. The ids stay (content uses them).
 export const KIND_LABELS: Record<EventKind | "other", string> = {
-  show: "Live music",
-  comedy: "Comedy",
+  show: "Music production",
+  comedy: "Studio production",
   talk: "Talk",
   workshop: "Workshop",
   screening: "Screening",
-  "open-mic": "Open mic",
-  "podcast-taping": "Podcast taping",
+  "open-mic": "Open studio",
+  "podcast-taping": "Podcast recording",
   networking: "Networking",
-  private: "Private",
-  other: "Event",
+  private: "Private booking",
+  other: "Production",
 };
 
 /** The rooms an event can be in — values match content/rooms/*.mdx slugs. Three rooms; podcast is a use. */
@@ -65,8 +67,8 @@ export const KIND_COLORS: Record<string, string> = {
   other: "#a3a3a3",
 };
 
-/** Opening hours (COMPANY-FACTS: Monday–Saturday, 8 AM–10 PM). 0 = Sunday. null = closed. */
-export const HOURS: Record<number, [number, number] | null> = { 0: null, 1: [8, 22], 2: [8, 22], 3: [8, 22], 4: [8, 22], 5: [8, 22], 6: [8, 22] };
+/** Opening hours (George, 2026-11-23: Monday–Saturday, 12 PM–8 PM; see site-config HOURS_SPEC). 0 = Sunday. null = closed. */
+export const HOURS: Record<number, [number, number] | null> = { 0: null, 1: [12, 20], 2: [12, 20], 3: [12, 20], 4: [12, 20], 5: [12, 20], 6: [12, 20] };
 
 export type Visibility = "public" | "members" | "private";
 
@@ -102,13 +104,15 @@ export type CalItem = {
 };
 
 /** "Find your kind of night" — the mood prompts the calendar filters on (George's #7). */
+// Labels only changed (George, 2026-11-23, zoning: no live music, comedy or shows); the values
+// stay, because the productions' content files use them.
 export const MOODS = [
-  { value: "music", label: "Put me near live music" },
-  { value: "laugh", label: "Make me laugh" },
+  { value: "music", label: "Music and video productions" },
+  { value: "laugh", label: "Something lighthearted" },
   { value: "learn", label: "Teach me something" },
   { value: "people", label: "Let me meet people" },
-  { value: "film", label: "Show me a film" },
-  { value: "unwind", label: "Let me unwind" },
+  { value: "film", label: "Screenings" },
+  { value: "unwind", label: "Something relaxed" },
 ] as const;
 export type Mood = (typeof MOODS)[number]["value"];
 

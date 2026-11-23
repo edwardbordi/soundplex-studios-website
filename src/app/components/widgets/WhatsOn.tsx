@@ -104,7 +104,7 @@ export default function WhatsOn({ items = [], showSamples = false }: { items?: C
   /* ── What each viewer may see ── */
   const locked = (e: VenueEvent) => (e.visibility === "members" && !member) || (e.visibility === "private" && !(member && e.invited));
   const title = (e: VenueEvent) =>
-    e.visibility === "private" && !(member && e.invited) ? "Private event" : e.visibility === "members" && !member ? "Members event" : e.title;
+    e.visibility === "private" && !(member && e.invited) ? "Private booking" : e.visibility === "members" && !member ? "Members only" : e.title;
 
   /* ── Filters: what (category, free) and where (room) apply to every view ── */
   const matches = (e: VenueEvent) => {
@@ -469,7 +469,7 @@ export default function WhatsOn({ items = [], showSamples = false }: { items?: C
                   <span className="block text-white/55">You could be one of them.</span>
                 </p>
                 <ul className="mx-auto mt-4 max-w-xs space-y-1.5 text-left text-[13.5px] text-white/70">
-                  {["See who's in each room, live", "Drop in to any open studio, no booking", "Members-only nights and member ticket prices"].map((t) => (
+                  {["See who's in each room, live", "Drop in to any open studio, no booking", "Members-only gatherings, by invitation"].map((t) => (
                     <li key={t} className="flex items-start gap-2">
                       <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#d4a030]" />
                       {t}
@@ -605,7 +605,7 @@ export default function WhatsOn({ items = [], showSamples = false }: { items?: C
                     to see them and RSVP.
                   </>
                 ) : (
-                  <>This room is booked for a private event. Want it for yours? Rooms can be booked for celebrations, shoots and team days.</>
+                  <>This room is booked privately. Want it for yours? Rooms can be booked for productions, shoots, recording and creative workshops.</>
                 )}
               </div>
             ) : (

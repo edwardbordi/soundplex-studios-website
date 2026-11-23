@@ -11,7 +11,7 @@ import { pushFeed } from "../../../lib/venue/feed";
 /**
  * Message alerts (Ed, 2026-10-30): when a message arrives anywhere in the members area, a pop-up
  * bottom right (above the tabs on phones) and a soft chime. Each can be switched off in
- * Settings → Privacy → Message alerts. Nothing for the conversation you're already reading.
+ * Settings → Notifications. Nothing for the conversation you're already reading.
  */
 type Sender = { first_name: string; last_name: string; photo_url: string | null };
 type Toast = { id: string; conv: string; from: string; body: string; sender: Sender };

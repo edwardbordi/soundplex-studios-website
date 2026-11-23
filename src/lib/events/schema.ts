@@ -44,7 +44,7 @@ export const EXTRA_FIELDS = z.object({
   /** Tickets are flexible per event: any URL (GHL payment link, Eventbrite…) + a label. */
   ticketLabel: z.string().trim().max(40).optional().meta({
     label: "Ticket button says",
-    placeholder: "Get tickets · RSVP · Free — just come",
+    placeholder: "RSVP · Reserve a spot · Free — just come",
   }),
   price: z.string().trim().max(40).optional().meta({
     label: "Price",

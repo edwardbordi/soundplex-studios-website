@@ -79,7 +79,7 @@ export default function GalleryPage() {
                 <h2 className="mt-3 font-[family-name:var(--font-poppins)] text-[clamp(1.5rem,2.6vw,2rem)] font-medium leading-tight text-white">
                   Hang your work <em className="font-[family-name:var(--font-lora)] font-normal italic text-[#d4a030]">at SoundPlex.</em>
                 </h2>
-                <p className="mt-3 max-w-[30rem] text-[15px] leading-relaxed text-white/60">Your pieces on our walls, seen by everyone who comes through for a show, a session or a tour, and sold right here.</p>
+                <p className="mt-3 max-w-[30rem] text-[15px] leading-relaxed text-white/60">Your pieces on our walls, seen by everyone who comes through for a production, a session or a tour, and sold right here.</p>
                 <div className="mt-6">
                   <Link href="/start?path=talk&from=gallery-artist" className="evp__btn group">
                     Talk to George

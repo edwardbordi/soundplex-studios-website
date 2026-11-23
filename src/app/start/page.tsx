@@ -5,6 +5,8 @@ import { buildPageMetadata } from "../../lib/seo";
 import { SITE_NAME } from "../../lib/site-config";
 import { ROOMS, USES, type RoomContext } from "../../lib/survey/flow";
 import { getAllRooms } from "../../lib/rooms/rooms";
+// Not a hook, despite the name; renamed so the hooks lint rule doesn't mistake it for one.
+import { useById as findUse } from "../../lib/rooms/uses";
 
 /**
  * /start — the one front door. Every CTA on the site lands here. The survey opens on its
@@ -14,7 +16,7 @@ import { getAllRooms } from "../../lib/rooms/rooms";
  */
 export const metadata = buildPageMetadata({
   title: `Start here — ${SITE_NAME}`,
-  description: "Rent a room, come to a show, join the Plex Collective, make something, or get a website built. Tell us what brings you to SoundPlex and we'll take it from there.",
+  description: "Book a room, join the Plex Collective, make something, or get a website built. Tell us what brings you to SoundPlex and we'll take it from there.",
   path: "/start",
   focusKeyword: "soundplex start",
   noindex: true,
@@ -24,8 +26,8 @@ export default async function StartPage({ searchParams }: { searchParams: Promis
   const params = await searchParams;
   const initialAnswers: Record<string, string> = {};
   if (params.room && ROOMS.some((r) => r.value === params.room)) initialAnswers.room = params.room;
-  // Older links may say use=party; that choice is "celebration" now (George: never "party").
-  const use = params.use === "party" ? "celebration" : params.use;
+  // Older links may name a retired use (party, celebration, wedding, concert, comedy): map it.
+  const use = findUse(params.use)?.id;
   if (use && USES.some((u) => u.value === use)) initialAnswers.use = use;
   // Room facts for the survey, so it can talk about the room you picked.
   const rooms: RoomContext[] = getAllRooms().map(({ frontmatter: r }) => ({

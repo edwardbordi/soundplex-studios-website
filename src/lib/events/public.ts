@@ -32,7 +32,7 @@ export function getCalendarItems(now = new Date()): CalItem[] {
     const end = (when.end ?? new Date(start + 2 * 3_600_000)).toISOString();
     const base = { id: fm.slug, room: fm.venue ?? "wood-room", startISO: when.start.toISOString(), endISO: end };
     if (fm.visibility === "private") {
-      out.push({ ...base, title: "Private event", kind: "private", kindLabel: "Private", visibility: "private" });
+      out.push({ ...base, title: "Private booking", kind: "private", kindLabel: "Private", visibility: "private" });
       continue;
     }
     out.push({

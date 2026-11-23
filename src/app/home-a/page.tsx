@@ -9,7 +9,7 @@ import { SITE_NAME, SITE_DESCRIPTION } from "../../lib/site-config";
  * loser in HomeView, and empty PREVIEW_VARIANTS in site-config.
  */
 export const metadata = buildPageMetadata({
-  title: `${SITE_NAME} — Recording, Podcast & Live Event Studios in Pennsauken, NJ`,
+  title: `${SITE_NAME} — Recording, Podcast & Video Production Studios in Pennsauken, NJ`,
   description: SITE_DESCRIPTION,
   path: "/home-a",
   focusKeyword: "recording studio Pennsauken NJ",
