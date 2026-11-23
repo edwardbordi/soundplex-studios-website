@@ -1,4 +1,5 @@
 import "server-only";
+import { after } from "next/server";
 import { blackFridayConfig } from "@/lib/admin/env";
 import { SITE_TIMEZONE } from "@/lib/site-config";
 
@@ -711,22 +712,11 @@ async function build(cfg: Config): Promise<Report> {
   deadline = Date.now() + READ_BUDGET_MS;
   // The two big message exports run one after the other, so they don't compete with each other
   // for HighLevel's attention; the small sources run alongside them.
-  const messages = (async () => {
-    const email = await source(
-      "emails",
-      () => exportMessages(cfg, "Email", shapes),
-      stale,
-    );
-    const text = await source(
-      "texts",
-      () => exportMessages(cfg, "SMS", shapes),
-      stale,
-    );
-    return [email, text] as const;
-  })();
-  const [[emailRaw, textRaw], callRaw, pipelineRaw, audience, pageRaw] =
+  // All at once: one after the other doubled the wait, and the retries now cover a slow answer.
+  const [emailRaw, textRaw, callRaw, pipelineRaw, audience, pageRaw] =
     await Promise.all([
-      messages,
+      source("emails", () => exportMessages(cfg, "Email", shapes), stale),
+      source("texts", () => exportMessages(cfg, "SMS", shapes), stale),
       source("calls", () => appointments(cfg, shapes), stale),
       source("the pipeline", () => readPipeline(cfg, shapes), stale),
       source(
@@ -893,28 +883,54 @@ async function build(cfg: Config): Promise<Report> {
   };
 }
 
-let cached: { at: number; report: Report } | null = null;
+/** A report with a failed or stand-in source is kept for a short while only, then read again. */
+const PARTIAL_CACHE_MS = 2 * 60 * 1000;
+/** Older than this, a kept report is too old to show while a new one is read: wait for the new one. */
+const SHOW_OLD_MS = 6 * 60 * 60 * 1000;
 
-/** The report, at most 15 minutes old; `fresh` (the Refresh button) reads everything again. */
+let cached: { at: number; report: Report; complete: boolean } | null = null;
+/** The read in progress, shared by everyone who asks while it runs (one read, not one each). */
+let inflight: Promise<Report> | null = null;
+
+function readNow(cfg: Config): Promise<Report> {
+  inflight ??= build(cfg)
+    .then((report) => {
+      const complete =
+        report.stale.length === 0 &&
+        [
+          report.emails,
+          report.texts,
+          report.calls,
+          report.pipeline,
+          report.audience,
+          report.page,
+        ].every((s) => s === null || s.ok);
+      cached = { at: report.generatedAt, report, complete };
+      return report;
+    })
+    .finally(() => {
+      inflight = null;
+    });
+  return inflight;
+}
+
+/**
+ * The report. Opening the page never waits on HighLevel when there's a recent report: it shows
+ * that one at once and, once it's past its time (15 minutes, or 2 if something failed), reads a
+ * new one in the background for the next visit. `fresh` (the Refresh button) waits for a new read.
+ */
 export async function blackFridayReport(
   fresh: boolean,
 ): Promise<Report | null> {
   const cfg = blackFridayConfig();
   if (!cfg) return null;
-  if (!fresh && cached && Date.now() - cached.at < CACHE_MS)
+  if (fresh || !cached) return readNow(cfg);
+  const age = Date.now() - cached.at;
+  if (age < (cached.complete ? CACHE_MS : PARTIAL_CACHE_MS))
     return cached.report;
-  const report = await build(cfg);
-  // Only a complete read is kept: a report with a failed or stand-in source tries again next time.
-  const complete =
-    report.stale.length === 0 &&
-    [
-      report.emails,
-      report.texts,
-      report.calls,
-      report.pipeline,
-      report.audience,
-      report.page,
-    ].every((s) => s === null || s.ok);
-  if (complete) cached = { at: report.generatedAt, report };
-  return report;
+  if (age < SHOW_OLD_MS) {
+    after(() => readNow(cfg).then(() => undefined));
+    return cached.report;
+  }
+  return readNow(cfg);
 }
