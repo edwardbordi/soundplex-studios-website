@@ -27,7 +27,7 @@ import { SITE_NAME, PHONE_DISPLAY, PHONE_TEL, LOCATION } from "../../lib/site-co
  */
 export const metadata = buildPageMetadata({
   title: `About — the building, the art, and George — ${SITE_NAME}`,
-  description: "SoundPlex Studios in Pennsauken, NJ: a building with a musical heritage — Victor Talking Machine, RCA, Dick Clark — now a creative studio, venue and community run by George Koch.",
+  description: "SoundPlex Studios in Pennsauken, NJ: a building with a musical story — Dick Clark, the Victor Talking Machine Company relaunch — now a creative studio, venue and community run by George Koch.",
   path: "/about",
   focusKeyword: "SoundPlex Studios Pennsauken history",
   ogType: "profile",
@@ -36,7 +36,9 @@ export const metadata = buildPageMetadata({
 const MAPS_URL = `https://maps.google.com/?q=${encodeURIComponent(`${SITE_NAME} ${LOCATION}`)}`;
 
 const STATS = [
-  { to: 1929, suffix: "", label: "RCA Victor moves in", plain: true },
+  // George (2026-11-01): Victor was here 2019–2021, a relaunch of the brand, not the original
+  // Camden company. Was "1929 · RCA Victor moves in".
+  { to: 2019, suffix: "", label: "Victor relaunch moves in", plain: true },
   { to: 213, suffix: "+", label: "Artists and creators" },
   { to: 10, suffix: "k+", label: "Creative hours logged" },
   { to: 2, suffix: "", label: "Years and counting" },
@@ -122,7 +124,10 @@ export default function AboutPage() {
               <Reveal delay={60}><h2 className="up__h mt-2">A building with a <em className="font-[family-name:var(--font-lora)] font-normal italic text-[#d4a030]">record.</em></h2></Reveal>
               <Reveal delay={120}>
                 <div className="ab__prose">
-                  <p>SoundPlex Studios is inspired by a building rich with musical heritage. Originally a bottlecap factory, it became a hub for the Victor Talking Machine Company in the early 20th century, evolving into RCA Victor in 1929. That landmark witnessed legendary recordings by artists such as Enrico Caruso, Arturo Toscanini and Sergei Rachmaninoff, and even hosted broadcasting icon Dick Clark in the 1950s.</p>
+                  {/* Corrected per George (2026-11-01): the Victor story is the 2019–2021 relaunch, not the
+                      original company (no Caruso, Toscanini or 1929 RCA here). Bottlecap factory and Dick
+                      Clark kept as they were, pending George. */}
+                  <p>SoundPlex Studios is inspired by a building with a musical story. Originally a bottlecap factory, it hosted broadcasting icon Dick Clark in the 1950s, and from 2019 to 2021 it was home to the Victor Talking Machine Company relaunch, whose Studio B is today’s Studio A.</p>
                   <p>Today, SoundPlex Studios honors and extends this vibrant legacy, creating a welcoming space for music, art and meaningful human connection.</p>
                 </div>
               </Reveal>
@@ -228,7 +233,7 @@ export default function AboutPage() {
               </Reveal>
               <Reveal delay={100}>
                 <p className="mt-10 text-[15px] leading-relaxed text-white/65">
-                  <span className="text-white">The SoundLounge.</span> A stylish, intimate space made for connection, creativity and unforgettable gatherings, comfortably hosting up to 50 guests.
+                  <span className="text-white">The SoundLounge.</span> A stylish, intimate space made for connection, creativity and unforgettable gatherings.
                 </p>
                 <Link href="/rooms/sound-lounge" className="card-cta group mt-4 inline-flex items-center gap-2 whitespace-nowrap">See the SoundLounge<ForwardArrow /></Link>
               </Reveal>

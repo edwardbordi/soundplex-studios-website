@@ -234,7 +234,7 @@ export default function MobileMenu({ items, showSamples }: { items: CalItem[]; s
                         {ROOMS.map((r) => {
                           const st = roomStatus(r.id, events, now);
                           return (
-                            <SubLink key={r.id} href={`/rooms/${r.id}`} onGo={() => setOpen(false)} img={r.photo} name={r.name} sub={`Holds ${r.capacity}${st.text ? ` · ${st.text}` : ""}`} />
+                            <SubLink key={r.id} href={`/rooms/${r.id}`} onGo={() => setOpen(false)} img={r.photo} name={r.name} sub={st.text || "See the room"} />
                           );
                         })}
                         <SubLink href="/rooms#podcast" onGo={() => setOpen(false)} img="/rooms/podcast-temp.webp" name="Podcast" sub="Any free room · $250/hr" />

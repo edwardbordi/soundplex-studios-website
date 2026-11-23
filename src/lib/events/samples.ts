@@ -39,7 +39,7 @@ const WEEK: Slot[] = [
   // Thursday
   { dow: 4, start: [14, 0], end: [17, 0], kind: "private", room: "wood-room", visibility: "private", titles: ["Private event"], summary: "" },
   { dow: 4, start: [18, 0], end: [20, 0], kind: "networking", room: "sound-lounge", visibility: "public", titles: ["Friendly Feud Networking", "Third Place Thursdays", "Friendly Feud Networking"], summary: "Networking that isn't awkward: a game, a drink, and people you'd actually want to call back.", price: "$10", hostNote: "Everyone arrives alone to this one. That's the point." },
-  { dow: 4, start: [20, 0], end: [22, 30], kind: "show", room: "wood-room", visibility: "public", titles: ["Thunder Road Refugees", "A Night of Jazz Standards", "Kid Charlemagne Live"], summary: "A full band in a room built for it. Eighty seats, the stage four feet away.", price: "$20" },
+  { dow: 4, start: [20, 0], end: [22, 30], kind: "show", room: "wood-room", visibility: "public", titles: ["Thunder Road Refugees", "A Night of Jazz Standards", "Kid Charlemagne Live"], summary: "A full band in a room built for it, the stage four feet away.", price: "$20" },
   // Friday
   { dow: 5, start: [11, 0], end: [13, 0], kind: "podcast-taping", room: "studio-a", visibility: "members", titles: ["Members' Podcast Hour"], summary: "Members record with the full three-camera setup — book a slot at the front desk." },
   { dow: 5, start: [18, 30], end: [22, 0], kind: "private", room: "sound-lounge", visibility: "private", titles: ["Private event"], summary: "" },

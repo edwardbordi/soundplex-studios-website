@@ -13,7 +13,7 @@ export const roomFrontmatterSchema = z
       .string()
       .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "lowercase, hyphens only")
       .meta({ label: "Slug", help: "The web address: /rooms/<slug>" }),
-    tagline: z.string().min(1).max(120).meta({ label: "One line", placeholder: "The stage. Eighty people, four feet away." }),
+    tagline: z.string().min(1).max(120).meta({ label: "One line", placeholder: "The stage, close enough to read the set list." }),
     /** Short description for cards and search. */
     description: z.string().min(1).max(230).meta({ label: "Description", help: "One or two sentences for cards and search engines." }),
     /** Numbers as printed on the live site. Strings on purpose — "2,800 sq ft", "up to 6". */

@@ -36,10 +36,19 @@ export default function RangePicker({
           value={has ? value : ""}
           placeholder={String(start)}
           onChange={(e) => onChange(e.target.value.replace(/[^\d.]/g, ""))}
-          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); onEnter(); } }}
+          // Never below the minimum (e.g. 2 hours for a booking — George): a typed "1" snaps up.
+          onBlur={() => { if (has && n < min) onChange(String(min)); }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              if (has && n < min) onChange(String(min));
+              onEnter();
+            }
+          }}
           style={{ width: `${Math.max(2, String(has ? value : start).length) + 0.4}ch` }}
         />
         <span className="rp__unit">{shown === 1 ? (one ?? unit.replace(/s$/, "")) : unit}</span>
+        {has && n < min && <span className="rp__over">{min} {unit} minimum</span>}
         {has && n > max && fullLabel && <span className="rp__over">more than the room holds — we’ll talk options</span>}
       </div>
       <input

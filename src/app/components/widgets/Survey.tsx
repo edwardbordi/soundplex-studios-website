@@ -360,7 +360,8 @@ export default function Survey({ initialPath, initialAnswers, entry, rooms = [] 
           <div className="sv__room-img"><Image src={room.image} alt={room.imageAlt} fill sizes="64px" className="object-cover" /></div>
           <div className="sv__room-text">
             <p className="sv__room-name">{room.name}</p>
-            <p className="sv__room-meta">{[room.tagline, room.capacity && `up to ${room.capacity}${/\d$/.test(room.capacity) ? " people" : ""}`].filter(Boolean).join(" · ")}</p>
+            {/* Tagline only: capacity is only mentioned at "how many people?" (George, 2026-11-23). */}
+            <p className="sv__room-meta">{room.tagline}</p>
           </div>
           {roomStep > 0 && <button type="button" className="sv__link sv__room-change" onClick={() => goTo(roomStep)}>Change</button>}
         </div>
@@ -407,7 +408,7 @@ export default function Survey({ initialPath, initialAnswers, entry, rooms = [] 
                   onEnter={next}
                   unit={q.other.suffix ?? ""}
                   label={`How many ${q.other.suffix ?? ""}`}
-                  min={1}
+                  min={q.other.min ?? 1}
                   max={24}
                   step={0.5}
                   start={Number(q.other.placeholder) || 4}
