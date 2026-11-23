@@ -14,6 +14,10 @@ import { SITE_TIMEZONE } from "@/lib/site-config";
 const BASE = "https://services.leadconnectorhq.com";
 const API_VERSION = "2021-07-28";
 const TIMEOUT_MS = 10_000;
+/** The message export sends up to 1,000 messages a page and is often slow: it gets longer. */
+const EXPORT_TIMEOUT_MS = 25_000;
+/** A timed-out or overloaded call is tried this many more times, waiting a little longer each time. */
+const RETRY_WAITS_MS = [1_500, 4_000];
 
 /** Midnight Eastern on the day the first email went out, and when the offer closes. */
 export const CAMPAIGN_START = Date.parse("2026-11-19T05:00:00Z");
@@ -139,6 +143,11 @@ export type Report = {
   days: DayRow[];
   /** Field names only (never values) of one record per source, for ?debug=1. */
   shapes: Record<string, string[]>;
+  /**
+   * Sources that couldn't be read this time and show their last good numbers instead:
+   * the name as it reads in a sentence ("emails"), and when those numbers were read.
+   */
+  stale: { what: string; at: number }[];
 };
 
 /* ───────────── plumbing ───────────── */
@@ -163,10 +172,52 @@ class HttpError extends Error {
   }
 }
 
+const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** Worth another try: HighLevel was slow, busy (429) or had a moment (5xx). A refusal (4xx) is not. */
+function retryable(err: unknown): boolean {
+  if (err instanceof HttpError) return err.status === 429 || err.status >= 500;
+  return (
+    err instanceof Error &&
+    (err.name === "TimeoutError" || err.name === "TypeError")
+  );
+}
+
 async function hl(
   cfg: Config,
   path: string,
-  init?: { method?: "POST"; body?: Json },
+  init?: { method?: "POST"; body?: Json; timeoutMs?: number },
+): Promise<Json> {
+  const timeoutMs = init?.timeoutMs ?? TIMEOUT_MS;
+  for (let attempt = 0; ; attempt++) {
+    // Never run past the read's deadline: the page has to answer before the server gives up on it.
+    const left = deadline - Date.now();
+    try {
+      return await hlOnce(cfg, path, {
+        ...init,
+        timeoutMs: Math.max(1_000, Math.min(timeoutMs, left)),
+      });
+    } catch (err) {
+      const pause = RETRY_WAITS_MS[attempt];
+      if (
+        pause === undefined ||
+        !retryable(err) ||
+        Date.now() + pause + 3_000 > deadline
+      )
+        throw err;
+      await wait(pause);
+    }
+  }
+}
+
+/** When the current read must be done by (set in build); leaves room under the page's maxDuration. */
+let deadline = Number.POSITIVE_INFINITY;
+const READ_BUDGET_MS = 50_000;
+
+async function hlOnce(
+  cfg: Config,
+  path: string,
+  init?: { method?: "POST"; body?: Json; timeoutMs?: number },
 ): Promise<Json> {
   const res = await fetch(`${BASE}${path}`, {
     method: init?.method ?? "GET",
@@ -178,7 +229,7 @@ async function hl(
     },
     body: init?.body ? JSON.stringify(init.body) : undefined,
     cache: "no-store",
-    signal: AbortSignal.timeout(TIMEOUT_MS),
+    signal: AbortSignal.timeout(init?.timeoutMs ?? TIMEOUT_MS),
   });
   if (!res.ok) {
     const body = obj(await res.json().catch(() => null));
@@ -204,10 +255,27 @@ function explain(err: unknown): string {
     : "Something went wrong reading this.";
 }
 
-async function source<T>(fn: () => Promise<T>): Promise<Source<T>> {
+/**
+ * The last numbers each source read successfully, kept on this server. A source that fails
+ * shows these (with a note saying when they're from) rather than "couldn't read".
+ */
+const lastGood = new Map<string, { at: number; data: unknown }>();
+
+async function source<T>(
+  key: string,
+  fn: () => Promise<T>,
+  stale: Report["stale"],
+): Promise<Source<T>> {
   try {
-    return { ok: true, data: await fn() };
+    const data = await fn();
+    lastGood.set(key, { at: Date.now(), data });
+    return { ok: true, data };
   } catch (err) {
+    const kept = lastGood.get(key);
+    if (kept) {
+      stale.push({ what: key, at: kept.at });
+      return { ok: true, data: kept.data as T };
+    }
     return { ok: false, error: explain(err) };
   }
 }
@@ -269,6 +337,7 @@ async function exportMessages(
         limit: 1000,
         ...(cursor ? { cursor } : {}),
       })}`,
+      { timeoutMs: EXPORT_TIMEOUT_MS },
     );
     const messages = arr(data.messages);
     if (page === 0 && messages[0]) {
@@ -638,20 +707,40 @@ async function build(cfg: Config): Promise<Report> {
     if (row) row[key] += 1;
   };
 
-  const [emailRaw, textRaw, callRaw, pipelineRaw, audience, pageRaw] =
+  const stale: Report["stale"] = [];
+  deadline = Date.now() + READ_BUDGET_MS;
+  // The two big message exports run one after the other, so they don't compete with each other
+  // for HighLevel's attention; the small sources run alongside them.
+  const messages = (async () => {
+    const email = await source(
+      "emails",
+      () => exportMessages(cfg, "Email", shapes),
+      stale,
+    );
+    const text = await source(
+      "texts",
+      () => exportMessages(cfg, "SMS", shapes),
+      stale,
+    );
+    return [email, text] as const;
+  })();
+  const [[emailRaw, textRaw], callRaw, pipelineRaw, audience, pageRaw] =
     await Promise.all([
-      source(() => exportMessages(cfg, "Email", shapes)),
-      source(() => exportMessages(cfg, "SMS", shapes)),
-      source(() => appointments(cfg, shapes)),
-      source(() => readPipeline(cfg, shapes)),
-      source(async () => {
-        const [all, booked] = await Promise.all([
-          tagged(cfg, CAMPAIGN_TAG),
-          tagged(cfg, BOOKED_TAG),
-        ]);
-        return { tagged: all, booked };
-      }),
-      source(() => pageStats(cfg)),
+      messages,
+      source("calls", () => appointments(cfg, shapes), stale),
+      source("the pipeline", () => readPipeline(cfg, shapes), stale),
+      source(
+        "tags",
+        async () => {
+          const [all, booked] = await Promise.all([
+            tagged(cfg, CAMPAIGN_TAG),
+            tagged(cfg, BOOKED_TAG),
+          ]);
+          return { tagged: all, booked };
+        },
+        stale,
+      ),
+      source("page visits", () => pageStats(cfg), stale),
     ]);
 
   let emails: Report["emails"];
@@ -792,6 +881,7 @@ async function build(cfg: Config): Promise<Report> {
 
   return {
     generatedAt: now,
+    stale,
     page,
     emails,
     texts,
@@ -814,6 +904,17 @@ export async function blackFridayReport(
   if (!fresh && cached && Date.now() - cached.at < CACHE_MS)
     return cached.report;
   const report = await build(cfg);
-  cached = { at: report.generatedAt, report };
+  // Only a complete read is kept: a report with a failed or stand-in source tries again next time.
+  const complete =
+    report.stale.length === 0 &&
+    [
+      report.emails,
+      report.texts,
+      report.calls,
+      report.pipeline,
+      report.audience,
+      report.page,
+    ].every((s) => s === null || s.ok);
+  if (complete) cached = { at: report.generatedAt, report };
   return report;
 }

@@ -22,6 +22,9 @@ import {
  * time (src/lib/black-friday/report.ts). Read-only. Temporary: remove with the campaign.
  */
 
+/** HighLevel's message export can be slow; give the read (and its retries) time to finish. */
+export const maxDuration = 60;
+
 const n = (v: number) => v.toLocaleString("en-US");
 const money = (v: number) =>
   v.toLocaleString("en-US", {
@@ -1337,6 +1340,16 @@ export default async function BlackFridayPage({
               </a>
             ))}
           </nav>
+          {report.stale.length > 0 ? (
+            <p className="text-sm" style={muted}>
+              HighLevel was slow just now, so{" "}
+              {report.stale
+                .map((s) => `${s.what} (from ${clock(s.at)})`)
+                .join(", ")}{" "}
+              {report.stale.length === 1 ? "shows its" : "show their"} last
+              good numbers. Refresh to try again.
+            </p>
+          ) : null}
           {tab === "overview" ? <Overview report={report} /> : null}
           {tab === "page" ? <ThePage report={report} /> : null}
           {tab === "visitors" ? (
