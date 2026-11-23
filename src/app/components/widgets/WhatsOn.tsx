@@ -1115,7 +1115,6 @@ function RoomsView({
               <div key={r.id} className="grid grid-cols-[8.5rem_1fr] border-b border-white/[0.05] last:border-0">
                 <div className="flex flex-col justify-center px-4">
                   <span className="font-[family-name:var(--font-poppins)] text-[11px] font-medium uppercase tracking-[0.14em] text-white/70">{r.name}</span>
-                  <span className="text-[11px] text-white/35">holds {r.capacity}</span>
                 </div>
                 <div className="relative h-16">
                   {Array.from({ length: span }, (_, i) => (

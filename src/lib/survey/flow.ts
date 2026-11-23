@@ -18,7 +18,7 @@ export type Option = { value: string; label: string; note?: string };
 
 export type Question =
   /** An option with value "other" opens a box for their own answer; `other` shapes that box. */
-  | { id: string; kind: "single"; label: string; help?: string; options: Option[]; other?: { placeholder?: string; input?: "text" | "number"; suffix?: string } }
+  | { id: string; kind: "single"; label: string; help?: string; options: Option[]; other?: { placeholder?: string; input?: "text" | "number"; suffix?: string; min?: number } }
   | { id: string; kind: "multi"; label: string; help?: string; options: Option[] }
   | { id: string; kind: "text"; label: string; help?: string; placeholder?: string; optional?: boolean; input?: "text" | "url" | "number" }
   | { id: string; kind: "textarea"; label: string; help?: string; placeholder?: string; optional?: boolean }
@@ -39,9 +39,10 @@ export type Path = {
 
 /** Three rooms (SITE-STRUCTURE-BRIEF §8e). Podcast is a USE — see the `use` question. */
 export const ROOMS: Option[] = [
-  { value: "wood-room", label: "WoodRoom", note: "stage · 80 people · 2,800 sq ft" },
-  { value: "studio-a", label: "Studio A", note: "recording · in the round · 80 people" },
-  { value: "sound-lounge", label: "SoundLounge", note: "speakeasy · 50 people · 1,800 sq ft" },
+  // No capacity in the room cards (George, 2026-11-23); it's only used by "how many people?".
+  { value: "wood-room", label: "WoodRoom", note: "stage · 2,800 sq ft" },
+  { value: "studio-a", label: "Studio A", note: "recording · music · film · 2,200 sq ft" },
+  { value: "sound-lounge", label: "SoundLounge", note: "speakeasy · 1,800 sq ft" },
   { value: "not-sure", label: "Not sure yet", note: "we’ll help you pick the right one" },
 ];
 
@@ -64,14 +65,37 @@ export const PATHS: Path[] = [
     questions: [
       { id: "room", kind: "single", label: "Which room?", help: "Podcasts go in any of them — pick a favorite, or let us set up wherever is free.", options: ROOMS },
       { id: "use", kind: "single", label: "What’s it for?", options: USES },
-      { id: "date", kind: "date", label: "When?", help: "A date, or leave it blank if you’re flexible.", optional: true },
+      // George (2026-11-02): a booking needs a time slot, not just a day — "I was not prompted to add a
+      // time slot". So the day is required, then a start time. Hours: Mon–Sat 9am–9pm, Sun 12–8pm.
+      { id: "date", kind: "date", label: "Which day?" },
+      {
+        id: "time",
+        kind: "single",
+        label: "What time would you start?",
+        help: "Open Monday to Saturday 9am–9pm, Sunday 12–8pm.",
+        options: [
+          { value: "09:00", label: "9:00 am" },
+          { value: "10:00", label: "10:00 am" },
+          { value: "11:00", label: "11:00 am" },
+          { value: "12:00", label: "12:00 pm" },
+          { value: "13:00", label: "1:00 pm" },
+          { value: "14:00", label: "2:00 pm" },
+          { value: "15:00", label: "3:00 pm" },
+          { value: "16:00", label: "4:00 pm" },
+          { value: "17:00", label: "5:00 pm" },
+          { value: "18:00", label: "6:00 pm" },
+          { value: "19:00", label: "7:00 pm" },
+          { value: "other", label: "A different time" },
+        ],
+        other: { placeholder: "e.g. 10:30 am" },
+      },
       {
         id: "duration",
         kind: "single",
         label: "How long?",
-        help: "Roughly is fine. If you know the exact hours, pick the last one.",
+        // No one-hour bookings; two hours is the minimum (George, 2026-11-02 rules).
+        help: "Two hours minimum. If you know the exact hours, pick the last one.",
         options: [
-          { value: "1h", label: "An hour" },
           { value: "2h", label: "Two hours" },
           { value: "3-4h", label: "Three or four hours" },
           { value: "half-day", label: "Half a day", note: "about five hours" },
@@ -79,7 +103,7 @@ export const PATHS: Path[] = [
           { value: "multi", label: "More than a day" },
           { value: "other", label: "I know exactly how many hours" },
         ],
-        other: { placeholder: "6", input: "number", suffix: "hours" },
+        other: { placeholder: "6", input: "number", suffix: "hours", min: 2 },
       },
       { id: "headcount", kind: "text", label: "Roughly how many people?", input: "number", placeholder: "40" },
       { id: "notes", kind: "textarea", label: "Anything we should know?", placeholder: "Catering, a stage, a quiet room for a speaker…", optional: true },
@@ -93,7 +117,8 @@ export const PATHS: Path[] = [
   },
   {
     id: "attend",
-    choice: "I’m coming to a show or event",
+    // George (2026-11-02): "Coming to show (change to gathering)".
+    choice: "I’m coming to a gathering",
     choiceNote: "Music, comedy, talks, screenings — tell us your kind of night.",
     phoneRequired: false,
     questions: [

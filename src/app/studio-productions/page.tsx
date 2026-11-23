@@ -94,7 +94,6 @@ export default function StudioProductionsPage() {
                     <div className="p-6 pt-4">
                       <div className="flex items-baseline justify-between gap-3">
                         <h3 className={`${DISPLAY} text-xl font-semibold text-white transition-colors group-hover:text-[#d4a030]`}>{r.name}</h3>
-                        {r.capacity && <span className="shrink-0 text-[12px] text-white/45">holds {r.capacity}</span>}
                       </div>
                       <p className="mt-2 text-[15px] leading-relaxed text-white/60">{r.description}</p>
                     </div>

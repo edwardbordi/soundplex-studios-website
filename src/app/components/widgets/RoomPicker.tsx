@@ -109,7 +109,7 @@ export default function RoomPicker({
         <span className={full || field ? "flex-1 truncate text-left" : ""}>
           {current
             ? field
-              ? `${current.name} (holds ${current.capacity})`
+              ? current.name
               : current.name
             : allLabel}
         </span>
@@ -193,11 +193,8 @@ export default function RoomPicker({
                     >
                       {o.name}
                     </span>
-                    <span className="block text-[11.5px] text-white/40">
-                      {o.capacity
-                        ? `Holds ${o.capacity}`
-                        : (allSub ?? `${ROOMS.length} rooms`)}
-                    </span>
+                    {/* No capacity (George, 2026-11-23): only the "all rooms" row has a second line. */}
+                    {!o.capacity && <span className="block text-[11.5px] text-white/40">{allSub ?? `${ROOMS.length} rooms`}</span>}
                   </span>
                   {sel && <Check className="h-4 w-4 text-[#d4a030]" />}
                 </button>

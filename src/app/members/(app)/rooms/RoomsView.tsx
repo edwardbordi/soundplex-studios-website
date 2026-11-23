@@ -44,7 +44,6 @@ export default function RoomsView({ items, showSamples }: { items: CalItem[]; sh
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" aria-hidden="true" />
                 <div className="absolute inset-x-5 bottom-4 text-white">
                   <p className="font-[family-name:var(--font-poppins)] text-[24px] font-medium">{r.name}</p>
-                  <p className="text-[13px] text-white/70">Up to {r.capacity} people</p>
                 </div>
               </div>
               <div className="flex flex-col p-5 sm:p-6">

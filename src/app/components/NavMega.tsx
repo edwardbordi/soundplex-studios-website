@@ -77,8 +77,8 @@ const showWhen = (e: VenueEvent, now: Date) => {
 
 /** Room pages + the podcast set-up. Taglines from content/rooms/*.mdx. */
 const ROOM_MENU = [
-  { id: "wood-room", href: "/rooms/wood-room", tagline: "The stage. Eighty people, four feet away." },
-  { id: "studio-a", href: "/rooms/studio-a", tagline: "Victor’s old Studio B, in the round." },
+  { id: "wood-room", href: "/rooms/wood-room", tagline: "The stage, close enough to read the set list." },
+  { id: "studio-a", href: "/rooms/studio-a", tagline: "A room with a history, and the tools to make something new." },
   { id: "sound-lounge", href: "/rooms/sound-lounge", tagline: "A 1920s speakeasy, with a piano bar." },
 ] as const;
 const PODCAST = { href: "/rooms#podcast", photo: "/rooms/podcast-temp.webp", tagline: "Three cameras, mics and an operator, set up in any free room." };
@@ -197,8 +197,7 @@ export function RoomsMega({ items, showSamples }: { items: CalItem[]; showSample
                       <span className="min-w-0 flex-1">
                         <span className={`block font-[family-name:var(--font-poppins)] text-[15px] font-medium ${on ? "text-[#d4a030]" : "text-white"}`}>{r.name}</span>
                         <span className="mt-0.5 block truncate text-[12.5px] text-white/50">
-                          Holds {r.capacity}
-                          {st.text && <> · <span className={st.live ? "text-white/80" : ""}>{st.text}</span></>}
+                          {st.text ? <span className={st.live ? "text-white/80" : ""}>{st.text}</span> : "See the room"}
                         </span>
                       </span>
                     </Link>
@@ -247,7 +246,6 @@ export function RoomsMega({ items, showSamples }: { items: CalItem[]; showSample
                 <div className="mt-3 flex flex-wrap items-center gap-2 text-[12px]">
                   {room ? (
                     <>
-                      <span className="rounded-[3px] bg-white/[0.12] px-2.5 py-1 text-white/85 backdrop-blur">Holds {room.capacity}</span>
                       {status?.text && (
                         <span className="flex items-center gap-1.5 rounded-[3px] bg-black/50 px-2.5 py-1 text-white/85 backdrop-blur">
                           <span className={`h-1.5 w-1.5 rounded-full ${status.live ? "animate-pulse bg-[#d4a030]" : "bg-white/40"}`} />

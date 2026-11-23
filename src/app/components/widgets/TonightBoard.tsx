@@ -26,8 +26,6 @@ import MeAvatar from "./MeAvatar";
 const GOLD = "#d4a030";
 /** "You're here": bright gold (Ed, 2026-10-28 — no green on SoundPlex), the same on the border,
     the chip, the check and the bar. "On your way" stays the thinner mid-gold ring. */
-/** Green = you: the status dot on your avatar in the menu, your ring on a room, your room's fill bar. */
-const ME_GREEN = "#4cc773";
 const POP = "font-[family-name:var(--font-poppins)]";
 const DAY = 86_400_000;
 
@@ -265,7 +263,6 @@ export default function TonightBoard({ events, now, title, locked, onOpen, peopl
                 <Image src={r.photo} alt={r.name} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 300px" className={`object-cover ${on ? "" : "opacity-55"}`} />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />
                 <p className={`${POP} absolute bottom-2.5 left-3 text-[11.5px] font-medium uppercase tracking-[0.14em] max-sm:hidden`}>{r.name}</p>
-                <p className="absolute bottom-2.5 right-3 text-[11px] text-white/60 max-sm:hidden">holds {r.capacity}</p>
                 {/* Live: a quiet dark-glass tag, top right. */}
                 {on && (
                   <span className="absolute right-2.5 top-2.5 flex items-center gap-1.5 rounded-[3px] bg-black/55 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/85 backdrop-blur max-sm:hidden">
@@ -292,7 +289,7 @@ export default function TonightBoard({ events, now, title, locked, onOpen, peopl
 
               <div className="flex min-w-0 flex-1 flex-col gap-3 p-3.5">
                 <p className={`${POP} -mb-1 text-[11px] font-medium uppercase tracking-[0.14em] text-white/80 sm:hidden`}>
-                  {r.name} <span className="font-normal normal-case tracking-normal text-white/40">· holds {r.capacity}</span>
+                  {r.name}
                 </p>
                 {/* Now */}
                 <div>
@@ -306,7 +303,7 @@ export default function TonightBoard({ events, now, title, locked, onOpen, peopl
                       <div className="mt-1.5 flex items-center gap-2 text-[12px]">
                         <PeopleIcon />
                         <span className="truncate text-white/55">
-                          {count > 0 && <><span className="tabular-nums text-white/85">{count} here</span> · room for {r.capacity - count} · </>}till {time(n.end)}
+                          {count > 0 && <><span className="tabular-nums text-white/85">{count} here</span> · </>}till {time(n.end)}
                         </span>
                       </div>
                     </>
@@ -316,7 +313,7 @@ export default function TonightBoard({ events, now, title, locked, onOpen, peopl
                       {member && (
                         <p className="mt-1.5 flex items-center gap-2 text-[12px] text-white/55">
                           <PeopleIcon />
-                          {count ? `${count} here` : "Nobody here yet"} · room for {r.capacity - count}
+                          {count ? `${count} here` : "Nobody here yet"}
                           {s.onWay === r.id && <span style={{ color: GOLD }}>· you&apos;re coming</span>}
                         </p>
                       )}
@@ -325,17 +322,10 @@ export default function TonightBoard({ events, now, title, locked, onOpen, peopl
                 </div>
 
                 {/* Later tonight */}
-                {/* The divider is the room's fill: how many are in, against what it holds. */}
-                <div className="-mt-px flex items-center gap-2.5 px-4" role="img" aria-label={`${count} of ${r.capacity} people`}>
-                  <div className="relative h-[3px] flex-1 overflow-hidden rounded-full bg-white/[0.08]">
-                    <span
-                      className="absolute inset-y-0 left-0 rounded-full transition-[width] duration-700"
-                      style={{ width: `${Math.min(100, (count / r.capacity) * 100)}%`, background: youHere ? ME_GREEN : GOLD }}
-                    />
-                  </div>
-                  <span className="shrink-0 text-[10.5px] tabular-nums text-white/45">
-                    {count} / {r.capacity}
-                  </span>
+                {/* A plain divider. It used to fill to show people in vs what the room holds; capacity
+                    is no longer shown anywhere (George, 2026-11-23). */}
+                <div className="-mt-px px-4" aria-hidden="true">
+                  <div className="h-px bg-white/[0.08]" />
                 </div>
                 <div className="-mt-0.5">
                   <Label>Later</Label>

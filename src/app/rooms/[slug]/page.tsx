@@ -61,7 +61,8 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
   const lowest = r.rates.map((x) => Number(x.match(/\$(\d[\d,]*)/)?.[1]?.replace(/,/g, ""))).filter((n) => n > 0).sort((a, b) => a - b)[0];
   const num = (s?: string) => s?.match(/^[\d,]+/)?.[0];
   const facts: { k: string; v: string; unit?: string }[] = [
-    ...(r.capacity ? [{ k: "Holds", v: num(r.capacity) ?? r.capacity, ...(num(r.capacity) ? { unit: "people" } : {}) }] : []),
+    // No capacity on the room pages (George, 2026-11-23). The number stays in the room file for the
+    // booking form's "how many people?" question.
     ...(r.size ? [{ k: "Size", v: num(r.size) ?? r.size, ...(num(r.size) ? { unit: "sq ft" } : {}) }] : []),
     ...(r.ceilings ? [{ k: "Ceilings", v: num(r.ceilings) ?? r.ceilings.split(",")[0], ...(num(r.ceilings) ? { unit: "ft" } : {}) }] : []),
     ...(lowest ? [{ k: "From", v: `$${lowest}`, unit: "/hr" }] : []),
@@ -207,7 +208,6 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
         description: r.description,
         url: `${SITE_URL}/rooms/${r.slug}`,
         image: `${SITE_URL}${r.heroImage}`,
-        ...(r.capacity && /^\d+$/.test(r.capacity) ? { maximumAttendeeCapacity: Number(r.capacity) } : {}),
         address: { "@type": "PostalAddress", streetAddress: "6713 Rudderow Ave", addressLocality: "Pennsauken", addressRegion: "NJ", postalCode: "08109", addressCountry: "US" },
         containedInPlace: { "@id": `${SITE_URL}/#place` },
         isAccessibleForFree: false,

@@ -21,7 +21,8 @@ export default function RoomCards({ rooms }: { rooms: RoomEntry[] }) {
               <Image src={r.heroImage} alt={r.heroImageAlt} fill sizes="(max-width: 640px) 100vw, 50vw" className="object-cover" />
             </Link>
             <div className="rm__card-body">
-              <p className="rm__label">{[r.capacity && `${r.capacity}${/\d$/.test(r.capacity) ? " people" : ""}`, r.size].filter(Boolean).join(" · ")}</p>
+              {/* Size only: no capacity on the room pages (George, 2026-11-23). */}
+              {r.size && <p className="rm__label">{r.size}</p>}
               <h3 className="rm__name"><Link href={`/rooms/${r.slug}`}>{r.name}</Link></h3>
               <p className="rm__tag">{r.tagline}</p>
               {lowestRate(r.rates) && <p className="rm__rate">From {lowestRate(r.rates)}/hr</p>}
