@@ -13,7 +13,7 @@ const REPORTS = [
     href: "/admin/reports/black-friday",
     title: "Black Friday",
     description:
-      "The website offer, from the first email to the sale: messages sent, what visitors do on the offer page, calls booked, sites sold and your share.",
+      "The website offer, from the first visit to the sale: what visitors do on the offer page, calls booked, sites sold and your share.",
     ends: OFFER_END,
   },
 ];

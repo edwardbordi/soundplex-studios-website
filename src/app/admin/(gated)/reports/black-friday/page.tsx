@@ -22,7 +22,7 @@ import {
  * time (src/lib/black-friday/report.ts). Read-only. Temporary: remove with the campaign.
  */
 
-/** HighLevel's message export can be slow; give the read (and its retries) time to finish. */
+/** HighLevel can be slow; give the read (and its retries) time to finish. */
 export const maxDuration = 60;
 
 const n = (v: number) => v.toLocaleString("en-US");
@@ -80,14 +80,13 @@ const TABS: [Tab, string][] = [
   ["overview", "Overview"],
   ["page", "The page"],
   ["visitors", "Visitors"],
-  ["money", "Messages and money"],
+  ["money", "Calls and money"],
   ["notes", "Notes"],
 ];
 const href = (tab: Tab, extra = "") =>
   `/admin/reports/black-friday?tab=${tab}${extra}`;
 
-const EMAIL_COLOR = "var(--signal)";
-const TEXT_COLOR = "var(--series-blue)";
+const BAR_COLOR = "var(--signal)";
 const box = { background: "var(--surface-2)" } as const;
 const strong = { color: "var(--text-primary)" } as const;
 
@@ -147,37 +146,29 @@ function Problem({ what, error }: { what: string; error: string }) {
   );
 }
 
-/** One bar row. `parts` stacks several colours in the one bar (emails + texts); `detail` is the quiet text after the number. */
+/** One bar row; `detail` is the quiet text after the number. */
 function Bar({
   label,
   value,
   max,
   detail,
-  parts,
 }: {
   label: string;
   value: number;
   max: number;
   detail?: string;
-  parts?: { value: number; color: string }[];
 }) {
-  const segments = (parts ?? [{ value, color: EMAIL_COLOR }]).filter(
-    (part) => part.value > 0,
-  );
-  const width = (v: number) => (max > 0 ? Math.max((v / max) * 100, 1.5) : 0);
+  const width = max > 0 && value > 0 ? Math.max((value / max) * 100, 1.5) : 0;
   return (
     <div className="grid grid-cols-[12rem_1fr_11rem] items-center gap-3 py-1.5 text-sm max-sm:grid-cols-[8rem_1fr_auto]">
       <span className="whitespace-nowrap max-sm:whitespace-normal">
         {label}
       </span>
       <span className="flex h-2.5 overflow-hidden rounded-full" style={box}>
-        {segments.map((part, i) => (
-          <span
-            key={i}
-            className="block h-full"
-            style={{ width: `${width(part.value)}%`, background: part.color }}
-          />
-        ))}
+        <span
+          className="block h-full"
+          style={{ width: `${width}%`, background: BAR_COLOR }}
+        />
       </span>
       <span className="text-right whitespace-nowrap tabular-nums">
         {n(value)}
@@ -208,7 +199,7 @@ function Reach({
       <span className="h-2.5 overflow-hidden rounded-full" style={box}>
         <span
           className="block h-full rounded-full"
-          style={{ width: `${width}%`, background: EMAIL_COLOR }}
+          style={{ width: `${width}%`, background: BAR_COLOR }}
         />
       </span>
       <span className="text-right tabular-nums">{n(value)}</span>
@@ -219,18 +210,6 @@ function Reach({
         {time}
       </span>
     </div>
-  );
-}
-
-function Key({ color, label }: { color: string; label: string }) {
-  return (
-    <span className="inline-flex items-center gap-1.5">
-      <span
-        className="inline-block h-2.5 w-2.5 rounded-full"
-        style={{ background: color }}
-      />
-      {label}
-    </span>
   );
 }
 
@@ -283,42 +262,36 @@ const DEVICE: Record<string, string> = {
 /* ───────────── Overview ───────────── */
 
 function Overview({ report }: { report: Report }) {
-  const emails = value(report.emails);
-  const texts = value(report.texts);
   const calls = value(report.calls);
   const pipeline = value(report.pipeline);
-  const audience = value(report.audience);
   const page = report.page?.ok ? report.page.data : null;
   const sold = pipeline?.won ?? 0;
-  const sent = (emails?.delivered ?? 0) + (texts?.delivered ?? 0);
-  const queued = audience?.tagged ?? null;
-  const scale = Math.max(queued ?? 0, sent);
+  const scale = Math.max(page?.visits ?? 0, calls?.booked ?? 0, sold);
+  const noPage = report.page ? "Couldn’t read the page visits" : "Not connected";
 
   return (
     <>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Tile
-          label="Messages sent"
-          value={emails ? n(sent) : "–"}
+          label="Visits to the offer page"
+          value={page ? n(page.visits) : "–"}
           note={
-            emails
-              ? `${n(emails.delivered)} emails · ${n(texts?.delivered ?? 0)} texts`
-              : "Couldn’t read emails"
+            page
+              ? `${n(page.visitors)} ${page.visitors === 1 ? "person" : "people"}`
+              : noPage
           }
         />
-        {page ? (
-          <Tile
-            label="Visits to the offer page"
-            value={n(page.visits)}
-            note={`${n(page.visitors)} ${page.visitors === 1 ? "person" : "people"} · ${n(page.bookClicks)} clicked to book`}
-          />
-        ) : (
-          <Tile
-            label="Replies to texts"
-            value={texts ? n(texts.replies) : "–"}
-            note={texts ? `${n(texts.sent)} texts sent` : "Couldn’t read texts"}
-          />
-        )}
+        <Tile
+          label="Started booking"
+          value={page ? n(page.calendarStarted) : "–"}
+          note={
+            page
+              ? pct(page.calendarStarted, page.visits)
+                ? `${pct(page.calendarStarted, page.visits)} of visits`
+                : `${n(page.bookClicks)} clicked to book`
+              : noPage
+          }
+        />
         <Tile
           label="Calls booked"
           value={calls ? n(calls.booked) : "–"}
@@ -339,21 +312,9 @@ function Overview({ report }: { report: Report }) {
         />
       </div>
 
-      <Card title="From message to sale" className="mt-6">
-        {emails ? (
+      <Card title="From visit to sale" className="mt-6">
+        {page || calls || pipeline ? (
           <>
-            {queued != null ? (
-              <Bar label="Queued by the campaign" value={queued} max={scale} />
-            ) : null}
-            <Bar
-              label="Messages sent"
-              value={sent}
-              max={scale}
-              parts={[
-                { value: emails.delivered, color: EMAIL_COLOR },
-                { value: texts?.delivered ?? 0, color: TEXT_COLOR },
-              ]}
-            />
             {page ? (
               <Bar label="Visited the page" value={page.visits} max={scale} />
             ) : null}
@@ -385,28 +346,11 @@ function Overview({ report }: { report: Report }) {
             {pipeline ? (
               <Bar label="Sites sold" value={pipeline.won} max={scale} />
             ) : null}
-            <p
-              className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm"
-              style={muted}
-            >
-              <Key
-                color={EMAIL_COLOR}
-                label={`Emails · ${n(emails.delivered)}`}
-              />
-              <Key
-                color={TEXT_COLOR}
-                label={
-                  texts
-                    ? `Texts · ${n(texts.delivered)}`
-                    : "Texts · couldn’t read"
-                }
-              />
-            </p>
           </>
         ) : (
           <Problem
-            what="emails"
-            error={report.emails.ok ? "" : report.emails.error}
+            what="the page visits, the calendar or the pipeline"
+            error="Try Refresh."
           />
         )}
       </Card>
@@ -417,8 +361,6 @@ function Overview({ report }: { report: Report }) {
             <thead>
               <tr>
                 <th>Day</th>
-                <th>Emails</th>
-                <th>Texts</th>
                 {page ? <th>Visits</th> : null}
                 <th>Booked</th>
                 <th>Held</th>
@@ -429,8 +371,6 @@ function Overview({ report }: { report: Report }) {
               {report.days.map((d) => (
                 <tr key={d.day}>
                   <td className="rz-fit">{dayLabel(d.day)}</td>
-                  <td>{emails ? n(d.sent) : "–"}</td>
-                  <td>{texts ? n(d.texts) : "–"}</td>
                   {page ? <td>{n(d.visits)}</td> : null}
                   <td>{calls ? n(d.booked) : "–"}</td>
                   <td>{calls ? n(d.held) : "–"}</td>
@@ -962,7 +902,7 @@ function Visitors({
                       className="block h-full rounded-full"
                       style={{
                         width: `${Math.min(j.scroll, 100)}%`,
-                        background: EMAIL_COLOR,
+                        background: BAR_COLOR,
                       }}
                     />
                   </span>
@@ -998,35 +938,15 @@ function Visitors({
   );
 }
 
-/* ───────────── Messages and money ───────────── */
+/* ───────────── Calls and money ───────────── */
 
 function Money({ report }: { report: Report }) {
-  const emails = value(report.emails);
-  const texts = value(report.texts);
   const calls = value(report.calls);
   const pipeline = value(report.pipeline);
 
   return (
     <>
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Tile
-          label="Emails sent"
-          value={emails ? n(emails.delivered) : "–"}
-          note={
-            emails
-              ? `${n(emails.messages.length)} ${emails.messages.length === 1 ? "email" : "emails"} so far`
-              : "Couldn’t read emails"
-          }
-        />
-        <Tile
-          label="Texts sent"
-          value={texts ? n(texts.sent) : "–"}
-          note={
-            texts
-              ? `${n(texts.replies)} ${texts.replies === 1 ? "reply" : "replies"} · ${n(texts.optOuts)} opted out`
-              : "Couldn’t read texts"
-          }
-        />
+      <div className="mb-6 grid gap-4 sm:grid-cols-2">
         <Tile
           label="Sold so far"
           value={pipeline ? money(pipeline.wonValue) : "–"}
@@ -1134,70 +1054,6 @@ function Money({ report }: { report: Report }) {
         </Card>
       </div>
 
-      <Card title="Each message" className="mt-6">
-        {emails ? (
-          emails.messages.length ? (
-            <div className="rz-table-wrap">
-              <table className="rz-table">
-                <thead>
-                  <tr>
-                    <th>Message</th>
-                    <th>Type</th>
-                    <th>First sent</th>
-                    <th>Sent</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {emails.messages.map((m) => (
-                    <tr key={m.subject}>
-                      <td>{m.subject}</td>
-                      <td className="rz-fit">
-                        {m.kind === "email" ? "Email" : "Text"}
-                      </td>
-                      <td className="rz-fit">
-                        {m.first ? dayLabel(m.first) : "–"}
-                      </td>
-                      <td>{n(m.sent)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p className="text-sm" style={muted}>
-              No campaign messages have gone out yet.
-            </p>
-          )
-        ) : (
-          <Problem
-            what="emails"
-            error={report.emails.ok ? "" : report.emails.error}
-          />
-        )}
-      </Card>
-
-      <Card title="Texts" className="mt-6">
-        {texts ? (
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <Stat label="Sent" value={n(texts.sent)} />
-            <Stat label="Replies" value={n(texts.replies)} />
-            <Stat label="Opted out (STOP)" value={n(texts.optOuts)} />
-            <Stat
-              label="Opt-out rate"
-              value={
-                texts.sent > 0
-                  ? `${((texts.optOuts / texts.sent) * 100).toFixed(1)}%`
-                  : "–"
-              }
-            />
-          </div>
-        ) : (
-          <Problem
-            what="texts"
-            error={report.texts.ok ? "" : report.texts.error}
-          />
-        )}
-      </Card>
     </>
   );
 }
@@ -1206,23 +1062,14 @@ function Money({ report }: { report: Report }) {
 
 function Notes({ report }: { report: Report }) {
   const calls = value(report.calls);
-  const emails = value(report.emails);
   const notes: [string, string][] = [
     [
       "How fresh are these numbers?",
-      `Read at ${clock(report.generatedAt)}. They are kept for up to 15 minutes; Refresh reads them again. Nothing on this page changes anything in HighLevel.`,
+      `Read at ${clock(report.generatedAt)}. Opening the page shows the last numbers read and reads new ones in the background every 15 minutes; Refresh reads them again now. Nothing on this page changes anything in HighLevel.`,
     ],
     [
-      "Where do the sent numbers come from?",
-      "From HighLevel’s message history: emails and texts that have actually left, the same number as Sent under Email Analytics in HighLevel. It can be far below what the workflow shows, because the workflow counts a message as soon as it is queued and HighLevel then sends a big batch gradually over several hours. “Queued by the campaign” is everyone the workflow has processed so far.",
-    ],
-    [
-      "Where are delivered, opened and clicked?",
-      "HighLevel shows those on each email step of the workflow and under Email Analytics, but doesn’t hand them to this report.",
-    ],
-    [
-      "How are text replies and opt-outs counted?",
-      "Only answers from people a campaign text went to. An answer of STOP (or a similar word) counts as an opt-out, not a reply; HighLevel stops texting that person automatically. An opt-out rate above about 1% is worth a look before the next text goes out.",
+      "Where are the emails and texts?",
+      "In HighLevel: Email Analytics, and the stats on each step of the campaign workflow. This report no longer counts them, because reading every message on each load made it too slow.",
     ],
     [
       "How are page visits counted?",
@@ -1240,14 +1087,6 @@ function Notes({ report }: { report: Report }) {
       "How is my share worked out?",
       "20% of each payment plus $150 a site, shown here as if every sale is paid in full.",
     ],
-    ...(emails?.truncated
-      ? ([
-          [
-            "Why might the email counts be low?",
-            "There were more emails than one load can read, so the counts are a little low.",
-          ],
-        ] as [string, string][])
-      : []),
   ];
   return (
     <Card title="How these numbers are counted">

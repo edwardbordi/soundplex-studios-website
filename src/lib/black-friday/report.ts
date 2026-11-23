@@ -15,8 +15,6 @@ import { SITE_TIMEZONE } from "@/lib/site-config";
 const BASE = "https://services.leadconnectorhq.com";
 const API_VERSION = "2021-07-28";
 const TIMEOUT_MS = 10_000;
-/** The message export sends up to 1,000 messages a page and is often slow: it gets longer. */
-const EXPORT_TIMEOUT_MS = 25_000;
 /** A timed-out or overloaded call is tried this many more times, waiting a little longer each time. */
 const RETRY_WAITS_MS = [1_500, 4_000];
 
@@ -27,9 +25,6 @@ export const PLACES = 20;
 /** The partner share: 20% of what is sold plus a flat amount for each site. */
 const SHARE_RATE = 0.2;
 const SHARE_PER_SITE = 150;
-/** An email subject counts as a campaign message once it has gone to this many people. */
-const BROADCAST_MIN = 25;
-const MAX_MESSAGE_PAGES = 30;
 const CACHE_MS = 15 * 60 * 1000;
 
 type Config = NonNullable<ReturnType<typeof blackFridayConfig>>;
@@ -37,23 +32,10 @@ export type Source<T> = { ok: true; data: T } | { ok: false; error: string };
 
 export type DayRow = {
   day: string;
-  sent: number;
-  opened: number;
-  clicked: number;
-  texts: number;
   visits: number;
   booked: number;
   held: number;
   sold: number;
-};
-export type MessageRow = {
-  subject: string;
-  first: string;
-  sent: number;
-  delivered: number;
-  opened: number;
-  clicked: number;
-  kind: "email" | "text";
 };
 export type StageRow = { name: string; open: number; value: number };
 
@@ -101,25 +83,8 @@ export type PageStats = {
 
 export type Report = {
   generatedAt: number;
-  emails: Source<{
-    sent: number;
-    delivered: number;
-    opened: number;
-    clicked: number;
-    failed: number;
-    hasEngagement: boolean;
-    truncated: boolean;
-    messages: MessageRow[];
-  }>;
-  texts: Source<{
-    sent: number;
-    delivered: number;
-    failed: number;
-    replies: number;
-    /** People who answered a campaign text with STOP. */
-    optOuts: number;
-    truncated: boolean;
-  }>;
+  // No email or text counts (Ed, 2026-11-24): HighLevel's message export got too slow to read on
+  // every load. HighLevel's own Email Analytics has them.
   calls: Source<{
     booked: number;
     upcoming: number;
@@ -138,7 +103,6 @@ export type Report = {
     wonValue: number;
     share: number;
   }>;
-  audience: Source<{ tagged: number | null; booked: number | null }>;
   /** Visits to the offer page; null when that source isn't set up. */
   page: Source<PageStats> | null;
   days: DayRow[];
@@ -297,100 +261,6 @@ const dayOf = (ms: number) => dayFmt.format(new Date(ms));
 
 /* ───────────── sources ───────────── */
 
-/** "outbound delivered: 120" lines for ?debug=1: counts only. */
-function tally(list: Message[]): string[] {
-  const counts = new Map<string, number>();
-  for (const m of list) {
-    const key = `${m.inbound ? "inbound" : "outbound"} ${m.status || "(no status)"}`;
-    counts.set(key, (counts.get(key) ?? 0) + 1);
-  }
-  return [...counts].map(([k, v]) => `${k}: ${v}`);
-}
-
-type Message = {
-  at: number;
-  status: string;
-  inbound: boolean;
-  subject: string;
-  contactId: string;
-  ending: string;
-  /** An opt-out word ("STOP") rather than a real reply. */
-  stop: boolean;
-};
-
-async function exportMessages(
-  cfg: Config,
-  channel: "Email" | "SMS",
-  shapes: Report["shapes"],
-): Promise<{ list: Message[]; truncated: boolean }> {
-  const list: Message[] = [];
-  let cursor = "";
-  for (let page = 0; page < MAX_MESSAGE_PAGES; page++) {
-    const data = await hl(
-      cfg,
-      `/conversations/messages/export?${qs({
-        locationId: cfg.locationId,
-        channel,
-        startDate: new Date(CAMPAIGN_START).toISOString(),
-        endDate: new Date().toISOString(),
-        sortBy: "createdAt",
-        sortOrder: "asc",
-        limit: 1000,
-        ...(cursor ? { cursor } : {}),
-      })}`,
-      { timeoutMs: EXPORT_TIMEOUT_MS },
-    );
-    const messages = arr(data.messages);
-    if (page === 0 && messages[0]) {
-      const meta = obj(messages[0].meta);
-      shapes[channel === "Email" ? "email" : "text"] = [
-        ...Object.keys(messages[0]),
-        ...Object.keys(meta).map((k) => `meta.${k}`),
-        ...Object.keys(obj(meta.email)).map((k) => `meta.email.${k}`),
-      ];
-    }
-    for (const m of messages) {
-      const meta = obj(m.meta);
-      list.push({
-        at: time(m.dateAdded),
-        status: str(m.status).toLowerCase(),
-        inbound: str(m.direction).toLowerCase() === "inbound",
-        subject:
-          str(m.subject) || str(obj(meta.email).subject) || str(meta.subject),
-        contactId: str(m.contactId),
-        // The end of the body: the same for everyone a broadcast went to, whatever the greeting says.
-        ending:
-          channel === "SMS"
-            ? str(m.body).replace(/\s+/g, " ").trim().slice(-60)
-            : "",
-        stop:
-          channel === "SMS" &&
-          /^(stop|stopall|stop all|unsubscribe|cancel|end|quit|remove|opt ?out)[.!\s]*$/i.test(
-            str(m.body).trim(),
-          ),
-      });
-    }
-    if (page === 0)
-      shapes[`${channel} total HighLevel reports`] = [
-        str(data.total) || "not given",
-      ];
-    cursor = str(data.nextCursor);
-    if (!cursor || messages.length === 0) {
-      shapes[`${channel} read`] = [
-        `${list.length} in ${page + 1} page(s)`,
-        ...tally(list),
-      ];
-      return { list, truncated: false };
-    }
-  }
-  return { list, truncated: true };
-}
-
-const FAILED = new Set(["failed", "undelivered", "bounced", "rejected"]);
-const OPENED = new Set(["opened", "read", "clicked"]);
-const notDelivered = (status: string) =>
-  FAILED.has(status) || status === "pending" || status === "scheduled";
-
 type Opportunity = {
   status: string;
   pipelineId: string;
@@ -519,8 +389,6 @@ type Appointment = {
   name: string;
 };
 
-/** Everyone the campaign went to carries this tag. */
-const CAMPAIGN_TAG = "bf26-soundplex";
 /** The booking workflow adds this one. A call only counts when its contact has it: the report shows who the workflow handled. */
 const BOOKED_TAG = "bf26-booked";
 
@@ -588,22 +456,6 @@ async function appointments(
       .sort((x, y) => x.startAt - y.startAt),
     skipped: events.length - counted.length,
   };
-}
-
-async function tagged(cfg: Config, tag: string): Promise<number | null> {
-  try {
-    const data = await hl(cfg, "/contacts/search", {
-      method: "POST",
-      body: {
-        locationId: cfg.locationId,
-        pageLimit: 1,
-        filters: [{ field: "tags", operator: "contains", value: tag }],
-      },
-    });
-    return typeof data.total === "number" ? data.total : null;
-  } catch {
-    return null;
-  }
 }
 
 /** Visits to the offer page, from the site it lives on: counts only, per day. */
@@ -693,10 +545,6 @@ async function build(cfg: Config): Promise<Report> {
     const day = dayOf(t);
     days.set(day, {
       day,
-      sent: 0,
-      opened: 0,
-      clicked: 0,
-      texts: 0,
       visits: 0,
       booked: 0,
       held: 0,
@@ -710,117 +558,11 @@ async function build(cfg: Config): Promise<Report> {
 
   const stale: Report["stale"] = [];
   deadline = Date.now() + READ_BUDGET_MS;
-  // The two big message exports run one after the other, so they don't compete with each other
-  // for HighLevel's attention; the small sources run alongside them.
-  // All at once: one after the other doubled the wait, and the retries now cover a slow answer.
-  const [emailRaw, textRaw, callRaw, pipelineRaw, audience, pageRaw] =
-    await Promise.all([
-      source("emails", () => exportMessages(cfg, "Email", shapes), stale),
-      source("texts", () => exportMessages(cfg, "SMS", shapes), stale),
-      source("calls", () => appointments(cfg, shapes), stale),
-      source("the pipeline", () => readPipeline(cfg, shapes), stale),
-      source(
-        "tags",
-        async () => {
-          const [all, booked] = await Promise.all([
-            tagged(cfg, CAMPAIGN_TAG),
-            tagged(cfg, BOOKED_TAG),
-          ]);
-          return { tagged: all, booked };
-        },
-        stale,
-      ),
-      source("page visits", () => pageStats(cfg), stale),
-    ]);
-
-  let emails: Report["emails"];
-  if (emailRaw.ok) {
-    // Only broadcasts: a subject that went to enough people. One-to-one replies stay out.
-    const bySubject = new Map<string, Message[]>();
-    for (const m of emailRaw.data.list) {
-      if (m.inbound) continue;
-      const key = m.subject.trim() || "(no subject)";
-      bySubject.set(key, [...(bySubject.get(key) ?? []), m]);
-    }
-    const hasSubjects = [...bySubject.keys()].some((k) => k !== "(no subject)");
-    const messages: MessageRow[] = [];
-    const total = { sent: 0, delivered: 0, opened: 0, clicked: 0, failed: 0 };
-    let hasEngagement = false;
-    for (const [subject, list] of bySubject) {
-      if (hasSubjects && list.length < BROADCAST_MIN) continue;
-      const row: MessageRow = {
-        kind: "email",
-        subject,
-        first: dayOf(Math.min(...list.map((m) => m.at))),
-        sent: list.length,
-        delivered: 0,
-        opened: 0,
-        clicked: 0,
-      };
-      for (const m of list) {
-        bump(m.at, "sent");
-        if (!notDelivered(m.status)) row.delivered += 1;
-        if (FAILED.has(m.status)) total.failed += 1;
-        if (OPENED.has(m.status)) {
-          row.opened += 1;
-          bump(m.at, "opened");
-        }
-        if (m.status === "clicked") {
-          row.clicked += 1;
-          bump(m.at, "clicked");
-        }
-      }
-      if (row.opened > 0) hasEngagement = true;
-      total.sent += row.sent;
-      total.delivered += row.delivered;
-      total.opened += row.opened;
-      total.clicked += row.clicked;
-      messages.push(row);
-    }
-    messages.sort((a, b) =>
-      a.first < b.first ? -1 : a.first > b.first ? 1 : b.sent - a.sent,
-    );
-    emails = {
-      ok: true,
-      data: {
-        ...total,
-        hasEngagement,
-        truncated: emailRaw.data.truncated,
-        messages,
-      },
-    };
-  } else emails = emailRaw;
-
-  let texts: Report["texts"];
-  if (textRaw.ok) {
-    // Only campaign texts: the same wording to enough people. Everyday one-to-one texts stay out,
-    // and a reply counts only when it comes from someone a campaign text went to.
-    const byEnding = new Map<string, number>();
-    for (const m of textRaw.data.list)
-      if (!m.inbound) byEnding.set(m.ending, (byEnding.get(m.ending) ?? 0) + 1);
-    const out = textRaw.data.list.filter(
-      (m) => !m.inbound && (byEnding.get(m.ending) ?? 0) >= BROADCAST_MIN,
-    );
-    const reached = new Set(out.map((m) => m.contactId));
-    for (const m of out) bump(m.at, "texts");
-    texts = {
-      ok: true,
-      data: {
-        sent: out.length,
-        delivered: out.filter((m) => !notDelivered(m.status)).length,
-        failed: out.filter((m) => FAILED.has(m.status)).length,
-        replies: textRaw.data.list.filter(
-          (m) => m.inbound && !m.stop && reached.has(m.contactId),
-        ).length,
-        optOuts: new Set(
-          textRaw.data.list
-            .filter((m) => m.inbound && m.stop && reached.has(m.contactId))
-            .map((m) => m.contactId),
-        ).size,
-        truncated: textRaw.data.truncated,
-      },
-    };
-  } else texts = textRaw;
+  const [callRaw, pipelineRaw, pageRaw] = await Promise.all([
+    source("calls", () => appointments(cfg, shapes), stale),
+    source("the pipeline", () => readPipeline(cfg, shapes), stale),
+    source("page visits", () => pageStats(cfg), stale),
+  ]);
 
   let calls: Report["calls"];
   if (callRaw.ok) {
@@ -873,11 +615,8 @@ async function build(cfg: Config): Promise<Report> {
     generatedAt: now,
     stale,
     page,
-    emails,
-    texts,
     calls,
     pipeline,
-    audience,
     days: [...days.values()].reverse(),
     shapes,
   };
@@ -897,14 +636,7 @@ function readNow(cfg: Config): Promise<Report> {
     .then((report) => {
       const complete =
         report.stale.length === 0 &&
-        [
-          report.emails,
-          report.texts,
-          report.calls,
-          report.pipeline,
-          report.audience,
-          report.page,
-        ].every((s) => s === null || s.ok);
+        [report.calls, report.pipeline, report.page].every((s) => s === null || s.ok);
       cached = { at: report.generatedAt, report, complete };
       return report;
     })
