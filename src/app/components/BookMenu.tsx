@@ -7,16 +7,16 @@ import ForwardArrow from "./ForwardArrow";
 
 /**
  * The header's main button (Ed, 2026-10-29: "Get in touch" undersold it — this button starts
- * renting a room, a tour, tickets, a production). "Book" opens a small menu of the real reasons
- * people come, each straight into the right path of the /start survey (or the calendar, for
- * tickets). Opens on hover (desktop) and on click/tap; Escape or a click outside closes it.
+ * booking a room, a tour or a production). "Book" opens a small menu of the real reasons people
+ * come, each straight into the right path of the /start survey. Opens on hover (desktop) and on
+ * click/tap; Escape or a click outside closes it. No "Get tickets" (George, 2026-11-23: no public
+ * ticket sales; members will reserve seats inside the members area).
  */
 // Small photo thumbs, not icons (Ed): each choice shows the real thing.
 const CHOICES = [
-  { href: "/start?path=room&from=nav-book", title: "Rent a room", sub: "Celebrations, workshops, shoots and sessions", img: "/rooms/wood-room-3.webp" },
+  { href: "/start?path=room&from=nav-book", title: "Book a room", sub: "Media production, photography, content and creative workshops", img: "/rooms/wood-room-3.webp" },
   { href: "/start?path=collective&from=nav-book", title: "Book a tour", sub: "See the building and hear about membership", img: "/rooms/sound-lounge-1.webp" },
-  { href: "/studio-productions", title: "Get tickets", sub: "Shows, comedy, talks and screenings", img: "/rooms/wood-room-2.webp" },
-  { href: "/start?path=produce&from=nav-book", title: "Record or produce", sub: "Podcasts, videos and live sessions, with our team", img: "/rooms/podcast-temp.webp" },
+  { href: "/start?path=produce&from=nav-book", title: "Record or produce", sub: "Podcasts, video and livestreams, with our team", img: "/rooms/podcast-temp.webp" },
 ] as const;
 
 export default function BookMenu() {

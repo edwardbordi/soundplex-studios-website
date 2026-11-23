@@ -27,7 +27,7 @@ export default function TourCalendar({ lead = "Book a tour" }: { lead?: string }
         <>
           <h2 id="cal-title" className="cal__title">Call or text and we’ll find a time.</h2>
           <a href={`tel:${PHONE_TEL}`} className="cal__phone">{PHONE_DISPLAY}</a>
-          <p className="cal__note">Monday to Saturday, 8 AM to 10 PM.</p>
+          <p className="cal__note">Monday to Saturday, 12 PM to 8 PM.</p>
         </>
       )}
     </section>

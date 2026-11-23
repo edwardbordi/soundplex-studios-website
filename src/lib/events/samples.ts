@@ -26,29 +26,30 @@ type Slot = {
   producer?: string;
 };
 
+// George, 2026-11-23 (zoning): only approved creative and media uses, inside the opening hours
+// (Monday–Saturday 12–8pm), and nothing sold — no prices, so no ticket buttons.
 const WEEK: Slot[] = [
   // Monday
-  { dow: 1, start: [10, 0], end: [16, 0], kind: "workshop", room: "studio-a", visibility: "members", titles: ["Open Studio"], summary: "The studio's open for members: bring a project, borrow the room, find a collaborator." },
-  { dow: 1, start: [19, 0], end: [21, 30], kind: "open-mic", room: "sound-lounge", visibility: "public", titles: ["SoundPlex Live Open Mic"], summary: "Sign up at the door. Three songs or ten minutes, whatever you've got.", price: "Free", hostNote: "Coming alone? Most people do. George will find you a seat near the front." },
+  { dow: 1, start: [12, 0], end: [16, 0], kind: "workshop", room: "studio-a", visibility: "members", titles: ["Open Studio"], summary: "The studio's open for members: bring a project, borrow the room, find a collaborator." },
+  { dow: 1, start: [17, 0], end: [19, 0], kind: "networking", room: "sound-lounge", visibility: "public", titles: ["Creative Enterprise Networking"], summary: "Creators and business owners meet, trade notes and find collaborators.", price: "Free · RSVP", hostNote: "Coming alone? Most people do. George will introduce you around." },
   // Tuesday
-  { dow: 2, start: [9, 30], end: [12, 30], kind: "private", room: "studio-a", visibility: "private", titles: ["Private session"], summary: "" },
-  { dow: 2, start: [18, 30], end: [20, 30], kind: "workshop", room: "wood-room", visibility: "public", titles: ["Founders Night: Telling Your Story", "Founders Night: Pricing What You're Worth", "Founders Night: Your First Ten Clients"], summary: "A working session for owners and founders: one talk, then the room does the work together.", price: "$20", producer: "The Plex Collective", hostNote: "Bring a business card and one problem you're stuck on." },
+  { dow: 2, start: [12, 0], end: [15, 0], kind: "private", room: "studio-a", visibility: "private", titles: ["Private session"], summary: "" },
+  { dow: 2, start: [16, 0], end: [18, 0], kind: "workshop", room: "wood-room", visibility: "public", titles: ["Founders Workshop: Telling Your Story", "Founders Workshop: Pricing What You're Worth", "Founders Workshop: Your First Ten Clients"], summary: "An educational workshop for owners and founders: one talk, then the room does the work together.", price: "Free · RSVP", producer: "The Plex Collective", hostNote: "Bring a business card and one problem you're stuck on." },
   // Wednesday
-  { dow: 3, start: [12, 0], end: [13, 0], kind: "podcast-taping", room: "sound-lounge", visibility: "public", titles: ["Local Lens: Live Taping"], summary: "Sit in on a live taping of Local Lens, our interview show with South Jersey business owners.", price: "Free · RSVP" },
-  { dow: 3, start: [19, 30], end: [21, 30], kind: "comedy", room: "wood-room", visibility: "public", titles: ["Corks & Comedy Connections", "Stand-Up at the Plex", "Corks & Comedy Connections"], summary: "Five comics, one long table of wine and a room that's four feet from the mic.", price: "$15", hostNote: "Coming alone? Grab a seat at the long table — it's the friendliest one in the room." },
+  { dow: 3, start: [12, 0], end: [13, 0], kind: "podcast-taping", room: "sound-lounge", visibility: "public", titles: ["Local Lens: Recording Session"], summary: "Sit in on a recording of Local Lens, our interview show with South Jersey business owners.", price: "Free · RSVP" },
+  { dow: 3, start: [15, 0], end: [18, 0], kind: "show", room: "wood-room", visibility: "members", titles: ["Music Video Production Day"], summary: "Members film a performance video on the WoodRoom stage with our three-camera crew." },
   // Thursday
-  { dow: 4, start: [14, 0], end: [17, 0], kind: "private", room: "wood-room", visibility: "private", titles: ["Private event"], summary: "" },
-  { dow: 4, start: [18, 0], end: [20, 0], kind: "networking", room: "sound-lounge", visibility: "public", titles: ["Friendly Feud Networking", "Third Place Thursdays", "Friendly Feud Networking"], summary: "Networking that isn't awkward: a game, a drink, and people you'd actually want to call back.", price: "$10", hostNote: "Everyone arrives alone to this one. That's the point." },
-  { dow: 4, start: [20, 0], end: [22, 30], kind: "show", room: "wood-room", visibility: "public", titles: ["Thunder Road Refugees", "A Night of Jazz Standards", "Kid Charlemagne Live"], summary: "A full band in a room built for it, the stage four feet away.", price: "$20" },
+  { dow: 4, start: [12, 0], end: [15, 0], kind: "private", room: "wood-room", visibility: "private", titles: ["Private booking"], summary: "" },
+  { dow: 4, start: [16, 0], end: [18, 0], kind: "networking", room: "sound-lounge", visibility: "public", titles: ["Third Place Thursdays"], summary: "Networking that isn't awkward: a game, and people you'd actually want to call back.", price: "Free · RSVP", hostNote: "Everyone arrives alone to this one. That's the point." },
+  { dow: 4, start: [17, 0], end: [20, 0], kind: "show", room: "studio-a", visibility: "public", titles: ["Studio A Livestream Session"], summary: "A musician records and livestreams a set from Studio A. Watch online, or members can sit in.", price: "Free · online" },
   // Friday
-  { dow: 5, start: [11, 0], end: [13, 0], kind: "podcast-taping", room: "studio-a", visibility: "members", titles: ["Members' Podcast Hour"], summary: "Members record with the full three-camera setup — book a slot at the front desk." },
-  { dow: 5, start: [18, 30], end: [22, 0], kind: "private", room: "sound-lounge", visibility: "private", titles: ["Private event"], summary: "" },
-  { dow: 5, start: [20, 0], end: [23, 0], kind: "show", room: "wood-room", visibility: "public", titles: ["Friday Night at the Plex: Live Music", "The Lost Sinatra Sessions", "Winds & Spirits: A Jazz Night"], summary: "The headline night of the week. Doors at 7:30, music at 8.", price: "$25", hostNote: "Coming alone? Say hi to George at the door — everyone does." },
+  { dow: 5, start: [12, 0], end: [14, 0], kind: "podcast-taping", room: "studio-a", visibility: "members", titles: ["Members' Podcast Hour"], summary: "Members record with the full three-camera setup — book a slot at the front desk." },
+  { dow: 5, start: [15, 0], end: [18, 0], kind: "private", room: "sound-lounge", visibility: "private", titles: ["Private booking"], summary: "" },
+  { dow: 5, start: [16, 0], end: [19, 0], kind: "workshop", room: "wood-room", visibility: "public", titles: ["Content Creation Lab", "Lighting for Video", "Editing Basics"], summary: "A hands-on workshop: small group, real gear, and something you made by the end.", price: "Free · RSVP" },
   // Saturday
-  { dow: 6, start: [11, 0], end: [13, 0], kind: "workshop", room: "studio-a", visibility: "public", titles: ["Portraits at the Plex", "Songwriting Circle", "Home Recording Basics"], summary: "A hands-on morning in Studio A. Small group, real gear, coffee's on us.", price: "$35" },
-  { dow: 6, start: [15, 0], end: [17, 0], kind: "screening", room: "wood-room", visibility: "public", titles: ["Cinema Salon", "Local Film Showcase", "Cinema Salon"], summary: "A screening and a conversation with the filmmaker afterward.", price: "$12" },
-  { dow: 6, start: [19, 30], end: [22, 0], kind: "comedy", room: "wood-room", visibility: "public", titles: ["Did I Ever Tell You About the Time…", "Saturday Night Stand-Up", "Did I Ever Tell You About the Time…"], summary: "Storytelling comedy: true stories, told badly on purpose, in front of a room that's in on it.", price: "$20" },
-  { dow: 6, start: [18, 0], end: [21, 0], kind: "networking", room: "sound-lounge", visibility: "members", titles: ["Collective Mixer"], summary: "Members only: drinks at the piano bar, new faces, and whoever George wants you to meet." },
+  { dow: 6, start: [12, 0], end: [14, 0], kind: "workshop", room: "studio-a", visibility: "public", titles: ["Portraits at the Plex", "Songwriting Circle", "Home Recording Basics"], summary: "A hands-on afternoon in Studio A. Small group, real gear.", price: "Free · RSVP" },
+  { dow: 6, start: [15, 0], end: [17, 0], kind: "screening", room: "wood-room", visibility: "public", titles: ["Cinema Salon", "Local Film Showcase", "Cinema Salon"], summary: "A filmmaker screens their work, then talks about how it was made.", price: "Free · RSVP" },
+  { dow: 6, start: [17, 0], end: [20, 0], kind: "networking", room: "sound-lounge", visibility: "members", titles: ["Plex Collective Meeting"], summary: "Members only: the creative group meets, new faces, and whoever George wants you to meet." },
 ];
 
 /**
@@ -76,7 +77,7 @@ export function sampleItems(now: Date): CalItem[] {
       const title = s.titles[weekIdx % s.titles.length];
       const id = `sample-${day.toISOString().slice(0, 10)}-${s.room}-${s.start[0]}`;
       if (s.visibility === "private") {
-        out.push({ id, title: "Private event", kind: "private", kindLabel: "Private", room: s.room, startISO: start.toISOString(), endISO: end.toISOString(), visibility: "private", sample: true });
+        out.push({ id, title: "Private booking", kind: "private", kindLabel: "Private", room: s.room, startISO: start.toISOString(), endISO: end.toISOString(), visibility: "private", sample: true });
         continue;
       }
       out.push({

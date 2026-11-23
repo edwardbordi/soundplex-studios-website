@@ -84,11 +84,13 @@ export default function TonightBoard({ events, now, title, locked, onOpen, peopl
   };
   const canEnter = (e: VenueEvent) => e.visibility !== "private" || (member && !!e.invited);
 
-  /* The spotlight: the next show you can buy a ticket for (later today, else on now, else the next one). */
-  const ticketed = events.filter((e) => left(e) !== null && e.end > now);
+  /* The spotlight: the next public production (later today, else on now, else the next one).
+     It used to be the next show with tickets; nothing public is sold now (George, 2026-11-23),
+     so any public production qualifies, and the ticket button shows only if one has a price. */
+  const ticketed = events.filter((e) => e.visibility === "public" && !e.ambient && e.end > now);
   const spot =
     ticketed.find((e) => e.start > now && sameDay(e.start, now)) ?? ticketed.find((e) => e.start <= now) ?? ticketed.find((e) => e.start > now);
-  const spotLabel = !spot ? "" : spot.start <= now ? "On now" : sameDay(spot.start, now) ? (spot.start.getHours() >= 17 ? "Up next tonight" : "Up next today") : "Next show";
+  const spotLabel = !spot ? "" : spot.start <= now ? "On now" : sameDay(spot.start, now) ? (spot.start.getHours() >= 17 ? "Up next tonight" : "Up next today") : "Next up";
 
   const busy = ROOMS.filter((r) => live(r.id)).length;
   /** Podcast card: rooms with nothing on right now (the rig goes wherever is free). */
@@ -118,7 +120,7 @@ export default function TonightBoard({ events, now, title, locked, onOpen, peopl
     if (member) {
       // A ticketed show is a show: members buy a ticket like everyone else.
       if (n && n.visibility === "public" && left(n) !== null) return [<Btn key="m" onClick={() => setTicketFor(n)}>Get tickets · {ticketPrice(n, true)}</Btn>, null];
-      if (n && !canEnter(n)) return [<Note key="m">Private event · free at {time(n.end)}</Note>, null];
+      if (n && !canEnter(n)) return [<Note key="m">Private booking · free at {time(n.end)}</Note>, null];
       // Anything else with space: just check in and hang out. No booking needed.
       // Not in the building: "I'm on my way". At the door: "I'm here · check in". Inside: "Move here".
       const coming = s.onWay === room;
@@ -142,7 +144,7 @@ export default function TonightBoard({ events, now, title, locked, onOpen, peopl
           Tickets for {time(nextTickets.start)} · {ticketPrice(nextTickets, true)} <ForwardArrow />
         </SubLink>
       ) : !n ? (
-        <SubLink onClick={() => bookRoom(room)}>Hosting? Book the whole room <ForwardArrow /></SubLink>
+        <SubLink onClick={() => bookRoom(room)}>Producing? Book the whole room <ForwardArrow /></SubLink>
       ) : null;
       return [main, sub];
     }
@@ -153,7 +155,7 @@ export default function TonightBoard({ events, now, title, locked, onOpen, peopl
       return [<Note key="m">Free · just walk in</Note>, login];
     }
     if (nextTickets) return [<Btn key="m" onClick={() => setTicketFor(nextTickets)}>Tickets for {time(nextTickets.start)} · {nextTickets.price}</Btn>, login];
-    if (n) return [<Note key="m">{n.visibility === "members" ? "Members only right now" : `Private event · free at ${time(n.end)}`}</Note>, login];
+    if (n) return [<Note key="m">{n.visibility === "members" ? "Members only right now" : `Private booking · free at ${time(n.end)}`}</Note>, login];
     return [
       <Btn key="m" ghost onClick={() => bookRoom(room)}>
         Book it for your event <ForwardArrow />
@@ -223,17 +225,30 @@ export default function TonightBoard({ events, now, title, locked, onOpen, peopl
             <p className="mt-3 max-w-md text-[15px] leading-relaxed text-white/70">{spot.blurb}</p>
             {(left(spot) ?? -1) >= 0 && <Seats e={spot} leftCount={left(spot) ?? 0} member={member} />}
             <div className="mt-auto flex flex-wrap items-center gap-3 pt-5">
-              <button
-                type="button"
-                onClick={() => setTicketFor(spot)}
-                className={`${POP} rounded-[4px] px-5 py-3 text-[14px] font-semibold text-black transition-colors hover:bg-[#e2b34e]`}
-                style={{ background: GOLD }}
-              >
-                Get tickets · {ticketPrice(spot, member)}
-              </button>
-              <button type="button" onClick={() => onOpen(spot)} className="text-[14px] text-white/65 underline underline-offset-4 hover:text-white">
-                Details
-              </button>
+              {left(spot) !== null ? (
+                <button
+                  type="button"
+                  onClick={() => setTicketFor(spot)}
+                  className={`${POP} rounded-[4px] px-5 py-3 text-[14px] font-semibold text-black transition-colors hover:bg-[#e2b34e]`}
+                  style={{ background: GOLD }}
+                >
+                  Reserve a spot · {ticketPrice(spot, member)}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => onOpen(spot)}
+                  className={`${POP} rounded-[4px] px-5 py-3 text-[14px] font-semibold text-black transition-colors hover:bg-[#e2b34e]`}
+                  style={{ background: GOLD }}
+                >
+                  Details{spot.price ? ` · ${spot.price}` : ""}
+                </button>
+              )}
+              {left(spot) !== null && (
+                <button type="button" onClick={() => onOpen(spot)} className="text-[14px] text-white/65 underline underline-offset-4 hover:text-white">
+                  Details
+                </button>
+              )}
             </div>
           </div>
         </article>
@@ -417,8 +432,8 @@ export default function TonightBoard({ events, now, title, locked, onOpen, peopl
               )
             )
           ) : spot ? (
-            <button type="button" onClick={() => setTicketFor(spot)} className={`${POP} w-full rounded-[4px] py-3 text-[14px] font-semibold text-black`} style={{ background: GOLD }}>
-              Get tickets · {spot.title} · {time(spot.start)}
+            <button type="button" onClick={() => (left(spot) !== null ? setTicketFor(spot) : onOpen(spot))} className={`${POP} w-full rounded-[4px] py-3 text-[14px] font-semibold text-black`} style={{ background: GOLD }}>
+              {left(spot) !== null ? "Reserve a spot" : "See"} · {spot.title} · {time(spot.start)}
             </button>
           ) : null}
         </div>

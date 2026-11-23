@@ -14,25 +14,37 @@ export type RoomUse = {
   note?: string;
 };
 
+/**
+ * Only the uses SoundPlex is approved for (George's "Authorized creative and media use" list,
+ * 2026-11-23, a zoning matter): media production, not concerts, comedy nights, weddings,
+ * celebrations or parties. Every room takes every use. Don't add a use that isn't on his list.
+ */
 export const ROOM_USES: RoomUse[] = [
-  { id: "podcast", label: "A podcast or interview", plural: "Podcasts", note: "We set up the cameras and mics in whichever room is free" },
-  { id: "workshop", label: "A workshop, talk or class", plural: "Workshops & talks" },
-  { id: "concert", label: "A concert or showcase", plural: "Concerts" },
-  // George, 2026-11-01 (Studio A): "Music productions, including video" instead of concerts.
-  { id: "production", label: "A music production (with video)", plural: "Music productions, incl. video" },
-  { id: "comedy", label: "A comedy night", plural: "Comedy" },
+  { id: "podcast", label: "A podcast", plural: "Podcasts", note: "We set up the cameras and mics in whichever room is free" },
+  { id: "video", label: "Video or film production", plural: "Video & film" },
+  // George, 2026-11-01 (Studio A): "Music productions, including video".
+  { id: "production", label: "A music or multimedia production", plural: "Music & multimedia" },
+  { id: "recording", label: "An audio recording session", plural: "Recording" },
+  { id: "livestream", label: "A livestream or broadcast", plural: "Livestreams" },
+  { id: "shoot", label: "A photo shoot", plural: "Photography" },
+  { id: "content", label: "Content creation", plural: "Content creation" },
+  { id: "editing", label: "Editing and post-production", plural: "Editing & post" },
+  { id: "workshop", label: "An educational creative workshop", plural: "Creative workshops" },
   { id: "screening", label: "A screening", plural: "Screenings" },
-  // Never "party" on the site (George, 2026-11-02: a zoning matter). "Celebration" is fine.
-  { id: "celebration", label: "A celebration", plural: "Celebrations" },
-  { id: "wedding", label: "A wedding", plural: "Weddings" },
-  { id: "shoot", label: "A photo or video shoot", plural: "Shoots" },
-  { id: "recording", label: "A recording or rehearsal", plural: "Recording" },
-  { id: "meeting", label: "A meeting or offsite", plural: "Meetings" },
+  { id: "meeting", label: "A production meeting or planning session", plural: "Production meetings" },
+  { id: "networking", label: "Creative networking", plural: "Creative networking" },
   { id: "other", label: "Something else", plural: "Something else" },
 ];
 
-// Older links may still say use=party; they mean a celebration.
-export const useById = (id: string | undefined) => ROOM_USES.find((u) => u.id === (id === "party" ? "celebration" : id));
+/** Older links (and old booking links in emails) may name a use that's gone; send them somewhere sensible. */
+const RETIRED: Record<string, string> = {
+  party: "other",
+  celebration: "other",
+  wedding: "other",
+  comedy: "other",
+  concert: "production",
+};
+export const useById = (id: string | undefined) => ROOM_USES.find((u) => u.id === (id && RETIRED[id] ? RETIRED[id] : id));
 
 /** The podcast use as it's sold today (live-site numbers; COMPANY-FACTS §4 — rate/guests OPEN). */
 export const PODCAST = {

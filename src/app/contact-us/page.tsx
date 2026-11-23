@@ -7,7 +7,7 @@ import ContactForm from "../components/widgets/ContactForm";
 import GoogleReviews from "../components/widgets/GoogleReviews";
 import TourCalendar from "../components/widgets/TourCalendar";
 import { buildPageMetadata, breadcrumbJsonLd } from "../../lib/seo";
-import { SITE_NAME, LOCATION, PHONE_DISPLAY, PHONE_TEL, CONTACT_EMAIL } from "../../lib/site-config";
+import { SITE_NAME, LOCATION, PHONE_DISPLAY, PHONE_TEL, CONTACT_EMAIL, HOURS_TEXT } from "../../lib/site-config";
 
 /** /contact-us — the live site's URL. Form → GHL, map, hours, parking, the tour calendar, reviews. */
 export const metadata = buildPageMetadata({
@@ -44,8 +44,8 @@ export default function ContactPage() {
                 </div>
                 <div className="ct__fact">
                   <p className="page-head__eyebrow">Hours</p>
-                  <p>Monday to Saturday, 8 AM – 10 PM</p>
-                  <p className="ct__muted">Show nights run later — check the event.</p>
+                  <p>{HOURS_TEXT}</p>
+                  <p className="ct__muted">Closed Sunday.</p>
                 </div>
                 <div className="ct__fact">
                   <p className="page-head__eyebrow">Call or text</p>

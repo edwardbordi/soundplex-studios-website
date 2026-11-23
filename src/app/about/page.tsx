@@ -14,7 +14,7 @@ import ParkingPopover from "./ParkingPopover";
 /** George's reel, in his GHL media library. */
 const REEL_SRC = "https://assets.cdn.filesafe.space/dPsv4bKyPW2sZ8hNlNFN/media/6ae26a1136aa4a07e8376736.mp4";
 import { buildPageMetadata, breadcrumbJsonLd } from "../../lib/seo";
-import { SITE_NAME, PHONE_DISPLAY, PHONE_TEL, LOCATION } from "../../lib/site-config";
+import { SITE_NAME, PHONE_DISPLAY, PHONE_TEL, LOCATION, HOURS_TEXT } from "../../lib/site-config";
 
 /**
  * /about — upgraded 2026-10-28 (Ed: "I like the about on his existing site, let's use most of
@@ -74,7 +74,7 @@ export default function AboutPage() {
               <Reveal eager><p className={EYEBROW}>About SoundPlex Studios</p></Reveal>
               <Reveal eager delay={80}><h1 className="page-head__title">Welcome to your <em>creative playground.</em></h1></Reveal>
               <Reveal eager delay={160}>
-                <p className="page-head__lede">SoundPlex Studios is more than a space. It’s a community where artists, musicians and creators thrive. From recording and live performances to networking and collaboration, we provide the tools, spaces and support to bring your vision to life.</p>
+                <p className="page-head__lede">SoundPlex Studios is more than a space. It’s a community where artists, musicians and creators thrive. From recording and studio productions to networking and collaboration, we provide the tools, spaces and support to bring your vision to life.</p>
               </Reveal>
               <Reveal eager delay={220}>
                 <p className="mt-5 flex items-center gap-2.5 text-[14px] text-white/70">
@@ -91,7 +91,7 @@ export default function AboutPage() {
                   poster="/about/on-stage.webp"
                   alt="A guitarist laughing mid-song on the SoundPlex stage under red light"
                   label="The SoundPlex reel"
-                  caption="The rooms, the shows and the people of SoundPlex Studios"
+                  caption="The rooms, the productions and the people of SoundPlex Studios"
                   src={REEL_SRC}
                   cta="Watch the reel"
                   endAction={{ href: "/start?path=collective&from=about-reel", label: "Book a tour", note: "Come see it for yourself." }}
@@ -114,7 +114,7 @@ export default function AboutPage() {
                     <Image src="/about/studio-a.webp" alt="Studio A at SoundPlex: drums, a grand piano and an organ under chandeliers" fill sizes="(max-width: 860px) 40vw, 20vw" className="object-cover" />
                   </div>
                   <div className="relative overflow-hidden rounded-[3px] border border-white/10">
-                    <Image src="/about/poster-wall.webp" alt="A wall of vintage concert posters at SoundPlex" fill sizes="(max-width: 860px) 40vw, 20vw" className="object-cover" />
+                    <Image src="/about/poster-wall.webp" alt="A wall of vintage music posters at SoundPlex" fill sizes="(max-width: 860px) 40vw, 20vw" className="object-cover" />
                   </div>
                 </div>
               </div>
@@ -171,7 +171,7 @@ export default function AboutPage() {
               <Reveal><p className={EYEBROW}>The art</p></Reveal>
               <Reveal delay={80}>
                 <h2 className="up__h mt-2">Every wall tells a story. <em className="font-[family-name:var(--font-lora)] font-normal italic text-[#d4a030]">Every piece is for sale.</em></h2>
-                <p className="ab__prose">Locally inspired, endlessly creative, and always inspiring. From bold visuals to hidden gems, there’s something to discover at every turn. Love what you see? Take it home. Ask George, or ask whoever’s at the bar.</p>
+                <p className="ab__prose">Locally inspired, endlessly creative, and always inspiring. From bold visuals to hidden gems, there’s something to discover at every turn. Love what you see? Take it home. Ask George, or ask whoever’s in the lounge.</p>
               </Reveal>
             </div>
             <Reveal delay={120}>
@@ -329,7 +329,7 @@ export default function AboutPage() {
                   </div>
                   <div className="py-5">
                     <dt className="text-[11.5px] uppercase tracking-[0.18em] text-white/45">Hours</dt>
-                    <dd className="mt-1.5 font-[family-name:var(--font-poppins)] text-[17px] text-white">Monday to Saturday, 8 AM to 10 PM</dd>
+                    <dd className="mt-1.5 font-[family-name:var(--font-poppins)] text-[17px] text-white">{HOURS_TEXT}</dd>
                     <dd className="mt-2.5"><OpenNow /></dd>
                   </div>
                   {PHONE_DISPLAY && (

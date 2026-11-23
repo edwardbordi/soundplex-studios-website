@@ -24,10 +24,11 @@ import { eventJsonLd } from "./event-jsonld";
  * past-production links and Event JSON-LD for every real upcoming public production.
  */
 export const metadata = buildPageMetadata({
-  title: `Studio Productions — what’s on: live music, comedy, talks & screenings — ${SITE_NAME}`,
-  description: "What’s on at SoundPlex in Pennsauken, NJ, tonight and every night: live music four feet from the stage, comedy, talks, screenings, open mics and workshops — and which rooms are free.",
+  // George, 2026-11-23 (zoning): studio productions, not live music, comedy or shows.
+  title: `Studio Productions — podcasts, music videos, workshops & screenings — ${SITE_NAME}`,
+  description: "What’s being made at SoundPlex in Pennsauken, NJ: podcast recordings, music and video productions, livestreams, creative workshops, screenings and networking — and which rooms are free.",
   path: "/studio-productions",
-  focusKeyword: "live music comedy shows Pennsauken NJ",
+  focusKeyword: "studio productions Pennsauken NJ",
 });
 
 const GOLD = "#d4a030";
@@ -45,7 +46,7 @@ export default function StudioProductionsPage() {
       <Nav />
       <main id="main" className="flex-1 bg-[#050505]">
         {/* No hero: the page opens straight on what's happening right now (as in the demo). */}
-        <h1 className="sr-only">Studio Productions at SoundPlex Studios: what’s on tonight, the calendar and who’s here</h1>
+        <h1 className="sr-only">Studio Productions at SoundPlex Studios: what’s on today, the calendar and who’s here</h1>
         <section id="calendar" className="relative scroll-mt-28 overflow-hidden px-6 pb-20 pt-14 sm:pt-16">
           <div
             aria-hidden
@@ -58,10 +59,10 @@ export default function StudioProductionsPage() {
               <p
                 className="mt-10 text-[12.5px] leading-relaxed text-white/40"
                 data-needs="Your real calendar"
-                data-needs-detail="Upcoming events: name, date, time, room, price or free, public or members only, and the ticket link. Also the member ticket discount (we've shown 20%)."
+                data-needs-detail="Upcoming productions: name, date, time, room, public or members only, and the RSVP link."
               >
-                Sample calendar: these nights are examples of a SoundPlex week, shown until the real calendar goes in. The member login is a
-                preview, check-ins are simulated, and nothing is booked, sold, sent or stored.
+                Sample calendar: these are examples of a SoundPlex week, shown until the real calendar goes in. The member login is a
+                preview, check-ins are simulated, and nothing is booked, sent or stored.
               </p>
             )}
           </div>

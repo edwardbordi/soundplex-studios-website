@@ -32,8 +32,8 @@ export default async function ThanksPage({ searchParams }: { searchParams: Promi
             <h1 className="thanks__title">{title}</h1>
             <p className="thanks__body">{body}</p>
             {p?.id === "attend" && (
-              <Link href="/studio-productions" className="card-cta group mt-6 inline-flex items-center gap-2 whitespace-nowrap">
-                See what’s on<ForwardArrow />
+              <Link href="/membership" className="card-cta group mt-6 inline-flex items-center gap-2 whitespace-nowrap">
+                How membership works<ForwardArrow />
               </Link>
             )}
           </div>

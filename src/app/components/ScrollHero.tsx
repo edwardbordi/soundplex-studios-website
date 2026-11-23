@@ -110,7 +110,7 @@ export default function ScrollHero({ live }: { live: React.ReactNode }) {
               <em className="font-[family-name:var(--font-lora)] font-normal italic text-[#d4a030]">already call this place home.</em>
             </p>
             {/* One useful line instead of "scroll to…" (Ed: more premium); the gold line below invites the scroll. */}
-            <p className="mt-6 max-w-xl text-[17px] leading-relaxed text-white/75">Live music, podcasts, workshops and a community of makers in Pennsauken, NJ.</p>
+            <p className="mt-6 max-w-xl text-[17px] leading-relaxed text-white/75">Podcasts, music and video productions, workshops and a community of makers in Pennsauken, NJ.</p>
           </div>
 
           {/* The full room's line: George's, the CTAs, and what's on now. */}

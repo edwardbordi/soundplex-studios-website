@@ -77,7 +77,7 @@ export default function FilterMenu({
         <div
           ref={menu}
           role="dialog"
-          aria-label="Filter events"
+          aria-label="Filter the calendar"
           className="vo-pop fixed z-[75] w-64 overflow-hidden rounded-[8px] border border-white/12 bg-[#141414] text-white shadow-2xl"
           style={{ top: at.top, right: at.right }}
         >
@@ -107,7 +107,7 @@ export default function FilterMenu({
             onClick={() => setFree(!free)}
             className="flex w-full items-center justify-between px-4 py-2.5 text-left text-[14px] transition-colors hover:bg-white/[0.06]"
           >
-            <span className={free ? "text-white" : "text-white/75"}>Free events only</span>
+            <span className={free ? "text-white" : "text-white/75"}>Free only</span>
             <span className={`relative h-5 w-9 rounded-full transition-colors ${free ? "bg-[#d4a030]" : "bg-white/20"}`}>
               <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all ${free ? "left-[18px]" : "left-0.5"}`} />
             </span>

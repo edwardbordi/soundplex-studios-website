@@ -75,7 +75,8 @@ const ALL_SCENES: RouteState[] = [
     // (Aug 2026): "Not just a creative venue. Not just a networking group… a true third
     // place… connection, conversations, collaboration, opportunity… momentum." He never
     // says "community" — neither do we. Founders and business professionals first.
-    eyebrow: "Create. Connect. Perform. \u00b7 Pennsauken, NJ",
+    // "Perform" \u2192 "Produce" (George, 2026-11-23, zoning: no live performance on the site).
+    eyebrow: "Create. Connect. Produce. \u00b7 Pennsauken, NJ",
     // George, 2026-11-01: his headline and the first sentence of his paragraph (same as the
     // version A hero). The full paragraph ran to six lines over the film (Ed: "no more than 3").
     title: "Find your people. *Put your story in motion.*",
@@ -222,13 +223,14 @@ const ROUTE_MUSIC: RouteState[] = [
 // photograph is better with nothing hung on it.)
 export const NIGHTS: Night[] = [
   { id: "workshop", label: "Business workshop", route: ROUTE_V2, ready: true },
-  { id: "music", label: "Live music", route: ROUTE_MUSIC, ready: false },
-  { id: "wedding", label: "A wedding", route: ROUTE_V2, ready: false },
-  { id: "comedy", label: "Comedy", route: ROUTE_V2, ready: false },
+  // Labels only (George, 2026-11-23, zoning: no live music, weddings, comedy or dinners).
+  { id: "music", label: "A music video", route: ROUTE_MUSIC, ready: false },
+  { id: "wedding", label: "A photo shoot", route: ROUTE_V2, ready: false },
+  { id: "comedy", label: "A livestream", route: ROUTE_V2, ready: false },
   { id: "podcast", label: "A podcast recording", route: ROUTE_V2, ready: false },
   { id: "screening", label: "A screening", route: ROUTE_V2, ready: false },
   { id: "launch", label: "A product launch", route: ROUTE_V2, ready: false },
-  { id: "dinner", label: "A private dinner", route: ROUTE_V2, ready: false },
+  { id: "dinner", label: "Creative networking", route: ROUTE_V2, ready: false },
 ];
 
 /** The last chip, always live: the night nobody listed. Goes to the contact page. */

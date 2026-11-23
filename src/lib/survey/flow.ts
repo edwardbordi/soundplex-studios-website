@@ -59,24 +59,22 @@ export const USES: Option[] = ROOM_USES.map((u) => ({ value: u.id, label: u.labe
 export const PATHS: Path[] = [
   {
     id: "room",
-    choice: "I want to rent a room",
-    choiceNote: "A podcast, a celebration, a workshop, a shoot — any of the three rooms.",
+    choice: "I want to book a room",
+    choiceNote: "A podcast, a video or photo shoot, a recording, a creative workshop — any of the rooms.",
     phoneRequired: true,
     questions: [
       { id: "room", kind: "single", label: "Which room?", help: "Podcasts go in any of them — pick a favorite, or let us set up wherever is free.", options: ROOMS },
       { id: "use", kind: "single", label: "What’s it for?", options: USES },
       // George (2026-11-02): a booking needs a time slot, not just a day — "I was not prompted to add a
-      // time slot". So the day is required, then a start time. Hours: Mon–Sat 9am–9pm, Sun 12–8pm.
-      { id: "date", kind: "date", label: "Which day?" },
+      // time slot". So the day is required, then a start time. Hours (George, 2026-11-23): Monday to
+      // Saturday 12–8pm, closed Sunday; the last start is 6pm so two hours end by closing.
+      { id: "date", kind: "date", label: "Which day?", help: "Monday to Saturday. We’re closed Sunday." },
       {
         id: "time",
         kind: "single",
         label: "What time would you start?",
-        help: "Open Monday to Saturday 9am–9pm, Sunday 12–8pm.",
+        help: "Open Monday to Saturday, 12pm to 8pm.",
         options: [
-          { value: "09:00", label: "9:00 am" },
-          { value: "10:00", label: "10:00 am" },
-          { value: "11:00", label: "11:00 am" },
           { value: "12:00", label: "12:00 pm" },
           { value: "13:00", label: "1:00 pm" },
           { value: "14:00", label: "2:00 pm" },
@@ -84,10 +82,9 @@ export const PATHS: Path[] = [
           { value: "16:00", label: "4:00 pm" },
           { value: "17:00", label: "5:00 pm" },
           { value: "18:00", label: "6:00 pm" },
-          { value: "19:00", label: "7:00 pm" },
           { value: "other", label: "A different time" },
         ],
-        other: { placeholder: "e.g. 10:30 am" },
+        other: { placeholder: "e.g. 12:30 pm" },
       },
       {
         id: "duration",
@@ -106,7 +103,7 @@ export const PATHS: Path[] = [
         other: { placeholder: "6", input: "number", suffix: "hours", min: 2 },
       },
       { id: "headcount", kind: "text", label: "Roughly how many people?", input: "number", placeholder: "40" },
-      { id: "notes", kind: "textarea", label: "Anything we should know?", placeholder: "Catering, a stage, a quiet room for a speaker…", optional: true },
+      { id: "notes", kind: "textarea", label: "Anything we should know?", placeholder: "Cameras, the stage, an editing room afterward…", optional: true },
     ],
     thanks: {
       title: "We’ll check the calendar.",
@@ -117,30 +114,32 @@ export const PATHS: Path[] = [
   },
   {
     id: "attend",
-    // George (2026-11-02): "Coming to show (change to gathering)".
-    choice: "I’m coming to a gathering",
-    choiceNote: "Music, comedy, talks, screenings — tell us your kind of night.",
+    // George (2026-11-23, zoning): no public shows or tickets; gatherings are for members, by
+    // invitation. So this path is "invite me", and it ends in a tour like the membership path.
+    choice: "I’d like to be invited to a gathering",
+    choiceNote: "Networking, workshops, screenings and creator meetups. Members get the invitations.",
     phoneRequired: false,
     questions: [
       {
         id: "mood",
         kind: "multi",
-        label: "What kind of night?",
+        label: "What would you like to be invited to?",
         help: "Pick as many as you like.",
         options: [
-          { value: "music", label: "Put me near live music" },
-          { value: "comedy", label: "Make me laugh" },
-          { value: "learn", label: "Teach me something" },
-          { value: "people", label: "Let me meet people" },
-          { value: "film", label: "Show me a film" },
+          { value: "people", label: "Networking with creators and business owners" },
+          { value: "learn", label: "Workshops and classes" },
+          { value: "film", label: "Screenings" },
+          { value: "meetups", label: "Creator meetups and content days" },
+          { value: "podcast", label: "Sitting in on a podcast recording" },
           { value: "surprise", label: "Surprise me" },
         ],
       },
     ],
     thanks: {
       title: "You’re on the list.",
-      body: "We’ll send you what’s on, once a month, matched to what you picked. Coming alone? Say hi to George at the door — everyone does.",
-      calendar: false,
+      body: "Gatherings at SoundPlex are for members. We’ll send you how membership works, and George will make sure you hear about the next one. Want to see the place first?",
+      calendar: true,
+      calendarLead: "Book a tour",
     },
   },
   {
@@ -194,7 +193,7 @@ export const PATHS: Path[] = [
   {
     id: "produce",
     choice: "I want to make something",
-    choiceNote: "A podcast, video, live broadcast, or a show of my own.",
+    choiceNote: "A podcast, a video, photography or a livestream.",
     phoneRequired: false,
     questions: [
       {
@@ -204,8 +203,8 @@ export const PATHS: Path[] = [
         options: [
           { value: "podcast", label: "A podcast" },
           { value: "video", label: "Video" },
-          { value: "broadcast", label: "A live broadcast or stream" },
-          { value: "show", label: "A live show I’ll sell tickets to" },
+          { value: "photo", label: "Photography" },
+          { value: "livestream", label: "A livestream or broadcast" },
           { value: "unsure", label: "Not sure yet" },
         ],
       },

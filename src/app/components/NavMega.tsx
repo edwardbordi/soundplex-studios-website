@@ -69,7 +69,7 @@ export function nextShow(events: VenueEvent[], now: Date | null) {
   return shows.find((e) => e.start <= now) ?? shows[0] ?? null;
 }
 export const showLabel = (e: VenueEvent, now: Date) =>
-  e.start <= now ? "On now" : sameDay(e.start, now) ? (e.start.getHours() >= 17 ? "Up next tonight" : "Up next today") : "Next show";
+  e.start <= now ? "On now" : sameDay(e.start, now) ? (e.start.getHours() >= 17 ? "Up next tonight" : "Up next today") : "Next up";
 const showWhen = (e: VenueEvent, now: Date) => {
   const day = sameDay(e.start, now) ? (e.start.getHours() >= 17 ? "Tonight" : "Today") : e.start.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
   return `${day} · ${time(e.start)}`;
@@ -77,9 +77,9 @@ const showWhen = (e: VenueEvent, now: Date) => {
 
 /** Room pages + the podcast set-up. Taglines from content/rooms/*.mdx. */
 const ROOM_MENU = [
-  { id: "wood-room", href: "/rooms/wood-room", tagline: "The stage, close enough to read the set list." },
+  { id: "wood-room", href: "/rooms/wood-room", tagline: "A real stage, lit and ready to film." },
   { id: "studio-a", href: "/rooms/studio-a", tagline: "A room with a history, and the tools to make something new." },
-  { id: "sound-lounge", href: "/rooms/sound-lounge", tagline: "A 1920s speakeasy, with a piano bar." },
+  { id: "sound-lounge", href: "/rooms/sound-lounge", tagline: "A 1920s speakeasy-style room, with an oak piano." },
 ] as const;
 const PODCAST = { href: "/rooms#podcast", photo: "/rooms/podcast-temp.webp", tagline: "Three cameras, mics and an operator, set up in any free room." };
 
@@ -386,9 +386,9 @@ export function MembershipMega() {
 const SECTIONS = [
   { href: "/studio-productions#tonight", name: "Tonight", sub: "What’s on in every room, right now" },
   { href: "/studio-productions#calendar", name: "Calendar", sub: "Month, week, day and room by room" },
-  { href: "/studio-productions#past", name: "Past productions", sub: "Shows, tapings and screenings we’ve hosted" },
+  { href: "/studio-productions#past", name: "Past productions", sub: "Productions, recordings and screenings made here" },
   // Members / who's here moved to the Membership menu (Ed, 2026-10-28).
-  { href: "/start?path=room&from=productions", name: "Produce your own", sub: "Book a room for your show, taping or screening" },
+  { href: "/start?path=room&from=productions", name: "Produce your own", sub: "Book a room for your production, recording or screening" },
 ];
 
 export function ProductionsMega({ items, showSamples }: { items: CalItem[]; showSamples: boolean }) {
@@ -424,7 +424,7 @@ export function ProductionsMega({ items, showSamples }: { items: CalItem[]; show
               ))}
             </ul>
 
-            {/* The next show, ready to buy. */}
+            {/* What's next on the calendar. */}
             <div className="relative min-h-[300px]">
               {show && now ? (
                 <>
@@ -439,7 +439,8 @@ export function ProductionsMega({ items, showSamples }: { items: CalItem[]; show
                       {show.price ? ` · ${show.price}` : ""}
                     </p>
                     <div className="mt-4 flex items-center gap-5">
-                      {show.price && show.price !== "Free" ? (
+                      {/* Only for a paid booking; nothing public is sold now (George, 2026-11-23). */}
+                      {/\$/.test(show.price) ? (
                         <button
                           type="button"
                           onClick={() => {
@@ -448,7 +449,7 @@ export function ProductionsMega({ items, showSamples }: { items: CalItem[]; show
                           }}
                           className={GOLD_BTN}
                         >
-                          Get tickets <ForwardArrow />
+                          Reserve a spot <ForwardArrow />
                         </button>
                       ) : null}
                       <Link href={show.slug ? `/studio-productions/${show.slug}` : "/studio-productions#tonight"} onClick={close} className={QUIET}>

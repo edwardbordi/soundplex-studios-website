@@ -19,10 +19,10 @@ import { PODCAST } from "../../lib/rooms/uses";
  * kept; the old podcast-room URLs 301 to #podcast.
  */
 export const metadata = buildPageMetadata({
-  title: `The Rooms — rent a studio, stage or lounge in Pennsauken, NJ — ${SITE_NAME}`,
-  description: "Three rooms under one roof in Pennsauken: the WoodRoom stage for 80, Studio A for recording and shows in the round, and the SoundLounge speakeasy — and a podcast setup that goes in any of them. Rates from $125/hr.",
+  title: `The Rooms — book a studio, stage or lounge in Pennsauken, NJ — ${SITE_NAME}`,
+  description: "Three rooms under one roof in Pennsauken: the WoodRoom stage built to be filmed, Studio A for recording and film, and the SoundLounge speakeasy-style room — and a podcast setup that goes in any of them. From $125/hr.",
   path: "/rooms",
-  focusKeyword: "event space rental South Jersey",
+  focusKeyword: "production studio South Jersey",
 });
 
 export default function Rooms() {
@@ -35,10 +35,10 @@ export default function Rooms() {
           <div className="mx-auto max-w-6xl px-6">
             <Reveal eager><p className="page-head__eyebrow">Three rooms, one building</p></Reveal>
             <Reveal eager delay={80}>
-              <h1 className="page-head__title">Rent the room. <em>Or the whole night.</em></h1>
+              <h1 className="page-head__title">Book the room. <em>Or the whole building.</em></h1>
             </Reveal>
             <Reveal eager delay={160}>
-              <p className="page-head__lede">Weddings, celebrations, workshops, podcasts, shoots and sessions. Every room comes with the building — the art on the walls, the people in the hallway, parking out back. Pick the room, tell us what it’s for, and we’ll check the calendar.</p>
+              <p className="page-head__lede">Podcasts, video and photo shoots, recording, livestreams and creative workshops. Every room comes with the building — the art on the walls, the people in the hallway, parking out back. Pick the room, tell us what it’s for, and we’ll check the calendar.</p>
             </Reveal>
           </div>
         </section>
@@ -73,7 +73,7 @@ export default function Rooms() {
             <Reveal>
               <div className="rm__cta">
                 <p>Not sure which room? Start with what you’re planning.</p>
-                <Link href="/start?path=room" className="evp__btn group">Plan an event<ForwardArrow /></Link>
+                <Link href="/start?path=room" className="evp__btn group">Plan a production<ForwardArrow /></Link>
               </div>
             </Reveal>
           </div>

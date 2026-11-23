@@ -20,7 +20,7 @@ import { getUpcomingAndPast } from "../../lib/events/public";
  */
 export const metadata = buildPageMetadata({
   title: `The Plex Collective — membership at ${SITE_NAME}`,
-  description: "A true third place for founders and creators in South Jersey. Membership from $75 a month: the rooms, the people, the events, and a path from idea to finished work. Start with a complimentary tour.",
+  description: "A true third place for founders and creators in South Jersey. Membership from $75 a month: the rooms, the people, the gatherings, and a path from idea to finished work. Start with a complimentary tour.",
   path: "/membership",
   focusKeyword: "creative membership South Jersey",
 });
@@ -77,7 +77,7 @@ export default function MembershipPage() {
         </section>
       </main>
       <Footer />
-      <JsonLd data={serviceJsonLd({ name: "The Plex Collective membership", description: "Membership at SoundPlex Studios: access to the rooms, the community, events and networking, discovery sessions, and a guided path from idea to finished work.", path: "/membership" })} />
+      <JsonLd data={serviceJsonLd({ name: "The Plex Collective membership", description: "Membership at SoundPlex Studios: access to the rooms, the community, gatherings and networking, discovery sessions, and a guided path from idea to finished work.", path: "/membership" })} />
       <JsonLd data={breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: "Membership", path: "/membership" }])} />
     </>
   );

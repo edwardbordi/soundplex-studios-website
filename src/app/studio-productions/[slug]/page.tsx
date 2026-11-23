@@ -115,7 +115,8 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
                 <div className="evp__actions">
                   {fm.url && !fm.cancelled && !fm.closed && !past && (
                     <a href={fm.url} target="_blank" rel="noopener noreferrer" className="evp__btn group">
-                      {fm.ticketLabel ?? "Get tickets"}<OutboundArrow />
+                      {/* No "Get tickets" (George, 2026-11-23: nothing sold to the public). */}
+                      {fm.ticketLabel && !/ticket/i.test(fm.ticketLabel) ? fm.ticketLabel : "Reserve a spot"}<OutboundArrow />
                     </a>
                   )}
                   {!past && !fm.cancelled && (

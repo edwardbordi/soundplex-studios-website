@@ -301,7 +301,7 @@ export default function Survey({ initialPath, initialAnswers, entry, rooms = [] 
 
   if (!step) return null;
   const q: Question | null = step.id !== "intent" && step.id !== "contact" ? tailor((step as { question: Question }).question) : null;
-  const part = room && step.id !== "intent" ? `Renting ${room.ref}` : step.part;
+  const part = room && step.id !== "intent" ? `Booking ${room.ref}` : step.part;
   const showRoom = !!room && step.id !== "intent" && step.id !== "room";
   const v = q ? answers[q.id] : undefined;
   const canBack = index > 0;

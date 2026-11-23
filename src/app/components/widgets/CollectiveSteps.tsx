@@ -7,7 +7,7 @@ import ForwardArrow from "../ForwardArrow";
  * band on the home and as the spine of /membership. `compact` is the home version.
  */
 export const STEPS = [
-  { n: "01", name: "Membership", price: "$75 / month · 3-month minimum", line: "Access to the ecosystem.", items: ["The creative environment", "The entrepreneurial community", "Events and networking", "Local Lens opportunities", "Creative collaboration", "Discovery sessions"] },
+  { n: "01", name: "Membership", price: "$75 / month · 3-month minimum", line: "Access to the ecosystem.", items: ["The creative environment", "The entrepreneurial community", "Gatherings and networking", "Local Lens opportunities", "Creative collaboration", "Discovery sessions"] },
   { n: "02", name: "The Creator Blueprint", price: "Call for pricing", line: "Turning ideas into direction.", items: ["Your story", "Your positioning", "Your audience", "Your content direction", "Your visibility strategy"] },
   { n: "03", name: "Amplify", price: "Pricing menu on your visit", line: "Bringing your story to life.", items: ["Amplify your story", "Amplify your strategy", "Amplify your content", "Amplify your exposure", "Amplify your experience"] },
 ];

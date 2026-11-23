@@ -91,7 +91,7 @@ async function cropWebp(file: File, out: { w: number; h: number }): Promise<Blob
   }
 }
 
-export type SettingsTab = "profile" | "password" | "privacy";
+export type SettingsTab = "profile" | "password" | "privacy" | "notifications";
 
 export default function ProfileForm({ mode, next = "/members", section: tabProp, submitLabel }: { mode: Mode; next?: string; section?: SettingsTab; submitLabel?: string }) {
   // In Settings (mode "account") the form is split into tabs (Ed, 2026-10-30): Profile,
@@ -387,13 +387,6 @@ export default function ProfileForm({ mode, next = "/members", section: tabProp,
         </p>
         {userId && <MessageLists meId={userId} mode={f.messages_from} />}
       </div>
-
-      {/* Message alerts (Ed, 2026-10-30): saved in this browser straight away. */}
-      <div className="mt-7 border-t border-(--mx-line) pt-6">
-        <p className="text-[15px] font-medium text-(--mx-text)">Message alerts</p>
-        <p className="mt-1 text-[13.5px] text-(--mx-muted)">While you’re in the members area. Saved on this device, straight away.</p>
-        <AlertToggles />
-      </div>
     </div>
   );
 
@@ -487,6 +480,28 @@ export default function ProfileForm({ mode, next = "/members", section: tabProp,
         {passwordBlock}
         {actions}
       </form>
+    );
+  }
+
+  // ── Settings → Notifications (Ed, 2026-11-24): pop-up and chime for new messages. Saved on
+  // this device the moment they're switched, so there's no Save button. ──
+  if (tab === "notifications") {
+    return (
+      <div className="max-w-[44rem] space-y-6">
+        <div className={section}>
+          <p className={sectionTitle}>Messages</p>
+          <p className={sectionNote}>How you hear about a new message, here and on the website while you’re signed in. Saved on this device straight away.</p>
+          <AlertToggles />
+          <button
+            type="button"
+            onClick={() => playChime()}
+            className="mt-4 text-[14px] text-(--mx-muted) underline underline-offset-4 transition-colors hover:text-(--mx-text)"
+          >
+            Play the chime
+          </button>
+          <p className="mt-4 text-[13px] text-(--mx-faint)">Using another phone or computer too? Switch these on there as well.</p>
+        </div>
+      </div>
     );
   }
 

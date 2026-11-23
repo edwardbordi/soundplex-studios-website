@@ -55,8 +55,8 @@ const placeJsonLd = {
     {
       "@type": "OpeningHoursSpecification",
       dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-      opens: "08:00",
-      closes: "22:00",
+      opens: "12:00",
+      closes: "20:00",
     },
   ],
   isAccessibleForFree: false,
@@ -72,16 +72,17 @@ const WAYS = [
   {
     n: "01",
     title: "Experience a production",
-    body: "There’s something happening at SoundPlex most nights—from live music and comedy to podcasts, screenings, and creative events.",
+    // George, 2026-11-23 (zoning): studio productions, not live music, comedy or events.
+    body: "There’s something being made at SoundPlex most days—podcasts, music videos, shoots, screenings and creative workshops.",
     image: "/rooms/wood-room-2.webp",
-    alt: "A guitarist mid-song on the SoundPlex stage under red and green light",
+    alt: "A guitarist on the SoundPlex stage under red and green light",
     href: "/studio-productions",
-    cta: "What’s on",
+    cta: "See the productions",
   },
   {
     n: "02",
     title: "Make the space yours",
-    body: "Rent a studio or the entire complex for your production, workshop, meeting, or celebration.",
+    body: "Book a studio or the entire complex for your production, shoot, workshop or meeting.",
     image: "/flythrough/states/state-A.jpg",
     alt: "The WoodRoom at SoundPlex, empty and lit: the stage, the brick wall in magenta, lounge seating",
     href: "/rooms",
@@ -169,7 +170,7 @@ export default function HomeView({ hero = "fill", night }: { hero?: "fill" | "sc
             <Reveal eager delay={220}>
               <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
                 <Link href="/start?path=collective&from=hero" className="evp__btn group">Book a tour<ForwardArrow /></Link>
-                <Link href="/studio-productions" className="card-cta group inline-flex items-center gap-2 whitespace-nowrap">What’s on tonight<ForwardArrow /></Link>
+                <Link href="/studio-productions" className="card-cta group inline-flex items-center gap-2 whitespace-nowrap">See what’s being made<ForwardArrow /></Link>
               </div>
             </Reveal>
             <div className="mt-10 sm:absolute sm:bottom-20 sm:right-6 sm:mt-0">
