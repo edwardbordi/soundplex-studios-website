@@ -78,7 +78,8 @@ test.describe('site smoke tests', () => {
     }
     // A deep link with room + use skips to the next open question, and says which room.
     await page.goto('/start?path=room&room=wood-room&use=podcast');
-    await expect(page.getByRole('heading', { level: 2, name: /when\?/i })).toBeVisible();
+    // (The date question became "Which day?" — George, 2026-11-23: a booking needs a day and a time.)
+    await expect(page.getByRole('heading', { level: 2, name: /which day\?/i })).toBeVisible();
     await expect(page.locator('.sv__room')).toContainText('WoodRoom');
     // Room only: the uses question is about that room, and "Something else" asks what.
     await page.evaluate(() => sessionStorage.clear());
