@@ -12,7 +12,7 @@ import { Avatar } from "./MemberShell";
  */
 // `bg` must be a SOLID colour: the dot's ring is drawn in it (--mx-panel is see-through, which let
 // the green show through the ring). The page background matches the account menu's #050505.
-export default function PresenceAvatar({ id, photo, name, size, bg = "var(--mx-bg)" }: { id: string; photo: string | null | undefined; name: string; size: number; bg?: string }) {
+export default function PresenceAvatar({ id, photo, name, size, bg = "var(--mx-panel-solid)" }: { id: string; photo: string | null | undefined; name: string; size: number; bg?: string }) {
   const at = usePresence().get(id);
   const room = at ? (ROOMS.find((r) => r.id === at.room)?.name ?? "the Plex") : "";
   const label = at ? (at.kind === "here" ? `At the Plex, in ${room}` : `On the way to ${room}`) : undefined;
