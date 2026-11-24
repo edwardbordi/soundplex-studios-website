@@ -12,8 +12,9 @@ import ForwardArrow from "./ForwardArrow";
  * click/tap; Escape or a click outside closes it. No "Get tickets" (George, 2026-11-23: no public
  * ticket sales; members will reserve seats inside the members area).
  */
-// Small photo thumbs, not icons (Ed): each choice shows the real thing.
-const CHOICES = [
+// Small photo thumbs, not icons (Ed): each choice shows the real thing. Also the "Book" block
+// in the phone menu (MobileMenu), so both say the same thing.
+export const BOOK_CHOICES = [
   { href: "/start?path=room&from=nav-book", title: "Book a room", sub: "Media production, photography, content and creative workshops", img: "/rooms/wood-room-3.webp" },
   { href: "/start?path=collective&from=nav-book", title: "Book a tour", sub: "See the building and hear about membership", img: "/rooms/sound-lounge-1.webp" },
   { href: "/start?path=produce&from=nav-book", title: "Record or produce", sub: "Podcasts, video and livestreams, with our team", img: "/rooms/podcast-temp.webp" },
@@ -65,7 +66,7 @@ export default function BookMenu() {
       {open && (
         <div id={id} role="menu" className="vo-pop absolute right-0 top-full z-[70] mt-3 w-[22rem] overflow-hidden rounded-[8px] border border-white/12 bg-[#101010] text-white shadow-[0_24px_60px_rgba(0,0,0,0.6)]">
           <ul className="p-2">
-            {CHOICES.map((c) => (
+            {BOOK_CHOICES.map((c) => (
               <li key={c.title}>
                 <Link href={c.href} role="menuitem" onClick={close} className="group flex items-center gap-3.5 rounded-[6px] px-3 py-3 transition-colors hover:bg-white/[0.06]">
                   <span className="relative h-12 w-16 shrink-0 overflow-hidden rounded-[5px] rounded-bl-none ring-1 ring-white/10 transition-shadow group-hover:ring-[#d4a030]/60">

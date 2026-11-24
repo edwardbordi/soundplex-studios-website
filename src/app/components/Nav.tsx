@@ -94,11 +94,9 @@ export default function Nav({ overlay = false }: { overlay?: boolean }) {
           {/* Members: Log in, or the avatar menu once in (ported from the What's On demo). */}
           <AccountMenu />
         </div>
-        <div className="ml-auto flex items-center gap-2 lg:hidden">
-          {/* One tap calls George (Ed, 2026-10-29). */}
-          <a href={NAV_CTA.href} aria-label={`Call SoundPlex at ${PHONE_DISPLAY}`} className="flex h-9 items-center rounded-[3px] border border-white/25 px-2.5 font-[family-name:var(--font-poppins)] text-[11px] font-medium uppercase tracking-[0.18em] text-white transition-colors hover:border-[#d4a030]/70 hover:text-[#e2b34e]">
-            Call
-          </a>
+        {/* Phones: just the avatar (or Log in) and the menu (Ed, 2026-11-24: Call + avatar + menu
+            was crowded). Book and Call live at the top of the menu instead. */}
+        <div className="ml-auto flex items-center gap-3 lg:hidden">
           <AccountMenu />
           <MobileMenu items={items} showSamples={SHOW_SAMPLE_EVENTS} />
         </div>

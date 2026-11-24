@@ -7,6 +7,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { membersBrowser } from "../../../lib/members/browser";
 import { useUnreadMessages } from "../../../lib/members/messages";
 import MessageToasts from "./MessageToasts";
+import InstallApp from "./InstallApp";
 import { ROOMS } from "../../../lib/venue/data";
 import { setSession, useVenueSession } from "../../../lib/venue/session";
 
@@ -402,7 +403,11 @@ export default function MemberShell({ me, theme: initialTheme, children }: { me:
         <main id="main" className="min-w-0 flex-1 px-4 pb-28 pt-6 sm:px-8 sm:pt-8 md:pb-16 lg:px-12">
           {/* Left-aligned beside the side menu, not centered (Ed, 2026-10-30): switching between a
               long page and a short one must not move anything. */}
-          <div className="max-w-6xl">{children}</div>
+          <div className="max-w-6xl">
+            {/* Phones only, until installed or "Not now": add the members area to the home screen. */}
+            <InstallApp />
+            {children}
+          </div>
         </main>
       </div>
 

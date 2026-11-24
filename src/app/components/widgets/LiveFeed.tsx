@@ -142,7 +142,9 @@ export default function LiveFeed({ events }: { events: VenueEvent[] }) {
 
   if (mode === "closed" || !latest) return null;
   const style = pos ? { left: pos.left, bottom: pos.bottom } : undefined;
-  const place = pos ? "" : "sp-live left-4 bottom-24 sm:bottom-5 sm:left-5";
+  // Tucked into the corner, level with the Ask button opposite (Ed, 2026-11-24: on phones it sat
+  // higher). Ask is 48px tall at 16/20px; this pill is 40px, so 4px higher to share a centre line.
+  const place = pos ? "" : "sp-live left-4 bottom-5 sm:bottom-6 sm:left-5";
 
   if (mode === "dot") {
     return (

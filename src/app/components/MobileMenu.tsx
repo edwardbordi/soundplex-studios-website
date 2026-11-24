@@ -9,6 +9,7 @@ import type { CalItem } from "../../lib/events/constants";
 import { nextShow, roomStatus, showLabel, useVenueNow } from "./NavMega";
 import { useVenueSession } from "../../lib/venue/session";
 import { membersConfigured } from "../../lib/members/env";
+import { BOOK_CHOICES } from "./BookMenu";
 
 /**
  * The phone navigation — a disclosure widget, not a div that toggles a class.
@@ -286,13 +287,30 @@ export default function MobileMenu({ items, showSamples }: { items: CalItem[]; s
                   </Link>
                 ),
               )}
-              {/* The phone, as the same hollow gold button the desktop header shows. */}
-              {/* The one front door (/start), then the phone. */}
-              <div className="mt-3 flex flex-wrap items-center gap-3">
-                <Link href="/start?from=menu" onClick={() => setOpen(false)} className="nav-cta nav-cta--solid">
-                  Get in touch
-                </Link>
-                <a href={NAV_CTA.href} onClick={() => setOpen(false)} className="nav-cta">
+              {/* Book (Ed, 2026-11-24): the desktop header's Book menu, the same three choices with
+                  their photos, then the phone. Replaces "Get in touch", and the header's Call button
+                  on phones moved here so the top bar isn't crowded. */}
+              <div className="mt-3 border-t border-white/[0.08] pt-4">
+                <p className="px-3 font-[family-name:var(--font-poppins)] text-[11px] font-medium uppercase tracking-[0.2em] text-[#d4a030]">Book</p>
+                <div className="mt-2 grid gap-1">
+                  {BOOK_CHOICES.map((c) => (
+                    <Link
+                      key={c.href}
+                      href={c.href.replace("from=nav-book", "from=menu-book")}
+                      onClick={() => setOpen(false)}
+                      className="flex items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-bone-2"
+                    >
+                      <span className="relative h-11 w-14 shrink-0 overflow-hidden rounded-[4px]">
+                        <Image src={c.img} alt="" fill sizes="56px" className="object-cover" />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block text-[15px] font-medium text-ink">{c.title}</span>
+                        <span className="block truncate text-[12.5px] text-slate">{c.sub}</span>
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+                <a href={NAV_CTA.href} onClick={() => setOpen(false)} className="nav-cta mt-3 block w-full text-center">
                   {NAV_CTA.label}
                 </a>
               </div>
