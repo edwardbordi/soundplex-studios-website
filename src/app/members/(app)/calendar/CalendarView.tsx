@@ -1,14 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { CalendarView as MonthWeekDay, RoomsView, type CalMode } from "../../../components/widgets/WhatsOn";
 import type { CalItem } from "../../../../lib/events/constants";
 import { CATEGORIES, ROOMS, catOf, roomOf, type VenueEvent } from "../../../../lib/venue/data";
 import FilterPanel, { ActiveFilters, filterCount, toggleIn, type FilterSel } from "../FilterPanel";
 import { EventRow } from "../NowView";
 import { Em, PANEL, PageHead, eventTitle, fmtDay, useEvents, useNow, useRsvps } from "../shared";
 
-/** Calendar (members): the next six weeks, grouped by day. Filters: everything, members-only, going. */
+/**
+ * Calendar (members): the next six weeks. Filters: everything, members-only, going. Three views,
+ * as on Studio Productions (Ed, 2026-11-24): List (grouped by day, with RSVP), Calendar (day, week,
+ * month) and Rooms (every room side by side). Calendar and Rooms are Studio Productions' own
+ * (components/widgets/WhatsOn), with .mx-cal re-colouring them for the light theme (globals.css).
+ */
 type Filter = "all" | "members" | "going";
+type View = "list" | "calendar" | "rooms";
 const DAYS_AHEAD = 42;
 
 export default function CalendarView({ items, showSamples }: { items: CalItem[]; showSamples: boolean }) {
@@ -20,6 +27,15 @@ export default function CalendarView({ items, showSamples }: { items: CalItem[];
   const [q, setQ] = useState("");
   const [flt, setFlt] = useState<FilterSel>({});
   const [panel, setPanel] = useState(false);
+  const [view, setView] = useState<View>("list");
+  const [calMode, setCalMode] = useState<CalMode>("month");
+  const [dayOffset, setDayOffset] = useState(0);
+  const [monthOffset, setMonthOffset] = useState(0);
+  const [roomsOffset, setRoomsOffset] = useState(0);
+  const [picked, setPicked] = useState<string | null>(null);
+  // A production picked on the Calendar or Rooms view: its row (with RSVP) shows above.
+  const [opened, setOpened] = useState<VenueEvent | null>(null);
+  const openedRef = useRef<HTMLDivElement>(null);
 
   if (!now) return <div className="h-96" aria-hidden="true" />;
 
@@ -52,6 +68,16 @@ export default function CalendarView({ items, showSamples }: { items: CalItem[];
     return true;
   };
   const shown = base.filter((e) => passes(e, flt));
+  // Calendar and Rooms show past days too (paging back), with the same tab, search and filters.
+  const forViews = events
+    .filter((e) => !e.ambient)
+    .filter((e) => (filter === "members" ? e.visibility === "members" : filter === "going" ? rsvps.includes(e.id) : true))
+    .filter(matches)
+    .filter((e) => passes(e, flt));
+  const open = (e: VenueEvent) => {
+    setOpened(e);
+    requestAnimationFrame(() => openedRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }));
+  };
   const countFor = (key: string, test: (e: VenueEvent) => boolean) => base.filter((e) => passes(e, flt, key) && test(e)).length;
   const WHEN: [string, string][] = [
     ["today", "Today"],
@@ -127,7 +153,8 @@ export default function CalendarView({ items, showSamples }: { items: CalItem[];
 
       <ActiveFilters chips={chips} onRemove={(k, v) => setFlt((f) => toggleIn(f, k, v))} onClear={() => setFlt({})} />
 
-      <div className="mb-6 flex flex-wrap gap-2" role="tablist" aria-label="Show">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap gap-2" role="tablist" aria-label="Show">
         {tabs.map(([id, label, n]) => (
           <button
             key={id}
@@ -141,8 +168,73 @@ export default function CalendarView({ items, showSamples }: { items: CalItem[];
           </button>
         ))}
       </div>
+      {/* List, Calendar or Rooms, as on Studio Productions. */}
+      <div className="flex rounded-[6px] border border-(--mx-line) bg-(--mx-panel) p-1" role="tablist" aria-label="View">
+        {(
+          [
+            ["list", "List"],
+            ["calendar", "Calendar"],
+            ["rooms", "Rooms"],
+          ] as const
+        ).map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={view === id}
+            onClick={() => {
+              setView(id);
+              setOpened(null);
+            }}
+            className={`rounded-[4px] px-3.5 py-1.5 text-[13.5px] font-medium transition-colors ${view === id ? "bg-(--mx-gold)/15 text-(--mx-gold-text)" : "text-(--mx-muted) hover:text-(--mx-text)"}`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      </div>
 
-      {days.length === 0 ? (
+      {view !== "list" && opened && (
+        <div ref={openedRef} className={`${PANEL} mb-6 px-5 py-1 sm:px-6`}>
+          <div className="flex items-center justify-between border-b border-(--mx-line) py-3">
+            <h2 className="text-[13px] uppercase tracking-[0.16em] text-(--mx-gold-text)">{fmtDay(opened.start, now)}</h2>
+            <button type="button" onClick={() => setOpened(null)} aria-label="Close" className="text-(--mx-muted) hover:text-(--mx-text)">
+              ✕
+            </button>
+          </div>
+          <ul>
+            <EventRow e={opened} now={now} going={rsvps.includes(opened.id)} />
+          </ul>
+          {opened.visibility !== "private" && opened.blurb && <p className="pb-4 text-[14px] text-(--mx-muted)">{opened.blurb}</p>}
+        </div>
+      )}
+
+      {view === "calendar" && (
+        <div className="mx-cal">
+          <MonthWeekDay
+            mode={calMode}
+            setMode={setCalMode}
+            dayOffset={dayOffset}
+            setDayOffset={setDayOffset}
+            monthOffset={monthOffset}
+            setMonthOffset={setMonthOffset}
+            events={forViews}
+            now={now}
+            picked={picked}
+            setPicked={setPicked}
+            title={eventTitle}
+            locked={() => false}
+            onOpen={open}
+          />
+        </div>
+      )}
+      {view === "rooms" && (
+        <div className="mx-cal">
+          <RoomsView events={forViews} now={now} offset={roomsOffset} setOffset={setRoomsOffset} title={eventTitle} locked={() => false} onOpen={open} />
+        </div>
+      )}
+
+      {view !== "list" ? null : days.length === 0 ? (
         <div className={`${PANEL} p-8 text-center text-(--mx-muted)`}>{needle || filtering ? "No events match. Try fewer filters or a different search." : filter === "going" ? "You haven’t RSVP’d to anything yet." : "Nothing here yet."}</div>
       ) : (
         <div className="space-y-6">

@@ -187,7 +187,7 @@ export function EventRow({ e, now, going }: { e: VenueEvent; now: Date; going: b
       ) : (
       <button
         type="button"
-        onClick={() => toggleRsvp(e.id)}
+        onClick={() => toggleRsvp(e.id, e.end)}
         aria-pressed={going}
         className={`shrink-0 rounded-[4px] border px-3 py-1.5 text-[13px] font-medium transition-colors ${going ? "border-(--mx-ok) bg-[#4cc773]/12 text-(--mx-ok)" : "border-(--mx-line-strong) text-(--mx-soft) hover:border-(--mx-gold) hover:text-(--mx-text)"}`}
       >

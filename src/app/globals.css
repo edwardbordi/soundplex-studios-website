@@ -2069,6 +2069,39 @@ input:-webkit-autofill:focus {
 @layer base {
   .mx .grid { grid-template-columns: minmax(0, 1fr); }
 }
+/* The members Calendar's Calendar and Rooms views (Ed, 2026-11-24) are Studio Productions' own,
+   drawn white-on-black. In the members area's LIGHT theme, .mx-cal maps their colours onto the
+   members tokens. Exact class tokens (~=), so hover-only classes don't paint at rest. */
+.mx[data-mtheme="light"] .mx-cal { color: var(--mx-text); }
+/* Dark theme: the grid sits on the members' panel colour (one step up), like the rest of the area. */
+.mx:not([data-mtheme="light"]) .mx-cal [class~="bg-[#080808]"] { background-color: var(--mx-panel-solid); }
+.mx[data-mtheme="light"] .mx-cal [class~="bg-[#080808]"] { background-color: var(--mx-panel-solid); }
+.mx[data-mtheme="light"] .mx-cal [class~="bg-black/40"] { background-color: rgba(23, 19, 12, 0.03); }
+.mx[data-mtheme="light"] .mx-cal [class~="bg-white/[0.015]"] { background-color: rgba(23, 19, 12, 0.02); }
+.mx[data-mtheme="light"] .mx-cal [class~="bg-white/[0.03]"],
+.mx[data-mtheme="light"] .mx-cal [class~="bg-white/[0.035]"] { background-color: rgba(23, 19, 12, 0.035); }
+.mx[data-mtheme="light"] .mx-cal [class~="bg-white/[0.05]"] { background-color: rgba(23, 19, 12, 0.05); }
+.mx[data-mtheme="light"] .mx-cal [class~="bg-white/[0.085]"] { background-color: rgba(23, 19, 12, 0.07); }
+.mx[data-mtheme="light"] .mx-cal [class~="hover:bg-white/[0.03]"]:hover,
+.mx[data-mtheme="light"] .mx-cal [class~="hover:bg-white/[0.07]"]:hover { background-color: rgba(23, 19, 12, 0.05); }
+.mx[data-mtheme="light"] .mx-cal [class~="hover:bg-white/[0.13]"]:hover { background-color: rgba(23, 19, 12, 0.1); }
+.mx[data-mtheme="light"] .mx-cal [class*="border-white"] { border-color: var(--mx-line); }
+.mx[data-mtheme="light"] .mx-cal [class~="hover:border-white/40"]:hover { border-color: var(--mx-line-strong); }
+.mx[data-mtheme="light"] .mx-cal [class~="divide-white/[0.07]"] > * + * { border-color: var(--mx-line); }
+.mx[data-mtheme="light"] .mx-cal [class~="text-white/90"],
+.mx[data-mtheme="light"] .mx-cal [class~="text-white/85"],
+.mx[data-mtheme="light"] .mx-cal [class~="text-white/80"],
+.mx[data-mtheme="light"] .mx-cal [class~="text-white/75"],
+.mx[data-mtheme="light"] .mx-cal [class~="text-white/70"] { color: var(--mx-soft); }
+.mx[data-mtheme="light"] .mx-cal [class~="text-white/60"],
+.mx[data-mtheme="light"] .mx-cal [class~="text-white/55"],
+.mx[data-mtheme="light"] .mx-cal [class~="text-white/50"] { color: var(--mx-muted); }
+.mx[data-mtheme="light"] .mx-cal [class~="text-white/45"],
+.mx[data-mtheme="light"] .mx-cal [class~="text-white/40"],
+.mx[data-mtheme="light"] .mx-cal [class~="text-white/35"] { color: var(--mx-faint); }
+.mx[data-mtheme="light"] .mx-cal [class~="hover:text-white"]:hover { color: var(--mx-text); }
+.mx[data-mtheme="light"] .mx-cal [class~="text-[#d4a030]"] { color: var(--mx-gold-text); }
+
 /* Room photos in the LIGHT theme (Ed, 2026-11-24: "so dark on a light background"). The rooms
    are lit for the evening, and in dark mode the cards also dim them (80% over black) under a tall
    black fade. On light: the photo at full strength and a touch brighter, and the fade only along

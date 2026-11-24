@@ -76,7 +76,22 @@ export default function RoomsView({ items, showSamples }: { items: CalItem[]; sh
                   >
                     {mine ? "You’re here" : s.checkedIn ? "Move here" : "Check in here"}
                   </button>
-                  <Link href={bookRoomHref(r.id)} className="rounded-[4px] border border-(--mx-line-strong) px-4 py-2 text-[14px] text-(--mx-soft) hover:border-(--mx-gold) hover:text-(--mx-text)">
+                  {/* Opens Member help straight into booking this room (Ed, 2026-11-24): the room's own
+                      calendar once it's set up, a time with George until then. If the chat is off,
+                      the link still goes to the booking form, so it never dead-ends. */}
+                  <Link
+                    href={bookRoomHref(r.id)}
+                    onClick={(ev) => {
+                      let askOn = false;
+                      try {
+                        askOn = sessionStorage.getItem("sp-ask-enabled") === "true";
+                      } catch {}
+                      if (!askOn) return;
+                      ev.preventDefault();
+                      window.dispatchEvent(new CustomEvent("sp:ask-book-room", { detail: { room: r.id, name: r.name } }));
+                    }}
+                    className="rounded-[4px] border border-(--mx-line-strong) px-4 py-2 text-[14px] text-(--mx-soft) hover:border-(--mx-gold) hover:text-(--mx-text)"
+                  >
                     Book this room
                   </Link>
                 </div>
