@@ -34,7 +34,7 @@ import CalTipLayer, { hideTip, showTip } from "./CalTip";
 
 const ACCENT = "#d4a030";
 type View = "list" | "calendar" | "rooms";
-type CalMode = "day" | "week" | "month";
+export type CalMode = "day" | "week" | "month";
 /** "When" only applies to the List; the calendar views always show everything. */
 type Quick = "upcoming" | "today" | "weekend";
 type Here = { name: string; photo?: string; room: string; you?: boolean };
@@ -826,7 +826,8 @@ function ListView({
 }
 
 /* ───────────────────────────── Calendar: Day / Week / Month ───────────────────────────── */
-function CalendarView({
+/** Also used by the members area's Calendar page (members/(app)/calendar). */
+export function CalendarView({
   mode,
   setMode,
   dayOffset,
@@ -1054,7 +1055,8 @@ function MonthView({
 /* ───────────────────────────── Rooms ───────────────────────────── */
 const OPEN_H = 9;
 const CLOSE_H = 24;
-function RoomsView({
+/** Also used by the members area's Calendar page (members/(app)/calendar). */
+export function RoomsView({
   events,
   now,
   offset,

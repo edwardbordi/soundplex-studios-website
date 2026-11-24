@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
+import { reconcileRsvps } from "../../../lib/members/rsvps";
 import type { CalItem } from "../../../lib/events/constants";
 import { eventsAround, fromCalItems, type VenueEvent } from "../../../lib/venue/data";
-import { setSession } from "../../../lib/venue/session";
 
 /**
  * Shared bits for the members' pages: the clock, the events list, RSVPs, formatting, and the
@@ -25,45 +25,17 @@ export function useNow(): Date | null {
 /** George's real events plus (while samples are on) the sample calendar, sorted. */
 export function useEvents(items: CalItem[], showSamples: boolean, now: Date | null): VenueEvent[] {
   const day = now ? now.toDateString() : "";
-  return useMemo(
+  const events = useMemo(
     () => (now ? [...fromCalItems(items), ...(showSamples ? eventsAround(now) : [])].sort((a, b) => a.start.getTime() - b.start.getTime()) : []),
     [day, items, showSamples], // eslint-disable-line react-hooks/exhaustive-deps
   );
+  // RSVPs to productions no longer on the calendar drop off, so "My RSVPs" matches "Going".
+  useEffect(() => reconcileRsvps(events), [events]);
+  return events;
 }
 
-// ── RSVPs (this browser for now) ──
-const RSVP_KEY = "sp-member-rsvps";
-const RSVP_EVENT = "sp-member-rsvps";
-let rsvpCache: string[] | null = null;
-function readRsvps(): string[] {
-  if (rsvpCache) return rsvpCache;
-  try {
-    const raw = JSON.parse(localStorage.getItem(RSVP_KEY) ?? "[]");
-    rsvpCache = Array.isArray(raw) ? raw.filter((x): x is string => typeof x === "string") : [];
-  } catch {
-    rsvpCache = [];
-  }
-  return rsvpCache;
-}
-const EMPTY: string[] = [];
-const subRsvps = (cb: () => void) => {
-  window.addEventListener(RSVP_EVENT, cb);
-  return () => window.removeEventListener(RSVP_EVENT, cb);
-};
-export function useRsvps(): string[] {
-  return useSyncExternalStore(subRsvps, readRsvps, () => EMPTY);
-}
-export function toggleRsvp(id: string) {
-  const cur = readRsvps();
-  rsvpCache = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
-  try {
-    localStorage.setItem(RSVP_KEY, JSON.stringify(rsvpCache));
-  } catch {
-    /* lasts this visit */
-  }
-  setSession({ rsvps: rsvpCache.length });
-  window.dispatchEvent(new Event(RSVP_EVENT));
-}
+// ── RSVPs (this browser for now): lib/members/rsvps.ts, so the avatar menu can count them too ──
+export { toggleRsvp, useRsvps } from "../../../lib/members/rsvps";
 
 // ── Formatting ──
 export const fmtTime = (d: Date) => d.toLocaleTimeString("en-US", { hour: "numeric", minute: d.getMinutes() ? "2-digit" : undefined });

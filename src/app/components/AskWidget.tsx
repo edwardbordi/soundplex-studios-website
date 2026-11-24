@@ -413,6 +413,37 @@ export default function AskWidget() {
           : { ...base, q: "Text George", a: "Leave your number and a message, and George will text you back." },
     ]);
   };
+  /**
+   * "Book this room" on the members Rooms page (Ed, 2026-11-24): open the chat straight into booking
+   * that room. Its own calendar when it has one (ROOM_CALENDAR_IDS), otherwise a time with George.
+   */
+  const bookRoom = (room: string, name: string) => {
+    setOpen(true);
+    setMenuOpen(false);
+    pushDataLayerEvent("ask_room_button", { page: pathname, room });
+    const base = { call: false, team: false, path: pathname, fromButton: true, at: Date.now() };
+    setTurns((t) => [
+      ...t.filter((x) => !(x.action && !x.done && x.fromButton)), // one open form at a time
+      rooms.some((r) => r.slug === room)
+        ? { ...base, q: `Book the ${name}`, a: "Pick how long and a time. It books under your name.", action: "room" as const, room }
+        : hlOn
+          ? { ...base, q: `Book the ${name}`, a: `Room booking isn't in the chat just yet. Pick a time with George and he'll set the ${name} up for you.`, action: "book" as const }
+          : { ...base, q: `Book the ${name}`, a: `Room booking isn't online just yet. Call or text George at (609) 697-2077 and he'll set the ${name} up for you.` },
+    ]);
+  };
+  const bookRoomRef = useRef(bookRoom);
+  useEffect(() => {
+    bookRoomRef.current = bookRoom;
+  });
+  useEffect(() => {
+    const on = (e: Event) => {
+      const d = (e as CustomEvent<{ room: string; name: string }>).detail;
+      if (d?.room) bookRoomRef.current(d.room, d.name ?? "room");
+    };
+    window.addEventListener("sp:ask-book-room", on);
+    return () => window.removeEventListener("sp:ask-book-room", on);
+  }, []);
+
   /** A booking or text finished: keep how it ended in the conversation. */
   const finish = (i: number, summary: string) => setTurns((t) => t.map((x, j) => (j === i ? { ...x, done: summary } : x)));
   /** Changed their mind: close the form, back to the chat (the buttons and the question box return). */
