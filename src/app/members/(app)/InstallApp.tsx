@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { membersBrowser } from "../../../lib/members/browser";
 
 /**
  * "Put SoundPlex on your home screen" (Ed, 2026-11-24): a small card at the top of the members
@@ -10,8 +11,13 @@ import { useEffect, useState } from "react";
  *   iPhone (Safari):  the two taps to do it by hand (Share, then Add to Home Screen), since
  *                     iPhones don't offer an install button to websites.
  *
- * Never shows inside the installed app, on a computer, or after "Not now" (remembered on
- * this device).
+ * Never shows inside the installed app, on a computer, or after "Not now".
+ *
+ * Remembered on the member's ACCOUNT, not just this browser (Ed, 2026-11-24: it came back after
+ * signing out and in). On an iPhone the home-screen app and Safari keep separate storage, and a
+ * sign-in link opens Safari, so Safari never knew the app was installed. Now: opening the app
+ * from the home screen saves app_installed on the member (Supabase user metadata), "Not now"
+ * saves install_card_dismissed, and either one hides the card everywhere.
  */
 
 type InstallPrompt = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: "accepted" | "dismissed" }> };
@@ -23,29 +29,55 @@ export default function InstallApp() {
   const [prompt, setPrompt] = useState<InstallPrompt | null>(null);
 
   useEffect(() => {
-    let dismissed = false;
+    let alive = true;
+    const sb = membersBrowser();
+    const standalone = window.matchMedia("(display-mode: standalone)").matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
+
+    // Opened from the home screen: remember it on the account, once, and show nothing.
+    if (standalone) {
+      void sb?.auth.getUser().then(({ data }) => {
+        if (data.user && !data.user.user_metadata?.app_installed) void sb.auth.updateUser({ data: { app_installed: true } });
+      });
+      return;
+    }
+
+    let dismissedHere = false;
     try {
-      dismissed = localStorage.getItem(DISMISS_KEY) === "1";
+      dismissedHere = localStorage.getItem(DISMISS_KEY) === "1";
     } catch {}
-    const installed = window.matchMedia("(display-mode: standalone)").matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
     const phone = window.matchMedia("(max-width: 820px)").matches;
-    if (dismissed || installed || !phone) return;
+    if (dismissedHere || !phone) return;
 
-    const ua = navigator.userAgent;
-    const ios = /iPhone|iPad|iPod/.test(ua) || (ua.includes("Macintosh") && navigator.maxTouchPoints > 1);
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- reads the device once on mount
-    if (ios) setPlatform("ios");
-
-    // Android: Chrome offers its install prompt as an event; keep it for the button.
+    let accountSaysHide = false;
     const onPrompt = (e: Event) => {
       e.preventDefault();
       setPrompt(e as InstallPrompt);
-      setPlatform("android");
+      setPlatform((p) => (p === null && !accountSaysHide ? "android" : p));
     };
-    const onInstalled = () => setPlatform(null);
+    const onInstalled = () => {
+      setPlatform(null);
+      void sb?.auth.updateUser({ data: { app_installed: true } });
+    };
     window.addEventListener("beforeinstallprompt", onPrompt);
     window.addEventListener("appinstalled", onInstalled);
+
+    // Ask the account before showing anything: installed (on any device) or "Not now" hides it.
+    void (async () => {
+      const { data } = sb ? await sb.auth.getUser() : { data: { user: null } };
+      const meta = data.user?.user_metadata ?? {};
+      if (!alive) return;
+      if (meta.app_installed || meta.install_card_dismissed) {
+        accountSaysHide = true;
+        setPlatform(null);
+        return;
+      }
+      const ua = navigator.userAgent;
+      const ios = /iPhone|iPad|iPod/.test(ua) || (ua.includes("Macintosh") && navigator.maxTouchPoints > 1);
+      if (ios) setPlatform("ios");
+    })();
+
     return () => {
+      alive = false;
       window.removeEventListener("beforeinstallprompt", onPrompt);
       window.removeEventListener("appinstalled", onInstalled);
     };
@@ -56,6 +88,7 @@ export default function InstallApp() {
       localStorage.setItem(DISMISS_KEY, "1");
     } catch {}
     setPlatform(null);
+    void membersBrowser()?.auth.updateUser({ data: { install_card_dismissed: true } });
   };
 
   if (!platform) return null;
