@@ -47,7 +47,7 @@ export default async function MemberSignInPage({ searchParams }: { searchParams:
       <main id="main" className="flex-1">
         <section className="py-[clamp(28px,5vw,64px)]">
           {/* items-start + the left column's lg:pt-12 (= the lounge's py-12): the eyebrow lines up with the card's top edge. */}
-          <div className="mx-auto grid max-w-6xl items-start gap-8 px-6 lg:grid-cols-[1fr_1.1fr] lg:gap-14">
+          <div className="mx-auto grid max-w-6xl grid-cols-1 items-start gap-8 px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-14">
             <div className="lg:pt-12">
               <p className="page-head__eyebrow">The Plex Collective</p>
               <h1 className="page-head__title">
