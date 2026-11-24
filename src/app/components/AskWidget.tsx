@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { pushDataLayerEvent } from "./AnalyticsBeacon";
 import ForwardArrow from "./ForwardArrow";
+import { BookFlow, RoomBookFlow, TextFlow, type BookableRoom } from "./AskActions";
 
 /**
  * "Ask us anything" — the floating question box, bottom-right (Ed, 2026-11-24, George asked for
@@ -16,11 +17,39 @@ import ForwardArrow from "./ForwardArrow";
  * (/start) or "send it to George" (name + email to the GoHighLevel webhook).
  *
  * Hidden until the server says it's switched on (GET /api/ask → { enabled }: the
- * ANTHROPIC_API_KEY is set in Vercel), and never in the members area or Studio.
+ * ANTHROPIC_API_KEY is set in Vercel), and never in Studio. Inside the members area it's the
+ * members' help desk (Ed, 2026-11-24): how the area works, membership, and booking a room on its
+ * own calendar once ROOM_CALENDAR_IDS is set (see lib/highlevel/ask.ts).
  */
 
-/** One question and its answer, and the page it was asked on. */
-type Turn = { q: string; a: string; call: boolean; team: boolean; path?: string };
+/**
+ * One question and its answer, and the page it was asked on. `action` opens booking or texting
+ * under the answer (the bot offered it, or the visitor tapped the button); `done` is how that
+ * ended ("Booked: Thursday…"), kept so the flow doesn't reopen on the next page.
+ */
+type Turn = {
+  q: string;
+  a: string;
+  call: boolean;
+  team: boolean;
+  path?: string;
+  action?: "book" | "text" | "room";
+  /** For a room booking: which room the chat already knows ("" = let them pick). */
+  room?: string;
+  done?: string;
+  fromButton?: boolean;
+  /** When it was asked (ms), for the time dividers and the saved chat. */
+  at?: number;
+};
+
+/** A quiet time line above a turn: at the top of the chat, and again after a 30-minute gap. */
+const GAP_MS = 30 * 60 * 1000;
+const dividerLabel = (ms: number) => {
+  const d = new Date(ms);
+  const sameDay = d.toDateString() === new Date().toDateString();
+  const time = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  return sameDay ? `Today · ${time}` : `${d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} · ${time}`;
+};
 
 const GOLD = "#d4a030";
 
@@ -108,6 +137,23 @@ function TeamFollowup({ q, path }: { q: string; path: string }) {
   );
 }
 
+/** One row in the "+" menu: an outline icon and a label (gold for the main one, booking). */
+function MenuItem({ onClick, icon, gold, children }: { onClick: () => void; icon: ReactNode; gold?: boolean; children: ReactNode }) {
+  return (
+    <button
+      type="button"
+      role="menuitem"
+      onClick={onClick}
+      className={`flex w-full items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-white/[0.06] ${gold ? "text-[#e2b34e]" : "text-white/80 hover:text-white"}`}
+    >
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={`h-4 w-4 shrink-0 ${gold ? "" : "text-white/50"}`}>
+        {icon}
+      </svg>
+      {children}
+    </button>
+  );
+}
+
 /* Answers mention site paths ("the short form at /start"): make them real links. Longest first. */
 const LINKABLE = [
   "/rooms/wood-room",
@@ -161,7 +207,14 @@ function linkify(text: string): ReactNode[] {
 }
 
 /** The suggested questions for the page you're on (anything can still be asked from anywhere). */
-function chipsFor(path: string): string[] {
+function chipsFor(path: string, member = false): string[] {
+  // Inside the members area: a help desk.
+  if (member) {
+    if (path.startsWith("/members/messages")) return ["How do I block someone?", "Who can message me?", "How do I turn off the chime?"];
+    if (path.startsWith("/members/settings")) return ["How do I change my photo?", "What does the public wall show?", "How do notifications work?"];
+    if (path.startsWith("/members/rooms") || path.startsWith("/members/calendar")) return ["Book a room for me", "What are the house rules?", "What's on this week?"];
+    return ["How do I check in?", "Book a room for me", "Put the app on my phone"];
+  }
   if (path === "/rooms/wood-room") return ["What can I film on the stage?", "What does the WoodRoom cost?", "How do I book it?"];
   if (path === "/rooms/studio-a") return ["Can I record with an engineer?", "What gear is in Studio A?", "What does it cost?"];
   if (path === "/rooms/sound-lounge") return ["What's the SoundLounge good for?", "What does it cost?", "Can I shoot a podcast here?"];
@@ -182,6 +235,12 @@ export default function AskWidget() {
   const [open, setOpen] = useState(() => load<boolean>(KEY.open, false));
   const [q, setQ] = useState(() => load<string>(KEY.draft, ""));
   const [busy, setBusy] = useState(false);
+  const [hlOn, setHlOn] = useState(false);
+  const [me, setMe] = useState<{ firstName: string; lastName: string; phone: string } | null>(null);
+  const [rooms, setRooms] = useState<BookableRoom[]>([]);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [confirmNew, setConfirmNew] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [turns, setTurns] = useState<Turn[]>(() => load<Turn[]>(KEY.turns, []).slice(-20));
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -203,19 +262,45 @@ export default function AskWidget() {
         save(KEY.on, Boolean(d?.enabled));
       })
       .catch(() => {});
+    // Booking and texting George need HighLevel set up; only offer the buttons when it is.
+    fetch("/api/ask/text")
+      .then((r) => r.json())
+      .then((d) => {
+        if (alive) setHlOn(Boolean(d?.enabled));
+      })
+      .catch(() => {});
+    // Signed in to the members area? Then it's the members' help desk: their name and number for
+    // the forms, and the rooms they can book here (those with a calendar).
+    fetch("/api/ask/me")
+      .then((r) => r.json())
+      .then((d: { member?: { firstName: string; lastName: string; phone: string } | null; rooms?: BookableRoom[] }) => {
+        if (!alive) return;
+        setMe(d.member ?? null);
+        setRooms(d.rooms ?? []);
+      })
+      .catch(() => {});
     return () => {
       alive = false;
     };
   }, []);
 
-  // Escape or a click outside closes it.
+  // Escape or a click outside closes it (the ⋯ menu first, if it's open).
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key !== "Escape") return;
+      if (menuRef.current) {
+        setMenuOpen(false);
+        setConfirmNew(false);
+      } else setOpen(false);
     };
     const onDown = (e: PointerEvent) => {
-      if (!panelRef.current?.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (menuRef.current && !menuRef.current.contains(target) && !(target as Element).closest?.("[aria-label^='More:']")) {
+        setMenuOpen(false);
+        setConfirmNew(false);
+      }
+      if (!panelRef.current?.contains(target)) setOpen(false);
     };
     document.addEventListener("keydown", onKey);
     document.addEventListener("pointerdown", onDown);
@@ -237,7 +322,9 @@ export default function AskWidget() {
     return () => cancelAnimationFrame(raf);
   }, [turns, busy, open, pathname]);
 
-  const chips = chipsFor(pathname);
+  // Signed in, inside the members area: the members' help desk.
+  const memberMode = Boolean(me) && /^\/members(\/|$)/.test(pathname);
+  const chips = chipsFor(pathname, memberMode);
   // Moved to another page mid-conversation: offer that page's questions under it.
   const lastPath = turns.at(-1)?.path;
   const newPage = turns.length > 0 && !busy && lastPath !== undefined && lastPath !== pathname;
@@ -254,35 +341,124 @@ export default function AskWidget() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ q: text, path: pathname, history: turns.slice(-4).map((t) => ({ q: t.q, a: t.a })) }),
       });
-      const d = (await res.json()) as { answer?: string; call?: boolean; team?: boolean };
-      setTurns((t) => [...t, { q: text, a: d.answer ?? "We couldn't fetch an answer just now, but George can.", call: Boolean(d.call ?? !d.answer), team: Boolean(d.team), path: pathname }]);
+      const d = (await res.json()) as { answer?: string; call?: boolean; team?: boolean; action?: "book" | "text" | "room" | null; room?: string };
+      setTurns((t) => [
+        ...t,
+        {
+          q: text,
+          a: d.answer ?? "We couldn't fetch an answer just now, but George can.",
+          call: Boolean(d.call ?? !d.answer),
+          team: Boolean(d.team),
+          path: pathname,
+          at: Date.now(),
+          ...(d.action ? { action: d.action } : {}),
+          ...(d.action === "room" ? { room: d.room ?? "" } : {}),
+        },
+      ]);
     } catch {
-      setTurns((t) => [...t, { q: text, a: "We couldn't fetch an answer just now, but George can.", call: true, team: false, path: pathname }]);
+      setTurns((t) => [...t, { q: text, a: "We couldn't fetch an answer just now, but George can.", call: true, team: false, path: pathname, at: Date.now() }]);
     } finally {
       setBusy(false);
       inputRef.current?.focus();
     }
   };
 
-  // Not in the members area (it has its own messages) or in Studio. Whole path segments only:
-  // "/membership" starts with the letters "/members" but is a public page.
-  const hidden = /^\/(members|admin)(\/|$)/.test(pathname);
+  /** ⋯ → New chat: clear it all (after "Start over?"), back to the opening screen. */
+  const newChat = () => {
+    pushDataLayerEvent("ask_new_chat", { page: pathname });
+    setTurns([]);
+    setQ("");
+    setMenuOpen(false);
+    setConfirmNew(false);
+    requestAnimationFrame(() => inputRef.current?.focus());
+  };
+
+  /** ⋯ → Save this chat: a plain-text copy, downloaded. Nothing is sent anywhere. */
+  const saveChat = () => {
+    pushDataLayerEvent("ask_save_chat", { page: pathname });
+    const now = new Date();
+    const lines = [
+      "SoundPlex Studios · Ask us anything",
+      `Saved ${now.toLocaleString("en-US", { dateStyle: "long", timeStyle: "short" })}`,
+      "soundplexstudios.com · (609) 697-2077",
+      "",
+      ...turns.flatMap((t) => [
+        `${t.at ? `[${new Date(t.at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}] ` : ""}You: ${t.q}`,
+        `SoundPlex: ${t.a}`,
+        ...(t.done ? [`✓ ${t.done}`] : []),
+        "",
+      ]),
+    ];
+    const url = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `soundplex-chat-${now.toISOString().slice(0, 10)}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setMenuOpen(false);
+  };
+
+  /** The buttons under the conversation: open booking or texting straight away, no question needed. */
+  const startAction = (action: "book" | "text" | "room") => {
+    pushDataLayerEvent(action === "book" ? "ask_book_open" : action === "room" ? "ask_room_open" : "ask_text_open", { page: pathname });
+    const base = { call: false, team: false, path: pathname, action, fromButton: true, at: Date.now() };
+    setTurns((t) => [
+      ...t,
+      action === "book"
+        ? { ...base, q: "Book a time with George", a: "Here are George's open times. Pick one and you're booked." }
+        : action === "room"
+          ? { ...base, q: "Book a room", a: "Pick the room, how long, and a time. It books under your name.", room: "" }
+          : { ...base, q: "Text George", a: "Leave your number and a message, and George will text you back." },
+    ]);
+  };
+  /** A booking or text finished: keep how it ended in the conversation. */
+  const finish = (i: number, summary: string) => setTurns((t) => t.map((x, j) => (j === i ? { ...x, done: summary } : x)));
+  /** Changed their mind: close the form, back to the chat (the buttons and the question box return). */
+  const cancel = (i: number) => {
+    pushDataLayerEvent("ask_action_cancel", { page: pathname });
+    // Opened with the button and closed again: take it out of the conversation altogether (a
+    // "Here are George's open times" with nothing under it reads like something broke). Offered by
+    // the bot: keep its answer, just close the form.
+    setTurns((t) => (t[i]?.fromButton ? t.filter((_, j) => j !== i) : t.map((x, j) => (j === i ? { ...x, action: undefined } : x))));
+    requestAnimationFrame(() => inputRef.current?.focus());
+  };
+  // Is a booking or text form open right now? (Then the quick buttons step aside.)
+  const flowOpen = turns.some((t) => t.action && !t.done);
+  // "+" shows when it has something to offer: talking to George, or the chat's New chat / Save.
+  const plusUseful = (hlOn && !flowOpen) || turns.length > 0;
+
+  // Never in Studio (it has its own help). Whole path segments only.
+  const hidden = /^\/admin(\/|$)/.test(pathname);
   if (!enabled || hidden) return null;
 
   return (
     <div ref={panelRef} className="sp-ask fixed bottom-4 right-4 z-[66] flex flex-col items-end sm:bottom-5 sm:right-5">
       {open && (
-        <div className="vo-pop mb-3 flex max-h-[min(480px,70vh)] w-[min(360px,calc(100vw-2rem))] flex-col overflow-hidden rounded-[10px] rounded-br-none border border-white/12 bg-[#121212]/97 text-white shadow-2xl backdrop-blur">
-          <div className="flex items-start justify-between gap-3 border-b border-white/[0.08] px-4 py-3">
+        // Taller while a booking or text form is open (and the subtitle steps aside), so the form fits.
+        <div
+          className={`vo-pop mb-3 flex ${flowOpen ? "max-h-[min(580px,80vh)]" : "max-h-[min(480px,70vh)]"} w-[min(360px,calc(100vw-2rem))] flex-col overflow-hidden rounded-[10px] rounded-br-none border border-white/12 bg-[#121212]/97 text-white shadow-2xl backdrop-blur`}
+        >
+          <div className="relative flex items-start justify-between gap-3 border-b border-white/[0.08] px-4 py-3">
             <div>
-              <div className="font-[family-name:var(--font-poppins)] text-[14px] font-medium">Ask us anything</div>
-              <div className="mt-0.5 text-[11.5px] text-white/50">Instant answers about the rooms, booking and membership. George follows up when it takes a person.</div>
+              <div className="font-[family-name:var(--font-poppins)] text-[14px] font-medium">{memberMode ? `Member help${me?.firstName ? `, ${me.firstName}` : ""}` : "Ask us anything"}</div>
+              {/* Only on the opening screen: once you're chatting it's two lines of repeat. */}
+              {turns.length === 0 && (
+                <div className="mt-0.5 text-[11.5px] text-white/50">
+                  {memberMode
+                    ? `How the members area works, your membership${rooms.length ? ", and booking a room" : ""}. George follows up when it takes a person.`
+                    : "Instant answers about the rooms, booking and membership. George follows up when it takes a person."}
+                </div>
+              )}
             </div>
-            <button type="button" onClick={() => setOpen(false)} aria-label="Close" className="mt-0.5 rounded-md p-1 text-white/45 transition-colors hover:text-white">
-              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="h-4 w-4">
-                <path d="M6 6l12 12M18 6 6 18" />
-              </svg>
-            </button>
+            <div className="mt-0.5 flex shrink-0 items-center gap-0.5">
+              <button type="button" onClick={() => setOpen(false)} aria-label="Close" className="rounded-md p-1 text-white/45 transition-colors hover:text-white">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="h-4 w-4">
+                  <path d="M6 6l12 12M18 6 6 18" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           <div ref={scrollRef} className="mx-scroll flex-1 space-y-3 overflow-y-auto px-4 py-3" style={{ ["--mx-scroll-bg" as string]: "#121212" }}>
@@ -305,6 +481,10 @@ export default function AskWidget() {
             )}
             {turns.map((t, i) => (
               <div key={i}>
+                {/* A quiet time line: at the top, and again after a 30-minute gap. */}
+                {t.at && (i === 0 || !turns[i - 1].at || t.at - (turns[i - 1].at ?? 0) > GAP_MS) && (
+                  <div className="mb-2.5 text-center text-[11px] tracking-[0.04em] text-white/35">{dividerLabel(t.at)}</div>
+                )}
                 <div className="ml-8 rounded-xl rounded-br-sm bg-[#d4a030]/12 px-3 py-2 text-[13px] text-white">{t.q}</div>
                 <div className="mr-4 mt-2 text-[13.5px] leading-relaxed text-white/75">
                   {linkify(t.a)}
@@ -315,6 +495,30 @@ export default function AskWidget() {
                     </Link>
                   )}
                   {t.team && <TeamFollowup q={t.q} path={pathname} />}
+                  {t.action &&
+                    !t.done &&
+                    (t.action === "book" ? (
+                      <BookFlow path={pathname} onDone={(s) => finish(i, s)} onCancel={() => cancel(i)} />
+                    ) : t.action === "room" ? (
+                      <RoomBookFlow
+                        path={pathname}
+                        room={t.room ?? ""}
+                        rooms={rooms}
+                        memberName={[me?.firstName, me?.lastName].filter(Boolean).join(" ")}
+                        onDone={(s) => finish(i, s)}
+                        onCancel={() => cancel(i)}
+                      />
+                    ) : (
+                      <TextFlow path={pathname} onDone={(s) => finish(i, s)} onCancel={() => cancel(i)} prefill={me ? { firstName: me.firstName, phone: me.phone } : undefined} />
+                    ))}
+                  {t.done && (
+                    <div className="mt-2 flex items-start gap-2 rounded-[8px] border border-[#4cc773]/35 bg-[#4cc773]/[0.08] px-3 py-2 text-[12.5px] text-white/85">
+                      <svg viewBox="0 0 16 16" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#4cc773]" aria-hidden="true">
+                        <path d="M3.5 8.3 6.5 11l6-6.2" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      {t.done}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -346,15 +550,120 @@ export default function AskWidget() {
             )}
           </div>
 
+          {/* Straight to a person, on every page (as realiiz.com's "Text Ed"): book a time with
+              George from his real calendar, or have him text you back. Only when HighLevel is set up. */}
+          {hlOn && !flowOpen && turns.length === 0 && (
+            <div className="flex gap-2 border-t border-white/[0.08] px-3 py-2">
+              <button
+                type="button"
+                onClick={() => startAction(memberMode && rooms.length ? "room" : "book")}
+                className="flex-auto whitespace-nowrap rounded-[6px] border border-[#d4a030]/50 px-3 py-1.5 text-[12.5px] font-medium text-[#e2b34e] transition-colors hover:bg-[#d4a030]/10"
+              >
+                {memberMode && rooms.length ? "Book a room" : "Book a time with George"}
+              </button>
+              <button
+                type="button"
+                onClick={() => startAction("text")}
+                className="flex-auto whitespace-nowrap rounded-[6px] border border-white/15 px-3 py-1.5 text-[12.5px] text-white/75 transition-colors hover:border-white/35 hover:text-white"
+              >
+                Text George
+              </button>
+            </div>
+          )}
+
           <form
             onSubmit={(e) => {
               e.preventDefault();
               void ask(q);
             }}
-            className="border-t border-white/[0.08] px-2.5 py-2"
+            className="relative border-t border-white/[0.08] px-2.5 py-2"
           >
+            {/* "+" (Ed, 2026-11-24, like a chat app's): everything that isn't a question, in one
+                place: talk to George, and the chat's own New chat / Save. Keeps the panel clean. */}
+            {menuOpen && (
+              <div ref={menuRef} role="menu" className="vo-pop absolute bottom-[calc(100%-4px)] left-2.5 z-10 w-60 overflow-hidden rounded-[8px] border border-white/12 bg-[#1b1b1b] py-1 text-[13px] shadow-2xl">
+                {confirmNew ? (
+                  <div className="px-3 py-2.5">
+                    <div className="text-white/80">Start over? This clears the chat.</div>
+                    <div className="mt-2.5 flex items-center gap-3">
+                      <button type="button" onClick={newChat} className="rounded-[6px] bg-[#d4a030] px-3 py-1.5 text-[12.5px] font-semibold text-black">
+                        Start over
+                      </button>
+                      <button type="button" onClick={() => setConfirmNew(false)} className="text-[12.5px] text-white/50 hover:text-white">
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {memberMode && rooms.length > 0 && !flowOpen && (
+                      <MenuItem
+                        onClick={() => {
+                          setMenuOpen(false);
+                          startAction("room");
+                        }}
+                        gold
+                        icon={<path d="M5 21V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v17M3 21h18M15 12h.01" />}
+                      >
+                        Book a room
+                      </MenuItem>
+                    )}
+                    {hlOn && !flowOpen && (
+                      <>
+                        <MenuItem
+                          onClick={() => {
+                            setMenuOpen(false);
+                            startAction("book");
+                          }}
+                          gold={!(memberMode && rooms.length > 0)}
+                          icon={<path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z" />}
+                        >
+                          Book a time with George
+                        </MenuItem>
+                        <MenuItem
+                          onClick={() => {
+                            setMenuOpen(false);
+                            startAction("text");
+                          }}
+                          icon={<path d="M5 18l-1 3 3.5-1.5A9 9 0 1 0 3 12a8.9 8.9 0 0 0 2 6Z" />}
+                        >
+                          Text George
+                        </MenuItem>
+                      </>
+                    )}
+                    {turns.length > 0 && (
+                      <>
+                        {hlOn && !flowOpen && <div className="my-1 border-t border-white/[0.08]" />}
+                        <MenuItem onClick={() => setConfirmNew(true)} icon={<path d="M12 5v14M5 12h14" />}>
+                          New chat
+                        </MenuItem>
+                        <MenuItem onClick={saveChat} icon={<path d="M12 4v11M7 10l5 5 5-5M5 20h14" />}>
+                          Save this chat
+                        </MenuItem>
+                      </>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
             {/* One rounded box around the field and the send button, gold while typing. */}
-            <div className="flex items-center gap-2 rounded-full border border-transparent py-1 pl-2.5 pr-1 transition-colors focus-within:border-[#d4a030]/70">
+            <div className="flex items-center gap-1.5 rounded-full border border-transparent py-1 pl-1 pr-1 transition-colors focus-within:border-[#d4a030]/70">
+              {plusUseful && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen((m) => !m);
+                    setConfirmNew(false);
+                  }}
+                  aria-label="More: book a time, text George, new chat, save this chat"
+                  aria-expanded={menuOpen}
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors ${menuOpen ? "bg-white/10 text-white" : "text-white/55 hover:bg-white/[0.06] hover:text-white"}`}
+                >
+                  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className={`h-[18px] w-[18px] transition-transform duration-200 ${menuOpen ? "rotate-45" : ""}`}>
+                    <path d="M12 5v14M5 12h14" />
+                  </svg>
+                </button>
+              )}
               <input
                 ref={inputRef}
                 value={q}
@@ -362,7 +671,7 @@ export default function AskWidget() {
                 maxLength={300}
                 placeholder="Type your question…"
                 style={{ outline: "none", boxShadow: "none" }}
-                className="min-w-0 flex-1 bg-transparent text-[16px] text-white placeholder:text-white/35 focus:outline-none sm:text-[13.5px]"
+                className="min-w-0 flex-1 bg-transparent px-1.5 text-[16px] text-white placeholder:text-white/35 focus:outline-none sm:text-[13.5px]"
               />
               <button
                 type="submit"
