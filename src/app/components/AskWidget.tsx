@@ -43,10 +43,6 @@ function save(key: string, value: unknown) {
     sessionStorage.setItem(key, JSON.stringify(value));
   } catch {}
 }
-/** Whether the widget was already switched on earlier this visit (AskWidgetLazy skips its delay). */
-export function askKnownOn(): boolean {
-  return load(KEY.on, false) === true;
-}
 
 /** "Send it to George": the dead-end question becomes a lead with an email to reply to. */
 function TeamFollowup({ q, path }: { q: string; path: string }) {
@@ -182,9 +178,9 @@ function chipsFor(path: string): string[] {
 export default function AskWidget() {
   const pathname = usePathname() ?? "/";
   // Client-only (AskWidgetLazy loads it with ssr: false), so reading the session here is safe.
-  const [enabled, setEnabled] = useState(() => load(KEY.on, false));
-  const [open, setOpen] = useState(() => load(KEY.open, false));
-  const [q, setQ] = useState(() => load(KEY.draft, ""));
+  const [enabled, setEnabled] = useState(() => load<boolean>(KEY.on, false));
+  const [open, setOpen] = useState(() => load<boolean>(KEY.open, false));
+  const [q, setQ] = useState(() => load<string>(KEY.draft, ""));
   const [busy, setBusy] = useState(false);
   const [turns, setTurns] = useState<Turn[]>(() => load<Turn[]>(KEY.turns, []).slice(-20));
   const scrollRef = useRef<HTMLDivElement>(null);

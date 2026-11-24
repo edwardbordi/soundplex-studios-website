@@ -6,7 +6,8 @@ import { useEffect, useState } from "react";
 // The Ask widget's code ships in its own chunk, not the first-load bundle.
 const AskWidget = dynamic(() => import("./AskWidget"), { ssr: false });
 
-/** Same check as AskWidget's askKnownOn, inlined so importing it doesn't pull the widget into this chunk. */
+/** Was the widget already on earlier this visit? (AskWidget saves "sp-ask-enabled"; read here
+    directly so this file doesn't pull the widget's code into the first-load bundle.) */
 function askKnownOn(): boolean {
   try {
     return sessionStorage.getItem("sp-ask-enabled") === "true";
