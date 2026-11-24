@@ -11,8 +11,10 @@ import { buildPageMetadata, breadcrumbJsonLd, serviceJsonLd } from "../../lib/se
 import { SITE_NAME } from "../../lib/site-config";
 
 /**
- * /websites — "Websites by SoundPlex". George resells Realiiz websites under Realiiz's partner
- * program (private/Realiiz-SoundPlex-Partner-Agreement). Prices are the normal ones, Schedule A.
+ * /websites — "Websites by SoundPlex". Built by Realiiz, a Plex Collective member and SoundPlex's
+ * web partner (private/Realiiz-SoundPlex-Partner-Agreement). Prices are the normal ones, Schedule A.
+ * Presented as SoundPlex's own offer (Ed, 2026-11-24): Realiiz is introduced, never featured, and
+ * nothing is badged "From SoundPlex", because all of it is.
  *
  * Layout (Ed, 2026-11-24): the realiiz.com Black Friday funnel (/black-friday/soundplex), section
  * for section, without the deal: no countdown, no package price or "only 20 sites", normal
@@ -49,7 +51,7 @@ const REASONS: { t: string; d: [string, string] }[] = [
 ];
 
 /** What a site costs: the normal prices (partner agreement, Schedule A). */
-const PRICES: { item: string; note: string; value: string; soundplex?: boolean }[] = [
+const PRICES: { item: string; note: string; value: string }[] = [
   { item: "A custom website, up to 10 pages", note: "Designed for your business, with the words written for you", value: "$6,000" },
   { item: "More pages", note: "Past the first ten", value: "$400 each" },
   { item: "Fly-through animation", note: "On your home page, like this site’s", value: "$2,000" },
@@ -57,8 +59,8 @@ const PRICES: { item: string; note: string; value: string; soundplex?: boolean }
   { item: "A 3-step funnel with follow-up", note: "A page that turns visitors into booked calls", value: "from $2,000" },
   { item: "A CRM other than GoHighLevel", note: "Forms connect to GoHighLevel at no extra cost", value: "$500" },
   { item: "Custom tools and member areas", note: "Scoped with you before anything starts", value: "Quoted" },
-  { item: "A produced podcast episode", note: "Recorded at SoundPlex and shared with its network", value: "$250", soundplex: true },
-  { item: "The Plex Collective", note: "The SoundPlex membership: a room full of local owners and creators", value: "$75 a month", soundplex: true },
+  { item: "A produced podcast episode", note: "Recorded here and shared with the SoundPlex network", value: "$250" },
+  { item: "The Plex Collective", note: "Our membership: a room full of local owners and creators", value: "$75 a month" },
 ];
 
 const ALSO_INCLUDED = ["Your own publishing dashboard", "A blog", "An events calendar you update yourself", "Forms wired into your CRM", "Google reviews on the site", "Search setup"];
@@ -120,7 +122,7 @@ export default function WebsitesPage() {
             style={{ background: "radial-gradient(60% 55% at 50% 38%, rgba(212,160,48,0.10), rgba(212,160,48,0.03) 45%, transparent 75%)" }}
           />
           <div className="relative mx-auto max-w-4xl px-6 pb-16 pt-14 text-center sm:pt-20">
-            <p className={eyebrow}>Websites by SoundPlex · built with Realiiz</p>
+            <p className={eyebrow}>Websites by SoundPlex</p>
             <h1 className={`${POP} mt-5 text-balance text-4xl font-semibold leading-[1.05] tracking-tight sm:text-6xl`}>
               You’re better in person than you are online.
             </h1>
@@ -130,6 +132,9 @@ export default function WebsitesPage() {
             <p className="mx-auto mt-5 max-w-2xl text-pretty text-[17.5px] leading-relaxed text-white/75">
               A custom website designed for your business, with the words written for you. We build it first and show it to you live. You
               only pay when you love it.
+            </p>
+            <p className="mx-auto mt-4 max-w-2xl text-pretty text-[15px] leading-relaxed text-white/55">
+              Built with Realiiz, a Plex Collective member and our web partner, the team behind this site.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-4">
               <Link href="#book" className="evp__btn group">
@@ -178,14 +183,7 @@ export default function WebsitesPage() {
                 {PRICES.map((row) => (
                   <li key={row.item} className="flex items-baseline justify-between gap-6 py-4">
                     <span>
-                      <span className={`${POP} flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[17.5px] font-semibold`}>
-                        {row.item}
-                        {row.soundplex && (
-                          <span className={`${POP} whitespace-nowrap rounded-[3px] border border-[#d4a030]/60 px-1.5 py-1 text-[9.5px] font-medium uppercase leading-none tracking-[0.16em] text-[#d4a030]`}>
-                            From SoundPlex
-                          </span>
-                        )}
-                      </span>
+                      <span className={`${POP} block text-[17.5px] font-semibold`}>{row.item}</span>
                       <span className="mt-0.5 block text-[14.5px] text-white/60">{row.note}</span>
                     </span>
                     <span className="shrink-0 text-right text-[15.5px] tabular-nums text-white/75">{row.value}</span>
@@ -280,9 +278,9 @@ export default function WebsitesPage() {
             </ol>
 
             <div className="mt-12 rounded-[10px] border border-[#d4a030]/45 bg-black p-7 sm:p-9">
-              <p className={eyebrow}>Add your launch from SoundPlex</p>
+              <p className={eyebrow}>Launch it here</p>
               <h3 className={`${POP} mt-3 text-balance text-2xl font-semibold tracking-tight sm:text-3xl`}>It&apos;s not just a website. It can come with a way to get it seen.</h3>
-              <p className="mt-4 max-w-3xl text-pretty text-[16.5px] leading-relaxed text-white/75">A new site needs people looking at it. SoundPlex can launch it with you.</p>
+              <p className="mt-4 max-w-3xl text-pretty text-[16.5px] leading-relaxed text-white/75">A new site needs people looking at it. We can launch it with you, right here at SoundPlex.</p>
               <ul className="mt-6 grid gap-6 md:grid-cols-3">
                 {[
                   { t: "Your podcast episode", d: "Recorded and professionally produced at SoundPlex Studios, about you and your business." },
@@ -377,8 +375,8 @@ export default function WebsitesPage() {
                 Start with a few questions
               </Link>
               {" · "}
-              <a href="https://realiiz.com/websites" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-white/70 hover:text-white">
-                More about Realiiz
+              <a href="https://realiiz.com/websites" target="_blank" rel="noopener noreferrer" className="group inline-flex items-center gap-1 text-white/70 hover:text-white">
+                About Realiiz, our web partner
                 <OutboundArrow />
               </a>
             </p>
