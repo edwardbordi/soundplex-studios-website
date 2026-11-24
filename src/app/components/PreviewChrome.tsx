@@ -27,10 +27,13 @@ export default function PreviewChrome() {
   const [prefs] = usePreviewPrefs();
   // "Show what we still need": a root attribute that globals.css turns into
   // dashed red outlines + labels on every [data-needs] spot.
+  // Only while the review kit is on: with PREVIEW_CHROME off there's no menu to switch it back
+  // off, so an old "on" saved in a browser must not outline the live site (Ed, 2026-11-24).
+  const showNeeds = PREVIEW_CHROME && Boolean(prefs?.needs);
   useEffect(() => {
-    if (prefs?.needs) document.documentElement.setAttribute("data-show-needs", "");
+    if (showNeeds) document.documentElement.setAttribute("data-show-needs", "");
     else document.documentElement.removeAttribute("data-show-needs");
-  }, [prefs?.needs]);
+  }, [showNeeds]);
   // Not inside Studio, and not inside the members' app (its bottom tabs own that corner on a phone).
   const inMembersApp = /^\/members(\/|$)/.test(pathname) && !pathname.startsWith("/members/sign-in") && !pathname.startsWith("/members/welcome");
   if (!PREVIEW_CHROME || !prefs || pathname.startsWith("/admin") || inMembersApp) return null;
