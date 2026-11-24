@@ -15,6 +15,7 @@ import MessageToasts from "../members/(app)/MessageToasts";
 export default function SiteMessageAlerts() {
   const path = usePathname() ?? "";
   const { member } = useVenueSession();
-  if (!member || !membersConfigured() || path.startsWith("/members") || path.startsWith("/admin")) return null;
+  // Whole path segments: "/membership" is a public page, not the members area.
+  if (!member || !membersConfigured() || /^\/(members|admin)(\/|$)/.test(path)) return null;
   return <MessageToasts place="site" />;
 }

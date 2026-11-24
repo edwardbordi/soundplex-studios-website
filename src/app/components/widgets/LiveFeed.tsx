@@ -7,7 +7,9 @@ import { pushFeed, useFeed, type FeedItem } from "../../../lib/venue/feed";
 import { useVenueSession } from "../../../lib/venue/session";
 
 /**
- * LIVE AT HOLLOWBROOK — a quiet activity ticker, bottom-right (Ed, 2026-10-11).
+ * LIVE AT HOLLOWBROOK — a quiet activity ticker, bottom-LEFT since 2026-11-24 (Ed: the Ask
+ * widget takes the bottom-right corner). For signed-in editors the Studio pill also sits
+ * bottom-left, so the ticker rides above it then (.sp-live in globals.css).
  *
  * Small by default: one line that changes every few seconds. Tap to see the last few, drag the
  * handle to move it, minimise to a dot, or close it. What it shows depends on who's looking:
@@ -18,12 +20,13 @@ import { useVenueSession } from "../../../lib/venue/session";
 
 const GOLD = "#d4a030";
 const BUYERS = ["Jess M.", "Daniel R.", "Kara P.", "Luis G.", "Megan T.", "Omar S.", "Beth W.", "Chris D.", "Ana V.", "Theo B."];
-const POS_KEY = "sp-feed-pos";
+// A new key: positions saved when it lived bottom-right were measured from the right edge.
+const POS_KEY = "sp-feed-pos-left";
 /** How you left it (Ed, 2026-10-28): minimised stays minimised on every page until you open it
     again (this browser); closed stays closed for this visit (a new visit brings it back). */
 const MODE_KEY = "sp-feed-mode";
 const CLOSED_KEY = "sp-feed-closed";
-type Pos = { right: number; bottom: number };
+type Pos = { left: number; bottom: number };
 
 const ago = (t: number) => {
   const s = Math.round((Date.now() - t) / 1000);
@@ -49,7 +52,7 @@ export default function LiveFeed({ events }: { events: VenueEvent[] }) {
     try {
       const p = JSON.parse(localStorage.getItem(POS_KEY) ?? "null");
       // eslint-disable-next-line react-hooks/set-state-in-effect -- restore once on mount
-      if (p && typeof p.right === "number") setPos(p);
+      if (p && typeof p.left === "number") setPos(p);
     } catch {}
     // (restore once on mount)
     let saved: string | null = null;
@@ -75,24 +78,34 @@ export default function LiveFeed({ events }: { events: VenueEvent[] }) {
     let n = 0;
     const tick = () => {
       const now = Date.now();
-      const soon = events.filter((e) => e.visibility === "public" && e.start.getTime() > now && e.start.getTime() - now < 36 * 3_600_000);
-      const live = events.filter((e) => e.visibility === "public" && e.start.getTime() <= now && e.end.getTime() > now);
-      // Made-up ticket buyers only ever for SAMPLE events — never for George's real ones.
+      const pub = events.filter((e) => e.visibility === "public" && !e.ambient);
+      const soon = pub.filter((e) => e.start.getTime() > now && e.start.getTime() - now < 36 * 3_600_000);
+      const live = pub.filter((e) => e.start.getTime() <= now && e.end.getTime() > now);
+      const next = pub.filter((e) => e.start.getTime() > now).sort((a, b) => a.start.getTime() - b.start.getTime());
+      // Made-up ticket buyers only ever for SAMPLE events with a price — none now (George,
+      // 2026-11-23: nothing public is sold), so this stays quiet unless a price comes back.
       const ticketed = soon.filter((e) => /\$/.test(e.price) && e.sample);
       n++;
-      if (n % 3 === 0 && soon[0]) {
-        const e = soon[0];
-        const left = ticketsLeft(e, roomOf(e.room).capacity, new Date(now));
-        pushFeed({ audience: "all", kind: "soon", text: `${e.title} starts in ${until(e.start, now)}${left !== null && left >= 0 ? ` · ${left} tickets left` : ""}` });
-      } else if (n % 5 === 0 && live[0]) {
-        pushFeed({ audience: "all", kind: "live", text: `${live[0].title} is on now in ${roomOf(live[0].room).name}` });
-      } else if (ticketed.length) {
+      // Something to say from the first tick (it used to be mostly ticket sales, and with no
+      // prices the ticker sat empty and hidden for 20s+): what's on now, what's next, coming up.
+      const on = live[(n - 1) % Math.max(1, live.length)];
+      const up = soon[(n - 1) % Math.max(1, soon.length)] ?? next[(n - 1) % Math.max(1, Math.min(next.length, 5))];
+      if (ticketed.length && n % 4 === 0) {
         const e = ticketed[Math.floor(Math.random() * ticketed.length)];
         const q = 1 + Math.floor(Math.random() * 3);
         pushFeed({ audience: "all", kind: "ticket", who: { name: BUYERS[Math.floor(Math.random() * BUYERS.length)] }, text: `got ${q} ticket${q > 1 ? "s" : ""} to ${e.title}` });
+      } else if (on && (n % 2 === 1 || !up)) {
+        pushFeed({ audience: "all", kind: "live", text: `${on.title} is on now in ${roomOf(on.room).name}` });
+      } else if (up) {
+        const left = ticketsLeft(up, roomOf(up.room).capacity, new Date(now));
+        const when =
+          up.start.getTime() - now < 36 * 3_600_000
+            ? `starts in ${until(up.start, now)}`
+            : `is next, ${up.start.toLocaleDateString("en-US", { weekday: "short" })} ${up.start.toLocaleTimeString("en-US", { hour: "numeric", minute: up.start.getMinutes() ? "2-digit" : undefined })}`;
+        pushFeed({ audience: "all", kind: "soon", text: `${up.title} ${when}${left !== null && left >= 0 ? ` · ${left} tickets left` : ""}` });
       }
     };
-    const first = window.setTimeout(tick, 2500);
+    const first = window.setTimeout(tick, 1500);
     const t = window.setInterval(tick, 9000);
     return () => {
       window.clearTimeout(first);
@@ -103,20 +116,20 @@ export default function LiveFeed({ events }: { events: VenueEvent[] }) {
   const unread = Math.max(0, feed.length - seen);
   const latest = feed[0];
 
-  /* Drag by the handle: the box keeps its distance from the bottom-right corner. */
+  /* Drag by the handle: the box keeps its distance from the bottom-left corner. */
   const onDown = (e: React.PointerEvent) => {
     const r = box.current?.getBoundingClientRect();
     if (!r) return;
-    drag.current = { x: e.clientX, y: e.clientY, start: { right: window.innerWidth - r.right, bottom: window.innerHeight - r.bottom } };
+    drag.current = { x: e.clientX, y: e.clientY, start: { left: r.left, bottom: window.innerHeight - r.bottom } };
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
   };
   const onMove = (e: React.PointerEvent) => {
     const d = drag.current;
     const r = box.current?.getBoundingClientRect();
     if (!d || !r) return;
-    const right = Math.min(window.innerWidth - r.width - 8, Math.max(8, d.start.right - (e.clientX - d.x)));
+    const left = Math.min(window.innerWidth - r.width - 8, Math.max(8, d.start.left + (e.clientX - d.x)));
     const bottom = Math.min(window.innerHeight - r.height - 8, Math.max(8, d.start.bottom - (e.clientY - d.y)));
-    setPos({ right, bottom });
+    setPos({ left, bottom });
   };
   const onUp = () => {
     if (drag.current && pos) {
@@ -128,8 +141,8 @@ export default function LiveFeed({ events }: { events: VenueEvent[] }) {
   };
 
   if (mode === "closed" || !latest) return null;
-  const style = pos ? { right: pos.right, bottom: pos.bottom } : undefined;
-  const place = pos ? "" : "right-4 bottom-24 sm:bottom-5 sm:right-5";
+  const style = pos ? { left: pos.left, bottom: pos.bottom } : undefined;
+  const place = pos ? "" : "sp-live left-4 bottom-24 sm:bottom-5 sm:left-5";
 
   if (mode === "dot") {
     return (

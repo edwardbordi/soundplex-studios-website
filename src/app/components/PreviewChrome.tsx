@@ -32,7 +32,7 @@ export default function PreviewChrome() {
     else document.documentElement.removeAttribute("data-show-needs");
   }, [prefs?.needs]);
   // Not inside Studio, and not inside the members' app (its bottom tabs own that corner on a phone).
-  const inMembersApp = pathname.startsWith("/members") && !pathname.startsWith("/members/sign-in") && !pathname.startsWith("/members/welcome");
+  const inMembersApp = /^\/members(\/|$)/.test(pathname) && !pathname.startsWith("/members/sign-in") && !pathname.startsWith("/members/welcome");
   if (!PREVIEW_CHROME || !prefs || pathname.startsWith("/admin") || inMembersApp) return null;
   // .review-chrome re-maps the template colors these widgets were drawn with (ink = panel,
   // paper = text) to SoundPlex's: near-black panels, white text, gold accents (globals.css).
