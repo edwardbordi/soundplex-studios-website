@@ -41,9 +41,10 @@ export type Path = {
 export const ROOMS: Option[] = [
   // No capacity in the room cards (George, 2026-11-23); it's only used by "how many people?".
   { value: "wood-room", label: "WoodRoom", note: "stage · 2,800 sq ft" },
-  { value: "studio-a", label: "Studio A", note: "recording · music · film · 2,200 sq ft" },
+  // Notes kept short enough to sit on one line in the card (Ed, 2026-11-24).
+  { value: "studio-a", label: "Studio A", note: "recording · film · 2,200 sq ft" },
   { value: "sound-lounge", label: "SoundLounge", note: "speakeasy · 1,800 sq ft" },
-  { value: "not-sure", label: "Not sure yet", note: "we’ll help you pick the right one" },
+  { value: "not-sure", label: "Not sure yet", note: "we’ll help you choose" },
 ];
 
 /**
