@@ -106,7 +106,7 @@ export default function Survey({ initialPath, initialAnswers, entry, rooms = [] 
   /** The address as it is now: a check that comes back for an older version is ignored. */
   const latestEmail = useRef("");
   /** The address as it was when it was flagged, for the "Fixed" chip's Undo. */
-  const emailBefore = useRef("");
+  const [emailBefore, setEmailBefore] = useState("");
 
   const stepRef = useRef<HTMLDivElement>(null);
   const timer = useRef<number | null>(null);
@@ -285,7 +285,7 @@ export default function Survey({ initialPath, initialAnswers, entry, rooms = [] 
       if (address !== latestEmail.current.trim()) return;
       if (r.ok && d.ok === false) {
         emailFlagged.current = true;
-        emailBefore.current = address;
+        setEmailBefore(address);
         emailErrorShown.current = true;
         setEmailStatus(null);
         setInvalid("email");
@@ -338,7 +338,7 @@ export default function Survey({ initialPath, initialAnswers, entry, rooms = [] 
         if (data.suggestion) setSuggestion(data.suggestion);
         if (data.field === "email") {
           emailFlagged.current = true;
-          emailBefore.current = contact.email.trim();
+          setEmailBefore(contact.email.trim());
           emailErrorShown.current = true;
           setEmailStatus(null);
         }
@@ -598,12 +598,12 @@ export default function Survey({ initialPath, initialAnswers, entry, rooms = [] 
                       <span className="sv__chip" role="status">
                         <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.3 6.5 11l6-6.2" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" /></svg>
                         {emailStatus === "fixed" ? "Fixed" : emailStatus === "kept" ? "Kept as typed" : "Verified"}
-                        {emailStatus === "fixed" && emailBefore.current && (
+                        {emailStatus === "fixed" && emailBefore && (
                           <button
                             type="button"
                             className="sv__chip-undo"
                             onClick={() => {
-                              const prev = emailBefore.current;
+                              const prev = emailBefore;
                               setContact((c) => ({ ...c, email: prev }));
                               latestEmail.current = prev;
                               setEmailStatus(null);
