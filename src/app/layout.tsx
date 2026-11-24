@@ -20,6 +20,7 @@ import PreviewChrome from "./components/PreviewChrome";
 import SiteLiveFeed from "./components/widgets/SiteLiveFeed";
 import MemberBridge from "./components/MemberBridge";
 import SiteMessageAlerts from "./components/SiteMessageAlerts";
+import AskWidgetLazy from "./components/AskWidgetLazy";
 import { getCalendarItems } from "../lib/events/public";
 import { STUDIO_ROUTES } from "../lib/admin/content-types";
 import "./globals.css";
@@ -151,8 +152,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             PREVIEW_CHROME is on in site-config, and each widget's code is only
             fetched once a reviewer switches that widget on. Delete at launch. */}
         <PreviewChrome />
-        {/* "Live at SoundPlex" — bottom right, every page (simulated while the sample calendar is on). */}
+        {/* "Live at SoundPlex" — bottom LEFT, every page (simulated while the sample calendar is on). */}
         <SiteLiveFeed items={getCalendarItems()} showSamples={SHOW_SAMPLE_EVENTS} />
+        {/* "Ask us anything" — bottom right; hidden until ANTHROPIC_API_KEY is set in Vercel. */}
+        <AskWidgetLazy />
         {/* Real member sign-in → the site's member session (does nothing until the members DB is connected). */}
         <MemberBridge />
         {/* New-message pop-up + chime for signed-in members anywhere on the website. */}

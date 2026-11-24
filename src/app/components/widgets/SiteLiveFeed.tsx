@@ -26,6 +26,7 @@ export default function SiteLiveFeed({ items, showSamples }: { items: CalItem[];
     [day, items, showSamples], // eslint-disable-line react-hooks/exhaustive-deps
   );
   // Not inside Studio, and not on the member sign-in / setup / profile pages (they're a quiet door).
-  if (!showSamples || !minute || path?.startsWith("/admin") || path?.startsWith("/members")) return null;
+  // Whole path segments: "/membership" is a public page, not the members area.
+  if (!showSamples || !minute || /^\/(admin|members)(\/|$)/.test(path ?? "")) return null;
   return <LiveFeed events={events} />;
 }

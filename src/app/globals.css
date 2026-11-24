@@ -2049,6 +2049,12 @@ input:-webkit-autofill:focus {
 }
 .mx:not([data-mtheme="light"]) .mx-scroll { --mx-thumb: #303030; }
 .mx { background: var(--mx-bg); color: var(--mx-text); color-scheme: dark; }
+/* The "Live at SoundPlex" ticker sits bottom-left (the Ask widget has bottom-right). For signed-in
+   editors the Studio pill is bottom-left too (16px up), so the ticker rides above it then. Only
+   where it hasn't been dragged somewhere else (.sp-live is dropped once it has a position). */
+@media (min-width: 640px) {
+  body:has([data-studio-bar]) .sp-live { bottom: 4.25rem; }
+}
 /* Members: a quiet scrollbar inside panels (Ed, 2026-10-31, the Filters dropdown): no track or
    border, the panel's own background behind it, and a thin thumb just a shade off the background. */
 /* Plain colours (not color-mix, which some browsers reject here and fall back to the grey
