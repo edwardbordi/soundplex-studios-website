@@ -315,11 +315,34 @@ export default function AskWidget() {
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
+    // Always the very bottom of the chat (Ed, 2026-11-24), "Book this room" included.
+    const last = turns.at(-1);
+    const flowNode = last?.action && !last.done ? el.querySelector<HTMLElement>(`[data-turn="${turns.length - 1}"]`) : null;
     const toBottom = () => el.scrollTo({ top: el.scrollHeight });
     toBottom();
     // Once more after layout settles (the panel's pop-in, wrapped answers).
     const raf = requestAnimationFrame(toBottom);
-    return () => cancelAnimationFrame(raf);
+    // A form fills in after it opens (George's open times load a moment later): keep following it
+    // to the bottom as it grows, for a couple of seconds or until they scroll themselves.
+    let ro: ResizeObserver | undefined;
+    let stop: number | undefined;
+    const quit = () => {
+      ro?.disconnect();
+      el.removeEventListener("wheel", quit);
+      el.removeEventListener("touchmove", quit);
+    };
+    if (flowNode && typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(toBottom);
+      ro.observe(flowNode);
+      el.addEventListener("wheel", quit, { passive: true });
+      el.addEventListener("touchmove", quit, { passive: true });
+      stop = window.setTimeout(quit, 2500);
+    }
+    return () => {
+      cancelAnimationFrame(raf);
+      if (stop) window.clearTimeout(stop);
+      quit();
+    };
   }, [turns, busy, open, pathname]);
 
   // Signed in, inside the members area: the members' help desk.
@@ -418,6 +441,8 @@ export default function AskWidget() {
    * that room. Its own calendar when it has one (ROOM_CALENDAR_IDS), otherwise a time with George.
    */
   const bookRoom = (room: string, name: string) => {
+    // "Studio A", but "the WoodRoom" and "the SoundLounge".
+    const ref = /^studio\b/i.test(name) ? name : `the ${name}`;
     setOpen(true);
     setMenuOpen(false);
     pushDataLayerEvent("ask_room_button", { page: pathname, room });
@@ -425,10 +450,10 @@ export default function AskWidget() {
     setTurns((t) => [
       ...t.filter((x) => !(x.action && !x.done && x.fromButton)), // one open form at a time
       rooms.some((r) => r.slug === room)
-        ? { ...base, q: `Book the ${name}`, a: "Pick how long and a time. It books under your name.", action: "room" as const, room }
+        ? { ...base, q: `Book ${ref}`, a: "Pick how long and a time. It books under your name.", action: "room" as const, room }
         : hlOn
-          ? { ...base, q: `Book the ${name}`, a: `Room booking isn't in the chat just yet. Pick a time with George and he'll set the ${name} up for you.`, action: "book" as const }
-          : { ...base, q: `Book the ${name}`, a: `Room booking isn't online just yet. Call or text George at (609) 697-2077 and he'll set the ${name} up for you.` },
+          ? { ...base, q: `Book ${ref}`, a: `Room booking isn't in the chat just yet. Pick a time with George and he'll set ${ref} up for you.`, action: "book" as const }
+          : { ...base, q: `Book ${ref}`, a: `Room booking isn't online just yet. Call or text George at (609) 697-2077 and he'll set ${ref} up for you.` },
     ]);
   };
   const bookRoomRef = useRef(bookRoom);
@@ -492,7 +517,7 @@ export default function AskWidget() {
             </div>
           </div>
 
-          <div ref={scrollRef} className="mx-scroll flex-1 space-y-3 overflow-y-auto px-4 py-3" style={{ ["--mx-scroll-bg" as string]: "#121212" }}>
+          <div ref={scrollRef} className="mx-scroll relative flex-1 space-y-3 overflow-y-auto px-4 py-3" style={{ ["--mx-scroll-bg" as string]: "#121212" }}>
             {turns.length === 0 && !busy && (
               <div>
                 <div className="text-[12px] text-white/45">People often ask:</div>
@@ -511,7 +536,7 @@ export default function AskWidget() {
               </div>
             )}
             {turns.map((t, i) => (
-              <div key={i}>
+              <div key={i} data-turn={i}>
                 {/* A quiet time line: at the top, and again after a 30-minute gap. */}
                 {t.at && (i === 0 || !turns[i - 1].at || t.at - (turns[i - 1].at ?? 0) > GAP_MS) && (
                   <div className="mb-2.5 text-center text-[11px] tracking-[0.04em] text-white/35">{dividerLabel(t.at)}</div>
