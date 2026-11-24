@@ -71,6 +71,15 @@ export default function TonightBoard({ events, now, title, locked, onOpen, peopl
     io.observe(el);
     return () => io.disconnect();
   }, []);
+  // While that sticky button shows, the corner widgets (Live, Ask) lift above it (globals.css).
+  const bottomBar = inView && !ticketFor;
+  useEffect(() => {
+    if (!bottomBar) return;
+    document.body.dataset.bottomBar = "1";
+    return () => {
+      delete document.body.dataset.bottomBar;
+    };
+  }, [bottomBar]);
 
   const cap = (e: VenueEvent) => roomOf(e.room).capacity;
   const left = (e: VenueEvent) => ticketsLeft(e, cap(e), now);

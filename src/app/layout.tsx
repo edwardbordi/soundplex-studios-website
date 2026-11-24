@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import {
   SITE_URL,
@@ -98,6 +98,9 @@ const organizationJsonLd = {
   ...(SOCIAL_LINKS.length ? { sameAs: SOCIAL_LINKS.map((s) => s.url) } : {}),
 };
 
+/** The browser and home-screen app chrome: the site's black. */
+export const viewport: Viewport = { themeColor: "#050505" };
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: `${SITE_NAME} — ${SITE_DESCRIPTION}`,
@@ -105,8 +108,12 @@ export const metadata: Metadata = {
   icons: {
     // The real SoundPlex monogram, extracted from the client's lockup.
     icon: [{ url: "/logos/favicon.png", type: "image/png" }],
-    apple: [{ url: "/logos/app-icon.png" }],
+    // iPhone home-screen icon: the monogram on black, full-bleed (iOS rounds the corners).
+    apple: [{ url: "/app/apple-touch-icon.png", sizes: "180x180" }],
   },
+  // iPhone: "Add to Home Screen" opens full screen, named SoundPlex (Ed, 2026-11-24). The rest is
+  // in manifest.ts. "black" status bar, so nothing slides under the clock and the notch.
+  appleWebApp: { capable: true, title: "SoundPlex", statusBarStyle: "black" },
   openGraph: {
     title: SITE_NAME,
     description: SITE_DESCRIPTION,

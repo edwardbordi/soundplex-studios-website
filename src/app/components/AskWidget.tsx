@@ -270,7 +270,7 @@ export default function AskWidget() {
   if (!enabled || hidden) return null;
 
   return (
-    <div ref={panelRef} className="fixed bottom-4 right-4 z-[66] flex flex-col items-end sm:bottom-5 sm:right-5">
+    <div ref={panelRef} className="sp-ask fixed bottom-4 right-4 z-[66] flex flex-col items-end sm:bottom-5 sm:right-5">
       {open && (
         <div className="vo-pop mb-3 flex max-h-[min(480px,70vh)] w-[min(360px,calc(100vw-2rem))] flex-col overflow-hidden rounded-[10px] rounded-br-none border border-white/12 bg-[#121212]/97 text-white shadow-2xl backdrop-blur">
           <div className="flex items-start justify-between gap-3 border-b border-white/[0.08] px-4 py-3">
