@@ -407,7 +407,7 @@ export default function ProfileForm({ mode, next = "/members", section: tabProp,
       {(mode !== "account" || pw || pw2) && (
         // Under each field, its own rules: the first four under the password, "Passwords match"
         // under "Type it again" (Ed, 2026-10-30).
-        <div className="mt-4 grid gap-x-5 gap-y-2 sm:grid-cols-2" aria-label="Password rules">
+        <div className="mt-4 grid grid-cols-1 gap-x-5 gap-y-2 sm:grid-cols-2" aria-label="Password rules">
           {[PASSWORD_RULES.filter((r) => r.id !== "match"), PASSWORD_RULES.filter((r) => r.id === "match")].map((group, g) => (
             <ul key={g} className="space-y-2">
               {group.map((r) => {
@@ -518,7 +518,7 @@ export default function ProfileForm({ mode, next = "/members", section: tabProp,
   const fullName = [f.first_name, f.last_name].map((s) => s.trim()).filter(Boolean).join(" ") || "Your name";
 
   return (
-    <form onSubmit={onSubmit} noValidate className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-12">
+    <form onSubmit={onSubmit} noValidate className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-12">
       <div className="min-w-0 space-y-6">
         <p className="text-[14px] text-(--mx-muted)">
           Signed in as <span className="text-(--mx-soft)">{email}</span>. That’s your username.
@@ -529,7 +529,7 @@ export default function ProfileForm({ mode, next = "/members", section: tabProp,
         <div className={section}>
           <p className={sectionTitle}>Your photos</p>
           <p className={sectionNote}>Drop a photo on either one, or choose a file. Each saves straight away.</p>
-          <div className="mt-6 grid gap-6 sm:grid-cols-2">
+          <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
             <PhotoSlot
               kind="avatar"
               title="Profile photo"
@@ -567,7 +567,7 @@ export default function ProfileForm({ mode, next = "/members", section: tabProp,
         <div className={section}>
           <p className={sectionTitle}>About you</p>
           <p className={sectionNote}>What other members see on your card. If you’re featured on the public Connection Wall, these show there too (not your contact details or social links).</p>
-          <div className="mt-5 grid gap-5 sm:grid-cols-2">
+          <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
             <label className={label}>
               First name
               <input className={`${field} mt-2 normal-case tracking-normal`} autoComplete="given-name" value={f.first_name} onChange={(e) => set("first_name", e.target.value)} />
@@ -611,7 +611,7 @@ export default function ProfileForm({ mode, next = "/members", section: tabProp,
         <div className={section}>
           <p className={sectionTitle}>How members can reach you</p>
           <p className={sectionNote}>Optional. Only signed-in members see these, on your card and in the members directory. Never on the public website.</p>
-          <div className="mt-5 grid gap-5 sm:grid-cols-2">
+          <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
             <label className={label}>
               Phone
               <input className={`${field} mt-2 normal-case tracking-normal`} type="tel" inputMode="tel" autoComplete="tel" placeholder="(609) 555-0123" value={f.phone} onChange={(e) => set("phone", formatPhone(e.target.value))} />

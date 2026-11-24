@@ -92,6 +92,21 @@ export default function Survey({ initialPath, initialAnswers, entry, rooms = [] 
   const [honeypot, setHoneypot] = useState("");
   const [typoConfirmed, setTypoConfirmed] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
+  /**
+   * The email's state after a check (Ed, 2026-11-24: "it flags a bad email but doesn't mark it
+   * fixed when you fix it, like Realiiz does"). Checked when you leave the field, and again as
+   * you type once it's been flagged, so the error clears the moment the address is right:
+   *   ok    "Looks good"        fixed "Fixed" (it had been flagged)        kept "Kept as typed"
+   */
+  const [emailStatus, setEmailStatus] = useState<"ok" | "fixed" | "kept" | null>(null);
+  const emailFlagged = useRef(false);
+  /** The error showing is the email's (so a good check clears it, and only it). */
+  const emailErrorShown = useRef(false);
+  const emailTimer = useRef<number | null>(null);
+  /** The address as it is now: a check that comes back for an older version is ignored. */
+  const latestEmail = useRef("");
+  /** The address as it was when it was flagged, for the "Fixed" chip's Undo. */
+  const [emailBefore, setEmailBefore] = useState("");
 
   const stepRef = useRef<HTMLDivElement>(null);
   const timer = useRef<number | null>(null);
@@ -256,6 +271,41 @@ export default function Survey({ initialPath, initialAnswers, entry, rooms = [] 
   }, []);
 
   /* ── Submit ───────────────────────────────────────────────────────────── */
+  /** Check the email on its own (/api/check-email, the same check /api/survey runs on submit). */
+  const checkEmailNow = async (value: string) => {
+    const address = value.trim();
+    if (!address) {
+      setEmailStatus(null);
+      return;
+    }
+    try {
+      const r = await fetch("/api/check-email", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: address, typoConfirmed }) });
+      const d = (await r.json().catch(() => ({ ok: true }))) as { ok?: boolean; error?: string; suggestion?: string };
+      // They've changed it since (typed on, or tapped "Use @…"): this answer is about an old address.
+      if (address !== latestEmail.current.trim()) return;
+      if (r.ok && d.ok === false) {
+        emailFlagged.current = true;
+        setEmailBefore(address);
+        emailErrorShown.current = true;
+        setEmailStatus(null);
+        setInvalid("email");
+        setError(d.error || "That email doesn’t look right.");
+        setSuggestion(d.suggestion ?? "");
+        return;
+      }
+    } catch {
+      return; // network trouble: say nothing, the submit checks again
+    }
+    // Good: clear the email's error (only that one), and say so.
+    if (emailErrorShown.current) {
+      emailErrorShown.current = false;
+      setError("");
+    }
+    setInvalid((cur) => (cur === "email" ? "" : cur));
+    setSuggestion("");
+    setEmailStatus((cur) => (cur === "kept" ? cur : emailFlagged.current ? "fixed" : "ok"));
+  };
+
   const submit = async (confirmTypo = false) => {
     if (!current || sending) return;
     setError("");
@@ -286,6 +336,12 @@ export default function Survey({ initialPath, initialAnswers, entry, rooms = [] 
         setError(data.error || "Something went wrong — try again, or call (609) 697-2077.");
         if (data.field) setInvalid(data.field);
         if (data.suggestion) setSuggestion(data.suggestion);
+        if (data.field === "email") {
+          emailFlagged.current = true;
+          setEmailBefore(contact.email.trim());
+          emailErrorShown.current = true;
+          setEmailStatus(null);
+        }
         return;
       }
       leaving.current = true;
@@ -500,9 +556,10 @@ export default function Survey({ initialPath, initialAnswers, entry, rooms = [] 
                     <label className="sv__label" htmlFor={`sv-${f.id}`}>
                       {f.label}{optional && <span className="sv__opt"> — optional</span>}
                     </label>
+                    <span className="sv__inputwrap">
                     <input
                       id={`sv-${f.id}`}
-                      className="sv__input"
+                      className={f.id === "email" && emailStatus ? "sv__input sv__input--chip" : "sv__input"}
                       type={f.type}
                       autoComplete={f.autocomplete}
                       inputMode={f.type === "tel" ? "tel" : f.type === "email" ? "email" : undefined}
@@ -511,12 +568,54 @@ export default function Survey({ initialPath, initialAnswers, entry, rooms = [] 
                       onChange={(e) => {
                         const val = f.id === "phone" ? formatPhone(e.target.value) : e.target.value;
                         setContact((c) => ({ ...c, [f.id]: val }));
-                        if (f.id === "email") { setSuggestion(""); setTypoConfirmed(false); }
+                        if (f.id === "email") {
+                          latestEmail.current = val;
+                          setSuggestion("");
+                          setTypoConfirmed(false);
+                          setEmailStatus(null);
+                          // Once it's been flagged, check again as they type (a beat after they
+                          // stop), so the error goes and "Fixed" shows as soon as it's right.
+                          if (emailTimer.current) window.clearTimeout(emailTimer.current);
+                          if (emailFlagged.current) emailTimer.current = window.setTimeout(() => void checkEmailNow(val), 600);
+                        }
                       }}
+                      onBlur={
+                        f.id === "email"
+                          ? (e) => {
+                              // (Also covers an address restored from earlier in the visit.)
+                              latestEmail.current = e.target.value;
+                              void checkEmailNow(e.target.value);
+                            }
+                          : undefined
+                      }
                       aria-invalid={invalid === f.id || undefined}
                       aria-describedby={invalid === f.id && error ? `sv-${f.id}-error` : undefined}
                       required={!optional}
                     />
+                    {/* The email's chip, at the end of the field once it's settled (as on realiiz.com
+                        and the members profile): Verified, Fixed (with Undo) or Kept as typed. */}
+                    {f.id === "email" && emailStatus && invalid !== "email" && (
+                      <span className="sv__chip" role="status">
+                        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.3 6.5 11l6-6.2" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                        {emailStatus === "fixed" ? "Fixed" : emailStatus === "kept" ? "Kept as typed" : "Verified"}
+                        {emailStatus === "fixed" && emailBefore && (
+                          <button
+                            type="button"
+                            className="sv__chip-undo"
+                            onClick={() => {
+                              const prev = emailBefore;
+                              setContact((c) => ({ ...c, email: prev }));
+                              latestEmail.current = prev;
+                              setEmailStatus(null);
+                              void checkEmailNow(prev);
+                            }}
+                          >
+                            Undo
+                          </button>
+                        )}
+                      </span>
+                    )}
+                    </span>
                     {/* A problem with this field shows right under it — "Did you mean …@icloud.com?" included. */}
                     {invalid === f.id && error && <p id={`sv-${f.id}-error`} className="sv__error sv__error--field" role="alert">{error}</p>}
                     {f.id === "email" && suggestion && (
@@ -524,9 +623,13 @@ export default function Survey({ initialPath, initialAnswers, entry, rooms = [] 
                         <button type="button" className="sv__btn sv__btn--primary" onClick={() => {
                           const local = contact.email.split("@")[0];
                           setContact((c) => ({ ...c, email: `${local}@${suggestion}` }));
+                          latestEmail.current = `${local}@${suggestion}`;
                           setSuggestion(""); setError(""); setInvalid("");
+                          emailFlagged.current = true;
+                          emailErrorShown.current = false;
+                          setEmailStatus("fixed");
                         }}>Use @{suggestion}</button>
-                        <button type="button" className="sv__link" onClick={() => { setSuggestion(""); setTypoConfirmed(true); void submit(true); }}>No, my address is right</button>
+                        <button type="button" className="sv__link" onClick={() => { setSuggestion(""); setTypoConfirmed(true); setError(""); setInvalid(""); setEmailStatus("kept"); void submit(true); }}>No, my address is right</button>
                       </div>
                     )}
                   </div>

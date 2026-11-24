@@ -1898,6 +1898,18 @@ p, li,
 .sv__hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 .sv__error { margin-top: 16px; color: var(--color-signal-light); font-size: 0.95rem; }
 .sv__error--field { margin-top: 8px; }
+/* The email's chip, inside the field at its right end (as on realiiz.com): "Verified", or "Fixed"
+   (with Undo) once a flagged address is put right, or "Kept as typed". */
+.sv__inputwrap { position: relative; display: block; }
+.sv__input--chip { padding-right: 9.5rem; }
+.sv__chip {
+  position: absolute; right: 10px; top: calc(50% + 4px); transform: translateY(-50%);
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 4px;
+  background: rgba(76, 199, 115, 0.12); color: #4cc773; font-size: 12px; font-weight: 500; white-space: nowrap;
+}
+.sv__chip svg { width: 14px; height: 14px; flex-shrink: 0; }
+.sv__chip-undo { margin-left: 4px; padding-left: 7px; border-left: 1px solid rgba(76, 199, 115, 0.35); color: rgba(255, 255, 255, 0.6); }
+.sv__chip-undo:hover { color: #fff; }
 .sv__suggest { margin-top: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
 .sv__nav { margin-top: 36px; padding-top: 22px; border-top: 1px solid var(--color-line); display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .sv__nav-right { display: flex; align-items: center; gap: 22px; }
@@ -2049,6 +2061,14 @@ input:-webkit-autofill:focus {
 }
 .mx:not([data-mtheme="light"]) .mx-scroll { --mx-thumb: #303030; }
 .mx { background: var(--mx-bg); color: var(--mx-text); color-scheme: dark; }
+/* Members area, phones (Ed, 2026-11-24: "Who's here" and "Coming up" spilled off the right edge).
+   A grid with no column set (e.g. `grid gap-6 lg:grid-cols-2`, one column on a phone) sizes that
+   column to its widest line, so one long name or title pushes the whole panel past the screen.
+   Default every members-area grid to one column that fits the screen. In the base layer, so any
+   grid-cols-* class on the element (sm:, lg:…) still wins. */
+@layer base {
+  .mx .grid { grid-template-columns: minmax(0, 1fr); }
+}
 /* The "Live at SoundPlex" ticker sits bottom-left (the Ask widget has bottom-right). For signed-in
    editors the Studio pill is bottom-left too (16px up), so the ticker rides above it then. Only
    where it hasn't been dragged somewhere else (.sp-live is dropped once it has a position). */
