@@ -2069,10 +2069,27 @@ input:-webkit-autofill:focus {
 @layer base {
   .mx .grid { grid-template-columns: minmax(0, 1fr); }
 }
+/* Room photos in the LIGHT theme (Ed, 2026-11-24: "so dark on a light background"). The rooms
+   are lit for the evening, and in dark mode the cards also dim them (80% over black) under a tall
+   black fade. On light: the photo at full strength and a touch brighter, and the fade only along
+   the bottom, where the white room name needs it. Not a white wash, which would look faded. */
+.mx[data-mtheme="light"] .mx-roomcard { background: #2a2724; }
+.mx[data-mtheme="light"] .mx-roomcard__photo { opacity: 1; filter: brightness(1.18) saturate(1.06); }
+.mx[data-mtheme="light"] .mx-roomcard__shade {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.28) 34%, rgba(0, 0, 0, 0) 62%);
+}
 /* The "Live at SoundPlex" ticker sits bottom-left (the Ask widget has bottom-right). For signed-in
    editors the Studio pill is bottom-left too (16px up), so the ticker rides above it then. Only
    where it hasn't been dragged somewhere else (.sp-live is dropped once it has a position). */
 body:has([data-studio-bar]) .sp-live { bottom: 4.25rem; }
+/* Members area (Ed, 2026-11-24): the Ask button (members' help) sits above the phone tabs, and
+   new-message pop-ups stack above the Ask button instead of on top of it. */
+body:has(#mx-root) .sp-ask { bottom: calc(4.75rem + env(safe-area-inset-bottom)); }
+body:has(#mx-root) .sp-toasts { bottom: calc(9rem + env(safe-area-inset-bottom)); }
+@media (min-width: 768px) {
+  body:has(#mx-root) .sp-ask { bottom: 1.25rem; }
+  body:has(#mx-root) .sp-toasts { bottom: 5.5rem; }
+}
 /* Phones: when a page shows its own sticky bar along the bottom (Studio Productions' "one sticky
    button", TonightBoard sets data-bottom-bar), both corner buttons ride above it. */
 @media (max-width: 639px) {

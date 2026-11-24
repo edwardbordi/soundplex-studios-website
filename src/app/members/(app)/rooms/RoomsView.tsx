@@ -39,9 +39,9 @@ export default function RoomsView({ items, showSamples }: { items: CalItem[]; sh
           const mine = s.checkedIn === r.id;
           return (
             <section key={r.id} className={`${PANEL} grid overflow-hidden md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]`}>
-              <div className="relative min-h-52 bg-[#050505]">
-                <Image src={r.photo} alt="" fill sizes="(min-width: 768px) 45vw, 100vw" className="object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" aria-hidden="true" />
+              <div className="mx-roomcard relative min-h-52 bg-[#050505]">
+                <Image src={r.photo} alt="" fill sizes="(min-width: 768px) 45vw, 100vw" className="mx-roomcard__photo object-cover" />
+                <div className="mx-roomcard__shade absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" aria-hidden="true" />
                 <div className="absolute inset-x-5 bottom-4 text-white">
                   <p className="font-[family-name:var(--font-poppins)] text-[24px] font-medium">{r.name}</p>
                 </div>

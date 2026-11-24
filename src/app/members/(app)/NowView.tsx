@@ -54,10 +54,10 @@ export default function NowView({ items, showSamples }: { items: CalItem[]; show
           const live = liveIn(r.id);
           const people = sampleIn(r.id).length + (mine ? 1 : 0);
           return (
-            <div key={r.id} className={`group relative overflow-hidden rounded-[8px] rounded-bl-none border ${mine ? "border-(--mx-ok)" : "border-(--mx-line)"} bg-[#050505]`}>
+            <div key={r.id} className={`mx-roomcard group relative overflow-hidden rounded-[8px] rounded-bl-none border ${mine ? "border-(--mx-ok)" : "border-(--mx-line)"} bg-[#050505]`}>
               <div className="relative h-36 sm:h-40">
-                <Image src={r.photo} alt="" fill sizes="(min-width: 640px) 33vw, 100vw" className="object-cover opacity-80 transition-transform duration-500 group-hover:scale-[1.03]" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" aria-hidden="true" />
+                <Image src={r.photo} alt="" fill sizes="(min-width: 640px) 33vw, 100vw" className="mx-roomcard__photo object-cover opacity-80 transition-transform duration-500 group-hover:scale-[1.03]" />
+                <div className="mx-roomcard__shade absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" aria-hidden="true" />
                 <div className="absolute inset-x-4 bottom-3 text-white">
                   <p className="font-[family-name:var(--font-poppins)] text-[19px] font-medium">{r.name}</p>
                   <p className="mt-0.5 flex items-center gap-2 text-[13px] text-white/75">
